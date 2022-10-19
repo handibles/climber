@@ -1,0 +1,278 @@
+---
+title: 'Red Cheese - Preamble'
+author: "jfg / ic"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: TRUE
+  pdf_document: 
+    toc: TRUE
+---
+
+
+# to do
+```{bash, eval = FALSE}
+ # intro on bash tips
+    #top, htop
+    #ls, ls -lash
+    #mkdir
+    #cd
+    #rm
+    #rmdir
+    #mv
+    #echo, cat
+    #intro on scp, sFTP, rsync
+    #wc 
+    #sed
+    # time
+    #hup
+    #comm
+
+ # intro on the HPC
+
+ # intro on slurm
+
+ # intro on R tips
+
+ # intro on screen
+
+ # intro on |
+ 
+ # intro on >
+ 
+ # intro on globbing
+ 
+ # intro on loops
+ 
+ # intro on parallel
+ 
+ # intro on shell exapansion
+ 
+ # intro on rsync and backups
+
+ # how to read an error
+
+ # how to make this fake fastq data
+
+ # reference material
+ 
+ # bibliography
+
+```
+
+---
+
+# Introduction
+
+#### What this is, and who it is for 
+
+This document is for someone (anyone!) trying to do the following:
+
+  * ...
+  * ...
+  * ...
+
+#### What this document is **not**
+
+#### When something goes wrong:
+
+### For **help** with a program:
+
+
+---
+
+# 0 setup your environment
+
+## the HPC
+
+The HPC (high performance compute) cluster is a system of 12 high powered computers (```nodes```) connected to a main access computer (```head```). We use ```ssh``` to access the HPC's head, and then **we always transfer to a node**. If you do not do this, it causes big problems, and you will be punished by magic (your user will be locked, any programs you run will be cancelled, and your project will be stuck). 
+
+The HPC is just some really big computers that share one huge hard drive. For more, better info on Teagasc's HPC, see [this link](http://hcux400.teagasc.net) (note you must be connected to the teagasc HPC to access it). There is also [a lot of general info on the web](https://duckduckgo.com/?q=intro+hpc+slurm&t=vivaldi&atb=v314-1&ia=web), as many places have different HPCs. 
+
+
+```{bash,eval=FALSE}
+    # ssh/putty arrives here at the 'head'
+    [[______________hcux400______________]]    
+                      |
+                      |   # we   A L W A Y S   change to a node!!
+                      |
+                      V
+    # then we ssh AGAIN, to the nodes (1 & 11 are broken)
+    [ computeXX ][ compute02 ][ compute03 ]
+    
+    [ compute04 ][ compute05 ][ compute06 ]
+    
+    [ compute07 ][ compute08 ][ compute09 ]
+    
+    [ compute10 ][ computeXX ][ compute12 ]
+
+```
+
+
+## connecting via SSH
+
+To connect to computers remotely, we use a tool called ```ssh``` ([secure shell protocol](https://en.wikipedia.org/wiki/Secure_Shell)). While many computers (e.g. ubuntu) come with ```ssh``` software installed. Windows needs to add a program to provide ```ssh``` functions. To use the Teagasc HPC, you need to connect to the Teagasc network: if on site, this is done already. If remote/wifi, log in to the Teagasc VPN. Next:
+
+ * **windows** : download [```putty``` (standalone version, x86)](www.putty.org/downloads) from the internet, and put it somewhere useful.
+ * **windows** : click to open it - enter ```teagaschpc``` as hostname/IP address, and use port ```22```, which will be the default - then click ```Open```!
+ * **mac/linux** computer : try opening a ```terminal``` window, and entering the same 
+
+When you connect to the teagasc HPC with ```putty```, you are asked for:
+
+  * your HPC ```username``` - Teagasc IT should have provided you with this
+  * your HPC ```password``` - don't worry if you can't see it when you type!
+
+```{bash, eval = FALSE}
+# this is approximate! it might not look exactly like this
+(base) your.name@hcux400:~$ 
+```
+  
+The window should look like the above (system dependent), which is the start of the journey - you're now working at the ```bash``` commandline! Note the following pieces:
+
+  * ```(base)``` - this part indicates an active ```conda environment```, which gives you extra powers, depending on what has been automatically "activated" when you login
+  * ```your.name``` - this is you, the user
+  * ```hcux400``` - this is the part of the hpc your using to run programs. ```hcux400``` is the head node.
+  * ```~``` - this is the current working dir(ectory), where you are doing work and making files. "```~```" is the shortcut to a user's ```home``` dir, i.e. ```/home/your.name```.
+  
+_Note:_ Many other ```ssh``` methods are out there, but aren't discussed here:
+
+ * [cygwin](https://www.cygwin.com/install.html) is like adding a mini-linux computer to your computer, and can be used for many different things:
+ * [mobixterm](https://mobaxterm.mobatek.net/download.html) I have note used.
+ * if you are on Linux and don't have ```ssh```, try ```apt-get install open-ssh``` (you'll need admin privileges).
+ * **NB:** [RStudio](https://www.rstudio.com/products/rstudio/#rstudio-desktop) has a ```terminal``` - you may be able to run your ```ssh``` sessions out of RStudio, instead of using a ```terminal``` standalone or ```putty``` etc.
+
+The first time we connect to the HPC with ```putty``` using ```ssh```, we set a safe, strong password, using ```passwd``` and following the instructions. The username and password will start the same as those used to log in to the HPC using putty/ssh. The next time, we will have to use the new password that we create below: 
+
+```{bash, eval = FALSE}
+
+login:
+  user
+  password
+  
+change password:
+  passwd
+
+```
+
+  
+  
+### change node
+
+```{bash, eval = FALSE}
+ssh compute05
+  
+  ## set up shortcut
+
+  which sftp
+  which scp
+
+
+## check the data partition
+
+  /home/ines.calvete  = ~
+  
+  /data/Food/Primary/R0936_redcheese/
+  
+  /data/Food/Analysis/R0936_redcheese/
+  
+
+## check the analysis partition
+
+
+
+## set your dir variables
+
+## set your assumptions
+
+## load your modules
+
+```
+
+---
+
+## Remember:
+
+Pretend that I am saying the following things very loudly at you, and giving you gestures of great importance:
+
+  * you **must** be connected to the Teagasc network/VPN in order to access the  HPC.**
+  * when you login to the HPC, you must **always** change to a ```node``` before you do any work 
+  
+
+## where does data go?
+
+## basespace or similar
+
+## some osrt of VPN:
+
+The forticlient debacle
+
+## ssh or fpt
+
+
+---
+
+# Reading / Reference
+
+  * [amazing thread on the effects of trimming your data - from 900K to 600K kmers, as trimming removes fake kmer patterns](https://www.biostars.org/p/212136/). Go on Brian Bushnell!
+  
+  
+
+---
+
+
+# Second Document :: the handy commands
+
+```{bash, eval = FALSE}
+pwd
+
+ls
+ls .
+ls /home/ines/calvete
+ls ~
+
+ls /data/Food/analysis/R0936_redcheese
+ls /data/Food/primary/R0936_redcheese
+
+cd 
+
+nano
+
+
+```
+
+
+## declaring variables
+
+```{bash, eval = FALSE}
+ANA=/data/Food/analysis/R0936_redcheese
+cd $ANA
+```
+
+
+## setting loops
+
+## running parallel
+
+## first functions
+
+## get data
+
+### qiita; qiita search terms; download
+
+### ENA; search terms; download
+
+	red cheese metagenomic illumina
+	red cheese
+	cheese # start broad!
+   > projewcts :
+	PRJNA295825	raw sequence reads from analysis of red-smear-cheese
+The cheese smear of a Swiss semi-hard red-smear cheese variety was analyzed for comparison of the microbial surface smear community patterns of cheeses differing in their smear quality.
+
+
+Here, we are taking a risk picking a random study - we could get anything back. However, the sequencing was carried out by GATC (a major company in the sequencing space), so should be relatively sane as long as the samples were extracted in a sensible way
+
+In fact, when we click on the "Show Column Selection" tab, showing uns the available metadata, and enable instrument model, we see that this is all 454 pyrosequencing data (from the era before illumina). Nix'd!
+
+### moving and un/zipping data
+
+

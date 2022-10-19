@@ -1,0 +1,168 @@
+---
+title: "Eosinophilic Oesophagitis 16S - Quality & Reads"
+author: "Jamie"
+date: "15 December 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#library('pander')
+library('phyloseq')
+library('dada2')
+library('reshape2')
+library('ggplot2')
+library('knitr')
+
+```
+
+
+## Preamble
+
+
+Steps in the pipeline proceed as below - this document deals with preprocessing and quality (1&2). Samples with low read abundance are considered, and some abundance cutoffs are recommended. 
+
+  1. Samples are quality trimmed
+  2. low quality reads are filtered out 
+  3. sequence errors are modelled 
+  4. sequences are denoised 
+  5. read-pairs are merged
+  6. chimeric sequences are removed
+  7. taxonomy is assigned
+  
+Output samples with low abundance generally began with low abundance. Although some sample abundances have been 'improved' through cleaning & merging, further processing is a good idea - in particular, use of paired-end reads (2x300bp: 600bp) for the V4-V5 region (515-806bp: ~291bp) could allow very aggressive quality trimming which should further reduce loss of reads (e.g. re-trim Reverse reads) - this is Monday's first job.
+
+
+__DO NOTE THAT YOU NEED TO CUT OUT THOSE PRIMERS AT SOME STAGE__  
+
+  F: ```GTG YCA GCM GCC GCG GTA A```  (19bp)
+  R: ```GGA CTA CNV GGG TWT CTA AT``` (20bp)
+
+----
+
+## Quality visualisation and management (R)
+
+Quality plots display the relationship between read length and sequence quality, often illustrating the length at which read quality rapidly degrades, necessitating read trimming. Judicious use of trimming allows problematic sequences to be removed before they error prediction profiles, theoretically providing more sensitive error correction models.
+
+Extensive trimming however causes loss of information, and depending on amplicon, can seriously hamper pair-merging. The PDF of quality plots (attached in email, __```dada2_qualplots.pdf```__) shows the median quality-score (green) and quality-score interquartile ranges (orange lines), while black/white shading (heatmap) plots the number of reads at a given position. Images are given for raw, trimmed, and filtered FASTQ reads, for F (R1) and R (R2) reads respectively  - apologies for the lack of graph titles.   
+
+The ideal outcome is to maintain length and abundance of reads while excising low-quality base-positions - note how the outputs improve.
+
+```{r eval=FALSE, include=TRUE}
+pdf('../6_PHYLO_Seqtab/dada2_qualplots.pdf')
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+dev.off()
+
+```
+
+
+----
+
+## Read Loss Through Processing
+
+After quality trimming, tracking the volume of reads through the pipeline can provide insight into where large volumes of reads are being lost (if any). This boxplot shows the mean and 25-75% interquartile ranges for the number of reads, in each category, at each step of the pipeline. The accompanying table of data catalogues abundances at each step, showing where read loss was greatest.
+
+```{r r_provenance, eval=TRUE, echo=FALSE, results='hold'}
+# generated in XXXX_PROVENANCE.R, see also master_ledger.rmd
+track <- readRDS('../output/6_PHYLO_Seqtab/PHYLO_trackoutput.RDS')
+
+# have already sample/state mapping:
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1)
+
+track$Desc <- (PHYLO_map_full[rownames(track),'Description'])
+track$ID <- rownames(track)
+
+# reorder track by smallest **read input**, not ASV output
+track <- track[with(track, order(rawF)), ]
+
+z.rm <- melt(track)   
+# max(track[,1:8])  # establish max read counts for plotting:
+
+ggplot(z.rm, aes(y=value, x=variable,  fill=as.factor(Desc) ,  colour=as.factor(Desc) )) +
+  geom_boxplot(outlier.shape=NA , colour='black') + 
+  geom_point(width=0.2, shape=21,  size=2.5,  aes(colour='black' , fill=as.factor(Desc), alpha=0.6 )) + #note factoring-by-source requires use of the aes arg
+  scale_fill_manual( "Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +         
+  scale_color_manual("Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +
+  scale_y_continuous(limits = c(0, 50000)) +
+  labs(title='Read-counts through pipeline' ) + 
+  xlab('DADA2 Step') + 
+  ylab('number of reads') + 
+  theme_classic()
+
+kable(track[,1:8], caption = 'Samples ordered by smallest starting ```.FASTQ``` file')  # or pander()
+
+
+#
+```
+
+
+
+----
+
+## Isolating problematic samples
+
+Several samples have problematically low read abundances. How do they compare? We evaluate samples with a total abundance below 5000 reads (arbitrary threshold).
+
+```{r bad_sample_sums , eval=TRUE, results='hold', fig.show='hold', echo=FALSE}
+
+PHYLO <- readRDS('../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS')  # make sure load from right dir
+
+print('sample_sums, small -> large')
+sort(sample_sums(PHYLO)) ; sample_data(PHYLO) <- data.frame('SeqDepth' = sample_sums(PHYLO) )
+bad <- subset_samples(PHYLO , sample_sums(PHYLO) < 5000)
+
+# plot all   #consider joining plots to axis with line
+plot( sort(sample_sums(PHYLO)), ylab = 'Total Reads per Sample', xlab = ' ' , ylim = c(0,50000), type = 'n' , main = 'Sample Sequencing Depths', xaxt='n' )
+abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' )
+points(sort(sample_sums(PHYLO)), cex = 1, col = "maroon", pch = 20, lwd = 1.5)
+axis(1, at=1:length(sample_sums(PHYLO)), labels = names(sort(sample_sums(PHYLO))) , cex.axis=0.6 , srt=90, las=2 )
+
+# plot the useless ones
+plot( sort(sample_sums(bad)), ylab = 'Total Reads per Sample', xlab = 'Sample' , ylim = c(0,8000), type = 'n' , main = 'Sequencing depth with speculative cutoffs' )
+abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' )
+axis(4, at=c(1000,2000,3000), col= 'skyblue3', las=0)
+points(sort(sample_sums(bad)), cex = 1.5, col = "skyblue3", pch = 1, lwd = 2)
+text(sort(sample_sums(bad)), labels = names(sort(sample_sums(bad))), pos=1, offset = -3, cex=0.9 , srt=90 )
+
+bad_names <- sample_data(bad)$OrigID
+write.table(bad_names, '../output/PHYLO_bad_names.txt', sep='\t')
+
+```
+
+These samples require extra consideration. Of note:
+
+  * Note the step effect, with sample sums grouping at distinct levels (e.g. 1-9, 10-16, 17-20; likely due to effects of processing). This can provide a clean point for setting thresholds
+  * These appear to _not_ be naturally sparse due to experimental conditions (e.g. not due to being control samples)
+  * Likely excluded from statistical analyses - unrepresentative samples
+  * Further attention to improve read output (but still will be insufficient in more extreme cases) 
+
+
+Comparing FASTQC Quality Plots of these _'bad samples'_ shows that there is _very_ little (virtually no) difference with that of the overall read profiles, despite the relatively tiny number of reads in ```bad_samples``` (i.e. low-quality reads would be more apparent if more common) - as such, appears __bad_samples amplified poorly__ (low abundance), __not badly__ (low quality).  
+
+This has a bearing on how we treat these low-abundance samples: As noted above, their structure is likely to reflect the most abundant members of the community, causing an 'unfair' weighting in Beta diversity analyses adn statistical testing - they are however still somewhat informative in terms of overall composition.
+
+One suggestion could be application of two thresholds: one for inclusion in the study (e.g. 1000 reads), and one for statistical testing (e.g. 3000 reads). This would mitigate total loss of paired samples, while ensuring that hypothesis testing was not unduly influenced by poor coverage.
+
+----
+
+## Amplicon Sequence Variant Lengths 
+
+ASV length is of interest when reviewing processing output - do lengths approximate expectations, are there any unusual sequences? Previous, mammalian-related sequences have been excluded (due to aggressive quality trimming to ~200bp), and most sequences still cluster at ~270bp, as expected from the 515-806 primers used. There is however also now a small cohort of ~200bp ASV sequences - who knows. 
+
+```{r short_ASVs, eval=TRUE, echo=FALSE}
+PHYLO <- readRDS('../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS')
+hist(as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )),main='histogram of all ASV lengths', xlab='ASV length',breaks=200)
+
+# # from DADA2's output: length of sequence, merging overlap (nmatch), mismatches, etc/:
+# readRDS(list.files('/data/jamie/PHYLO/Materials/5_final' , pattern = 'RDS', full.names = TRUE)[45])
+
+```
+

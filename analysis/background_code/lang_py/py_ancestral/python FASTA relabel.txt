@@ -1,0 +1,1 @@
+python /home/jfg/jf/AJ_USEARCH/pythons/fastq_strip_barcode_relabel2.py 2016_10_25_JamieFitzGerald_AJACOB.fastq TGAAACTYAAAGGAATTG ~/jf/AJ_USEARCH/aj_barcodes.fa Fixed > ~/jf/AJ_USEARCH/aj_fixed

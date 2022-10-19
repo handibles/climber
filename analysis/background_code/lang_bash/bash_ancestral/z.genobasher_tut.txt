@@ -1,0 +1,164 @@
+#!/bin/bash -x
+
+
+##===  I N F O   ==================================## 
+# jamie tries to make a 454-processing script 
+# which uses VSEARCH, QIIME, SUMACLUST and SortMeRNA
+# 
+# The tutorial followed is to be found at 
+# http://www.linuxcommand.org/lc3_writing_shell_scripts.php
+#
+
+##===  T O   D O   ================================## 
+
+## 0
+## get this working
+
+
+## 1
+## get VS uchime_denovo working: 
+## needs abundance inclusion (;size=INT;) in the header for each 'unique' sequence. 
+## Should be possible using some other method (Q, U...)
+
+
+## 2
+## get working for the MV material - _case_ for 454/illumina
+
+
+##===   functions - such as they are   ============##
+# should be abke to take locations, drag and drop?
+# interactive-recursive mode for redoing portions if output is not desirable
+# should noterise stages exited at
+# should pipe all output to a standalone file at TLD. 
+# should allow to skip to certain steps
+
+
+
+# variables
+
+technology
+
+wf=
+workspace=
+seq_fasta=
+seq_qual=
+seq_map=
+q_param
+
+ref_tax=
+ref_fna=
+ref_aln=
+chim_m
+
+# prep sequences
+
+# pick otus
+
+## pick otus step 1
+
+## pick otus step 2
+
+## pick otus step 3
+
+# align filter phylo 
+
+# taxa-sum bioms
+
+
+
+##===   B O D Y   =============================##
+
+##
+## not required as of SUMACLUST 1.0.20 - other instances removed.
+### text filt - fix headers for sumaclust
+### sed 's/[;]\S*\S[;]//g' $wf.fasta > $wf_strip.fasta
+##
+## Note Sumaclust 1.0.0 needs to be upgraded for OTU picking.
+##
+
+cd $workspace
+
+# derep and qual with QIIME
+split_libraries.py -f $seq.fasta -q $seq.qual -s 25 -b 10 -M 15 --retain_unassigned_reads -w 50 -m $seq.map -o $wf_splib_s25M15/
+
+
+## Chimera check: exclude chims&borderlines;
+# denovo - this needs size coutns from derep_fulllength to work. permissive derep?
+# vsearch --uchime_denovo $wf_splib_s25M15/seqs.fna --nonchimeras $wf_q_vs_nonchim.fasta --chimeras $wf_q_vs_chim.fasta --borderline $wf_q_vs_chimish.fasta --fasta_score --nonchimeras $wf_q_vs_nochim.fasta --sizeout --uchimealns $wf_q_vs_chimaln
+vsearch --uchime_ref $wf_splib_s25M15/seqs.fna --nonchimeras $wf_q_vs_nonchim.fasta --chimeras $wf_q_vs_chim.fasta --borderline $wf_q_vs_chimish.fasta --fasta_score --nonchimeras $wf_q_vs_nochim.fasta --sizeout --uchimealns $wf_q_vs_chimaln --db $ref_fna 
+
+
+# pre-filter step: against 16S at e.g. 60%
+pick_otus.py -m sortmerna -i $wf_q_vs_nochim.fasta -s 0.6 -r $ref_fna -m sortmerna -o $wf_q_vs_smrprefilt_60pc
+
+# filter-out non-clustering (ie. non 16S) seqs
+filter_fasta.py -f $wf_q_vs_nochim.fasta -m $wf_q_vs_smrprefilt_60pc/$wf_q_vs_nochim_otus.txt -o $wf_q_vs_nochim_filt.fasta
+
+
+#=====================================
+
+
+
+# OTU picking 1
+#Closed-Ref pick with nochims - SORTMERNA
+pick_otus.py -m sortmerna -i $wf_q_vs_nochim_filt.fasta -r $ref_fna -m sortmerna -o $wf_q_vs_smr
+
+# pick rep_set.fna for OTUs
+pick_rep_set.py -i $wf_q_vs_smr/$wf_q_vs_nochim_filt_otus.txt -f $wf_q_vs_nochim_filt.fasta -o $wf_q_vs_smr/$wf_q_vs_smr_rep_set.fasta -m most_abundant
+
+
+
+### OTU picking S2
+mkdir $wf_q_vs_sumac
+
+# filter-get seqs that didnt align (fails) to ref
+filter_fasta.py -s $wf_q_vs_smr/$wf_q_vs_nochim_filt_failures.txt -f $wf_q_vs_nochim_filt.fasta -o $wf_q_vs_sumac/$wf_q_vs_nochim_fails.fasta
+
+# de-novo pick otus for fails - SUMAC.
+pick_otus.py -m sumaclust -i $wf_q_vs_sumac/$wf_q_vs_nochim_fails.fasta -o $wf_q_vs_sumac/ --sumaclust_exact --denovo_otu_id_prefix sumden --threads 4 
+
+# pick rep_set.fna from fails
+pick_rep_set.py -i $wf_q_vs_sumac/$wf_q_vs_nochim_fails_otus.txt -f $wf_q_vs_sumac/$wf_q_vs_nochim_fails.fasta -o $wf_q_vs_sumac/$wf_q_vs_sumac_rep_set.fasta -m most_abundant
+
+# cat OTUs & rep_set - DeNovo & Ref
+cat $wf_q_vs_smr/$wf_q_vs_nochim_filt_otus.txt $wf_q_vs_sumac/$wf_q_vs_nochim_fails_otus.txt > $wf_q_vs_ss_otu.txt
+cat $wf_q_vs_smr/$wf_q_vs_smr_rep_set.fasta $wf_q_vs_sumac/$wf_q_vs_sumac_rep_set.fasta > $wf_q_vs_ss_rep_set.fasta
+
+# cluster borderline chimeras against OTUs already detected
+# ss_chim_rep_set does not need to be processed as is simply an abundance subset, simply combine at end of workflow. Both OTU tables will need taxonomies!
+pick_otus.py -m sortmerna -i $wf_q_vs_chimish.fasta -r $wf_q_vs_ss_rep_set.fasta -o $wf_q_vs_smr_chim/
+
+
+
+#=====================================
+
+
+
+# align, filter, make phylogeny
+
+align_seqs.py -i $wf_q_vs_ss_rep_set.fasta -t $ref_aln -o $wf_q_vs_ss_phylo/
+
+filter_alignment.py -i $wf_q_vs_ss_phylo/$wf_q_vs_ss_rep_set_aligned.fasta -o $wf_q_vs_ss_phylo/ -e 0.0005
+
+make_phylogeny.py -i $wf_q_vs_ss_phylo/$wf_q_vs_ss_rep_set_aligned_pfiltered.fasta -o $wf_q_vs_ss_phylo/$wf_q_vs_ss_phylo.tre 
+
+
+# assign and summarize taxonomy, tabulate
+assign_taxonomy.py -i $wf_q_vs_ss_rep_set.fasta -t $ref_tax -m sortmerna --sortmerna_threads 6 -o $wf_q_vs_ss_smr_tax 
+
+make_otu_table.py -i $wf_q_vs_ss_otu.txt -t $wf_q_vs_ss_smr_tax/$wf_q_vs_ss_rep_set_tax_assignments.txt -m $seq.map -o $wf_q_vs_ss_otu.biom
+
+make_otu_table.py -i $wf_q_vs_smr_chim/$wf_q_vs_chimish_otus.txt -t $wf_q_vs_ss_smr_tax/$wf_q_vs_ss_rep_set_tax_assignments.txt -m $seq.map -o $wf_q_vs_ss_
+otu_chim.biom
+
+merge_otu_tables.py -i $wf_q_vs_ss_otu.biom,$wf_q_vs_ss_otu_chim.biom -o $wf_q_vs_ss_FINAL.BIOM
+
+sort_otu_table.py -i $wf_q_vs_ss_FINAL.BIOM -o $wf_q_vs_ss_FINAL.BIOM
+
+biom summarize-table -i $wf_q_vs_ss_FINAL.BIOM
+
+summarize_taxa_through_plots.py -i $wf_q_vs_ss_FINAL.BIOM -o $wf_q_vs_ss_taxasummary -s -m $seq.map
+
+
+
+

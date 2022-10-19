@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1577459326751.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1206450339",
+    "id" : "5EE3FAC9",
+    "lastKnownWriteTime" : 1575618808,
+    "last_content_update" : 1575618808,
+    "path" : "~/Dropbox/SeqBiome/sb_4.11_master/analysis/background_code/R__fns_jfg/shade_ranks2.R",
+    "project_path" : "analysis/background_code/R__fns_jfg/shade_ranks2.R",
+    "properties" : {
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

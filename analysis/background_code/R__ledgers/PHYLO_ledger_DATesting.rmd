@@ -1,0 +1,1547 @@
+---
+title: "PHYLO ledger :: Differential Testing"
+author: "jfg"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+      toc: TRUE
+      toc_depth: 4
+  pdf_document:
+      toc: TRUE
+      toc_depth: 4
+---
+
+---
+
+  * THINK about the problem you're working on -
+    - what are you looking for?
+    - what is required to _solve_, not erradicate, that problem?
+
+  * Adonis of treatments, multiple factors, and diversity? (little observed change in diversity)
+  * better understanding of formulae, and avoid redundant terms
+
+
+----
+
+
+## Outline
+
+### Approaches 
+
+  * checking for correlation through scatter plots
+  * testing multivariate associations using PERMANOVA (adonis)
+  * Differential testing of taxa (DE/metagenomeSeq, LEfSe, Aitch+KW)
+  
+----
+
+### The Issues
+
+  * zero-count data (sparse treatments)
+  * library size (library size vs. prevalence?)
+  * abundance, prevalence, dispersion (could we filer by dispersion too, e.g. k, A, _D_?)
+  * distribution: NB, Beta, log normal...
+  
+  * compositional data: resets the clock as is incompatible with sparseness - LR transforms will additionally change the distribution at hand (to a ~normal?)
+  * 
+  
+---
+
+### Differentiation (T, MW-U, Wilcoxon, PERMANOVA)
+
+  1. MW-U (2 samples): non-normal ~T Test, for _independent samples_ ("are A and B from the same pop?"). Extends to KW test below.
+  2. Wilcoxon Rank-Sum test (2 samples): for _dependent samples_ ("does effect X change A's value?")
+  3. Kruskal-Wallis / o.w. rank ANOVA (2+ samples):
+  4. PERMANOVA/Adonis
+  
+
+### Prediction (GLM, OLR, MLR)
+
+Suspect at this stage we are __losing focus__ and are no longer reading about ways to differentiate (DA testing) but rather, to predict (modelling). Nice, but not what we want.
+  
+  1. from [CrossVal](https://stats.stackexchange.com/a/189116) ```outliers > nonlinearity > heteroscedasticity > non-normality``` when applying a (linear) model.
+  2. . __See also [gung's response](https://stats.stackexchange.com/questions/91872/alternatives-to-one-way-anova-for-heteroskedastic-data/91881#91881)__ to Q about o.w. ANOVA for heteroscedasctics. Eventually suggests non-para methods ```KW test``` (but notes its low power and restriction to one categorical) or ```ordinal logistic regression```! 
+  3. ```Logistic Regression``` : [construct and test a predictive model for __categorical variables__ to predict __binary outcomes__](https://datascienceplus.com/perform-logistic-regression-in-r/). 
+  4. . [```Ordered Logistic Regression```](https://stats.idre.ucla.edu/r/dae/ordinal-logistic-regression/) seems to focus on several ordinal variables and limited continuous variables. Reading about OLR leads to ```mulitnomial logistic regression```, allowing for multipe interacting (non-ordinal? continuous?) factors. Many things to consider, in particular the final section on proving that 'assumption of proportional odds' holds (i.e. factors in the model hold equal sway). __wiki__: OLR used to predict ordinal variables.
+  5. . [```GeneraliZed Linear Models``` , see intro here.](http://statmath.wu.ac.at/courses/heather_turner) Modelling the _response_ ```Y``` through _explanators_ ```B1X + B2X + B3X + ... BxX```. Assumes errors indendent and equally distributed. _Generalised_ linear models account for linear models being effected by range (as a constraint) and/or variance (dictating ```Y```).  This is no simple single-pass topic. Comprises:
+      a. linear predictor
+      b. link function: means dependence on predictor
+      c. variance function: variance dependence on mean
+
+
+## Examples: 
+
+### the Literature
+
+  [Gloor/Knight paper on vag microbiome: illustrate differences in PC1 and ShanDiv using BonfCorr'd Wilcoxon Rank-Sum (dep testing)](https://www.tandfonline.com/doi/full/10.3402/mehd.v26.27799)  
+    
+
+
+#### DESeq2 using GLM and DA testing
+
+models counts (K) for gene (i) in sample (j) using 
+
+  * ```negative-binomial``` distribution
+  * ```fitted mean```: (sample-specific size factor) X (model of true proportional sample size)
+  * a gene-specific dispersion parameter ```alpha``` that (dar le Julia) differentially shrinks genes dependent on their profile as housekeeping/constiutive genes.  
+  
+Then, having fitted the counts to the NB dist, outliers are detected and removed, independent filtering is carried out, 
+
+
+
+
+## PHYLO Dataset
+
+#### Step 0: prep and load
+
+```{r prepare_load, results='hold', collapse=TRUE, message=FALSE}
+## ecostats
+library('phyloseq')
+library('ape')
+library('vegan')
+library('permute')
+library('FSA')
+library('car')
+library('GMPR')
+library(metagenomeSeq)
+
+## visuals
+library('RColorBrewer')
+library('scales')
+library('ggplot2')
+library('ggpubr')    #ggboxplot
+library('reshape2') # melt
+library('knitr') # kable
+
+theme_set(theme_classic())
+knitr::opts_chunk$set(echo=TRUE)
+#knitr::opts_chunk$set(results='hold')
+knitr::opts_chunk$set(eval=TRUE)
+knitr::opts_chunk$set(warning=FALSE)
+knitr::opts_chunk$set(message=FALSE)
+
+# processed pre-fabricated version
+PHYLO_full <- readRDS('../output/7_phyout/PHYLO_uc_purMAN_full.RDS')
+
+```
+
+#### Step 1: Subset
+
+```{r PHYLO_5_subset}
+PHYLO <- subset_samples(PHYLO_full, sample_sums(PHYLO_full) >= 400)  # PHYLO_bup <- PHYLO
+prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=5), A=0.01*nsamples(PHYLO))
+PHYLO_5 = prune_taxa(prunA, PHYLO)
+
+# # obsereve data heading in
+# kable(data.frame(sample_data(PHYLO)), caption='Sample Data')
+
+```
+
+#### Step 2: Colours for variables
+
+``` {r colours, results='hold'}
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' , 'N_CONTROL' = 'lavenderblush3' )
+
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","N_CONTROL", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+e.treat <- brewer.pal(n = length(unique(sample_data(PHYLO_full)$Treatment)), name = 'Dark2')  
+names(e.treat) <- c("2FED" , "4FED" , "CONTROL" , "PPIs" , "STEROIDS")
+
+```
+
+
+#### Step 3: Bray Curtis PCoA
+
+Intereseted in testing the differences between the axial values (i.e., the distribution of groups for each axis)
+
+> MAKE ME A FUNCTION THAT COULD BE SENT TO A STRANGER
+
+```{r bc_pcoa}
+  PHYLO_RA <- transform_sample_counts(PHYLO, function(x) ( x/sum(x) ) *100 ) 
+  PHYLO_5RA <- prune_taxa(taxa_names(PHYLO_5) , PHYLO_RA)
+  ## PCoA
+	bc_dist <- vegdist(otu_table(PHYLO_5RA),method="bray")  ## .....! BC on subset of data?   
+	pc_pcoa <-pcoa(bc_dist)
+  bc_df = data.frame(data.frame(sample_data(PHYLO), stringsAsFactors = FALSE), pc_pcoa$vectors)   # PHYLO_rich, 
+
+  bc_pcoa_boxp = cbind(Condition = data.frame(sample_data(PHYLO)$Condition), Treatment = data.frame(sample_data(PHYLO)$Treatment), Description = data.frame(sample_data(PHYLO)$Description), pc_pcoa$vectors)
+	bc_pcoa_boxp <- melt(bc_pcoa_boxp)
+	colnames(bc_pcoa_boxp) <- c('Condition', 'Treatment', 'Description', 'PC','value')
+
+	# note low number of axes
+   ggboxplot(bc_pcoa_boxp[1:(0.4*nrow(bc_pcoa_boxp)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCoA eigenvalues (20 of 64) of treatment*pre/post')
+     
+```
+
+#### Step 4.a : Make a CoDa object
+
+Make a CLR transformed object for use elsewhere 
+
+```{r coda, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
+
+# get CLR values for LEfSe below
+
+library('robCompositions')
+library('zCompositions')
+
+PHYLO_clr <- PHYLO
+PHYLO_df <- data.frame(otu_table(PHYLO_clr), stringsAsFactors = FALSE)    # samples as ROWS
+
+# replace zeroes
+PHYLO_df_0 <- cmultRepl(PHYLO_df,  label=0, method="CZM")
+
+# transform and put back into a phylo
+
+PHYLO_clr_df <- cenLR(PHYLO_df_0)
+clr_values <- PHYLO_clr_df[[1]]
+
+otu_table(PHYLO_clr) <-otu_table( data.frame(clr_values, stringsAsFactors = FALSE) , taxa_are_rows = FALSE)
+
+```
+
+#### Step 4.b : 
+
+Check the effect of CLR on e.g. Wilcox testing. Hypothesis: _can shift CLR values into positive_ and test, with same outcome
+
+```{r min_transform_clr, eval=FALSE}
+# speculate negative log ratios upset computation
+# speculate total difference of values informative, not absolute value for KW/W tests
+
+# => bring all CLR values into postiive
+
+# vis
+summary(t(clr_values))[ , 1:4] ; dim (clr_values)
+plot(sort(clr_values[,1]))
+
+# weirdly, some NAs in 12POST: replace these with the minimum value, -2.8532   -     < !!! >  HERETICAL ERROR
+clr_values[4,(is.na(clr_values[4,]))] <- -2.8532
+clr_shift <-   apply(clr_values, 1, function(x) x+abs(min(x)) )
+summary(clr_shift)[ , 1:4] ; dim (clr_shift)
+
+PHYLO_clrshift <- PHYLO_clr
+otu_table(PHYLO_clrshift) <- otu_table(clr_shift, taxa_are_rows = TRUE)
+
+# need to check that a shifted/translated dataset gives same KW/W results as original 
+pre_seq <-sample_data(PHYLO)[ sample_data(PHYLO)$Condition == 'PRE', 'SeqDepth'] 
+post_seq <-sample_data(PHYLO)[ sample_data(PHYLO)$Condition == 'POST', 'SeqDepth'] 
+
+# # double check all samples in each, censor those that are not so ENFORCE SAME LENGTH
+# names(unlist(pre_seq[-1])) %in% names(unlist(post_seq))
+
+a <- wilcox.test(unlist(pre_seq[-1]), unlist(post_seq), paired = TRUE, exact = FALSE)
+
+# spuriously inflate vectors
+pre_seq2 <- apply(pre_seq, 1, function(x) x+abs(max(x)) )
+post_seq2 <- apply(post_seq, 1, function(x) x+abs(min(x)) )
+b <- wilcox.test(unlist(pre_seq2[-1]), unlist(post_seq2), paired = TRUE, exact = FALSE)
+a ; b ; plot(x = unlist(pre_seq), y=pre_seq2, main = 'PLEASE EXPLAIN YOURSELF')
+
+# same diff yo!
+
+```
+
+
+---
+
+## __Define your question__
+
+  * does betadiversity (i.e. dissimilarity in case of BC, distance in case of UF/Ait) differ based on the treatments (Condition? Description?) visited?
+  * do PHYLO patients differ from controls?
+  * does community differ between POST treatment groups?
+  
+  * what taxa are differentially abundant between groups?
+  * taxa in Control, POST, but not PRE?
+  * taxa in PRE and POST but not CONTROL?
+  
+  * taxa clusters per Description? (check also kmeans clustering)
+
+
+
+
+---
+
+## Assumptions
+
+### Heteroscedasticism
+
+__See also__ 
+
+  * the Breusch Pagan test (lmtest::bptest) [as per here for model selection](https://rstudio-pubs-static.s3.amazonaws.com/187387_3ca34c107405427db0e0f01252b3fbdb.html)
+  * the NCV test (car::ncvTest) [as per here for MANOVAs and co](https://datascienceplus.com/how-to-detect-heteroscedasticity-and-rectify-it/)
+
+
+```{r demo_fixing_hetersced, results='hold', eval=FALSE}
+
+attach(cars)
+library(caret)
+library(lmtest)
+
+lmMod <- lm(dist ~ speed, data=cars) # initial model
+
+par(mfrow=c(2,2)) # init 4 charts in 1 panel
+plot(lmMod)
+
+# test hetero
+lmtest::bptest(lmMod)  # Breusch-Pagan test
+car::ncvTest(lmMod)  # Breusch-Pagan test
+
+# BoxCOx
+distBCMod <- caret::BoxCoxTrans(cars$dist)
+print(distBCMod)
+
+# apply remodelling
+cars <- cbind(cars, dist_new=predict(distBCMod, cars$dist)) # append the transformed variable to cars
+head(cars) # view the top 6 rows
+
+# retest
+lmMod_bc <- lm(dist_new ~ speed, data=cars)
+bptest(lmMod_bc)
+plot(lmMod_bc)
+
+
+detach(cars)
+```
+
+own data:
+
+```{r assessing_hetersced, results='hold'}
+attach(cars)
+library(caret)
+library(lmtest)
+
+lmMod <- lm(Axis.1 ~ Description, data=bc_df) # initial model
+
+par(mfrow=c(2,2)) # init 4 charts in 1 panel
+plot(lmMod)
+
+# test hetero
+lmtest::bptest(lmMod)  # Breusch-Pagan test
+car::ncvTest(lmMod)  # Breusch-Pagan test
+
+# BoxCOx
+distBCMod <- caret::BoxCoxTrans(bc_df$Axis.1)
+print(distBCMod)
+bc_df <- cbind(bc_df, Axis.1_new=predict(distBCMod, bc_df$Axis.1))
+
+# retest
+lmMod_bc <- lm(Axis.1_new ~ Description, data=bc_df)
+bptest(lmMod_bc)
+plot(lmMod_bc)
+
+```
+---
+
+## Testing testing
+
+
+
+### Normalisation
+
+Many methods out there (via DESeq2, ALDEx2, metagenomeSeq, GMPR). All ocnsider themselves hot shit, and have supplanted more traditional ecological methods through techniques leveraging Bayesianism, Monte-Carlo sampling, Dirichlet, Negative-Binomial, Gaussian etc. distributions, Geometric means, and friends for bamboozlement. 
+
+#### GMPR
+
+Interesting addition to the arsenal (weird word). Modifies the size-factor estimation steps of several different techniques (e.g. DESeq2, MGS, edgeR). Rather than taking the geo-mean of a common OTU (?), or geo-mean of all non-zero features per sample (edgeR, DESeq2), or picking one 'reference' sample (MGS), bases size factors on pairwise comparisons before geo-mean calculations, maximising amount of info incorportated and minimising 0-counts (as less likely among pairwise comparisons) providing possibly more robust estimates and therefore more accurately normalised counts. 
+
+[jchen points out](https://github.com/jchen1981/GMPR/issues/2#issuecomment-379298749):
+
+> GMPR-normalized data are most useful for taxon-level analysis. __It may not have an advantage for alpha and beta-diversity analysis__.
+
+So don't act so surprised below when it gives identical PCoA results. Needs to be combined with a transforming/testing approach - not an independent approach. 
+
+[Additionally (see line 6)](https://github.com/jchen1981/GMPR/blob/master/GMPR.R): 
+
+ > The size factors can be used as offsets in count-based regression models or as divisors to produce normalized data
+
+
+
+Not AFAIK compatible with CLR, but as uses GMean takes compositionality partially into account... 
+
+```
+library(devtools)
+install.packages('/home/jfg/Downloads/GMPR_0.1.3.tar.gz', repo=NULL, type="source")
+library(GMPR)
+
+data(otu.table)
+gmpr.size.factor <- GMPR(t(otutable))
+#thats it! Pass to D2/mgS/eR
+
+###########################################################################################################
+# Application 1: Counts are normalized by size factors to reduce the variation due to different library sizes
+otu.tab.norm <- t(t(otu.tab) / gmpr.size.factor)
+dist.mat <- vegdist(t(otu.tab.norm))
+PCs <- cmdscale(dist.mat, k=2)
+plot(PCs[, 1], PCs[, 2], col=factor(throat.meta$SmokingStatus))
+
+###########################################################################################################
+# Application 2:  Differential abundance analysis using DESeq2 using GMPR size factors instead of the default
+dds <- DESeqDataSetFromMatrix(countData = otu.tab,
+		colData = throat.meta,
+		design= ~ SmokingStatus)
+
+# Replace size factor
+# dds <- estimateSizeFactors(dds)
+sizeFactors(dds) <-  gmpr.size.factor
+dds <- estimateDispersions(dds)
+dds <- nbinomWaldTest(dds)
+results(dds, contrast=c("SmokingStatus", "NonSmoker", "Smoker"))
+
+```
+
+Check out on your own data. Note that values are different for PCA/MDS, but are identical for PCoA, as BC calculated on RA for ASV and ASV-GMPR data. Plot shows that the relative abundances of ```GMPR normalised``` counts are identical to relative abundance of ```raw``` counts. Likely because total absolute calues change between samples, GMPR is not changing the relative abundance _within each sample_ . 
+
+
+Consider rounding values to better fit assumptions of count data?
+
+```{r gmpr_deployment}
+
+PHYLO_otu <- t(data.frame(otu_table(PHYLO), stringsAsFactors = TRUE) )
+# orientation of OTU table matters - want samples as COLUMNS
+
+dim(PHYLO_otu)
+PHYLO_gmpr.sf <- GMPR(t(PHYLO_otu))
+PHYLO_otu_gmpr <- t(t(PHYLO_otu) / PHYLO_gmpr.sf)   # double t(t/) : reorient for div, then restore
+dim(PHYLO_otu_gmpr)
+
+# plot
+par(mfrow = c(1, 3))
+
+dist.mat1 <- vegdist(t(PHYLO_otu))
+PCs1 <- cmdscale(dist.mat1, k=2)
+plot(PCs1[, 1], PCs1[, 2], col=factor(sample_data(PHYLO)$Description), main = 'raw MDS/PCA')
+
+dist.mat2 <- vegdist(t(PHYLO_otu_gmpr))
+PCs2 <- cmdscale(dist.mat2, k=2)
+plot(PCs2[, 1], PCs2[, 2], col=factor(sample_data(PHYLO)$Description), main = 'GMPR norm`d MDS/PCA')
+
+# OTU BC 
+PHYLO_otu_ra <- t(apply(PHYLO_otu, 2, function(x) x/sum(x) ))
+bc_dist1 <- vegdist(PHYLO_otu_ra,method="bray")
+otu.pcoa <-pcoa(bc_dist1)
+
+# GMPR BC
+PHYLO_gmpr_ra <- t(apply(PHYLO_otu_gmpr, 2, function(x) x/sum(x) ))
+bc_dist2 <- vegdist(PHYLO_gmpr_ra,method="bray")
+gmpr.pcoa <-pcoa(bc_dist2)
+
+# 
+plot(PHYLO_otu_ra, PHYLO_gmpr_ra, main='GMPR RA == raw RA')
+
+
+## move transformed values to phylo-object
+otu_table(PHYLO) <- otu_table(t(PHYLO_otu_gmpr), taxa_are_rows = FALSE)
+
+
+## input to a MGS object
+      # # ## MGS-SPECIFIC method of normalizing counts
+      # p = cumNormStatFast(e_mgs)           # quantile calculation
+      # e_mgs = cumNorm(e_mgs, p = p)        # calculate the scaling factors
+      # expSummary(e_mgs)$normFactors
+      # 
+      # ## REPLACE size factors with those from GMPR  -   samples as COLUMNS
+      # otu <- data.frame((otu_table(PHYLO)))
+      # gmpr.size.factor <- GMPR(otu)
+      # normFactors(e_mgs) <- gmpr.size.factor   # Works!
+
+
+
+
+```
+
+
+
+
+### Scatterplots 
+Need to know what the lines (red = [linear regression](http://www.sthda.com/english/wiki/abline-r-function-an-easy-way-to-add-straight-lines-to-a-plot-using-r-software#add-regression-line), blue = [Loess regression](http://r-statistics.co/Loess-Regression-With-R.html)) mean. Loess isn't a name! _Lo_ cal Regr _ess_ ion.
+
+```{r scatter, eval=FALSE}
+# no mock data for this :(
+plot(x=sample_data(PHYLO)$Propionic.acid, y=sample_data(gas)$Acetic.acid, main='[AcOH] vs. [PrOH]')
+
+abline(lm(x ~ sample_data(PHYLO_neg_tax)$SeqDepth, col="red")) 
+
+# lowess line (x,y) - the order you specify it in makes a big diff! 
+lines(lowess(sample_data(gas)$Propionic.acid,sample_data(gas)$Acetic.acid), col="blue") 
+
+```
+
+Boxplots are the categorical analogue.
+
+---
+
+### pairwise tests
+
+  1. Mann Whitney's U Test (2 samples): non-normal unpaired test for _independent_ samples ("are A and B from the same pop?"). Extends to KW test below.
+  2. Wilcoxon Rank-Sum test (2 samples): non-normal pairwise test for _dependent_ samples ("does effect X change A's value?")
+
+### multiple (2+) group tests
+
+  3. Kruskal-Wallis test
+  4. PERMANOVA, including the ```vegan::adonis``` approach
+
+
+---
+
+## Pairwise Testing (2 groups) -  [Students's T, Wilcoxon's and Mann-Whitney's U tests](https://en.wikipedia.org/wiki/Student%27s_t-distribution#History_and_etymology)
+
+Testing the same variable in ```Group A``` with things in ```Group B```. Usually a comparison of ```average + variation``` for each, and then checking to see how likely it is that observed difference is a freak occurrence. Not gonna talk about ```t-tests```, because AFAIK none of the data we tend to deal with is normal/parametric enough to rely on parametric tests (though ideal 'actual' ASV abundances are expected to be log-normal...(?)). 
+
+MW is just a version of Wilcoxon rank-sum test: probably some really cool history but never mind that. ```Wilcox.test()``` is the function, where ```paired``` specifies MW (unpaired) or W (paired). Need equal numbers in each group for MW-U/W-rs
+
+Here we check to see if abundance of ASV0001 is the same between IS and ES setups.
+
+```{r wilc_unpaired, eval=FALSE}
+# don't have paired samples so no handy example fo that here! 
+
+# compare abundances of ASV0001 in IS and ES samples
+tax1.1 <- tax1[1:15]
+tax1.2 <- tax1[16:30]  # note not taking all values so sample sizes same
+wilcox.test(tax1.1, tax1.2, paired = FALSE, exact = TRUE)
+
+# see also wilcox_test from coin package
+```
+
+---
+
+## Group Testing
+
+### Model Specification
+
+Not trivial! From this [handy specificant](http://conjugateprior.org/2013/01/formulae-in-r-anova/):
+
+> nesting amounts to adding one main effect and one interaction.
+
+#### ```Basic Formulae Indicators```
+
+```
+# where # is the response, and A, B, C are the explanators/available metadata
+
+aov( Y ~ A + B, data=d )        # additive effect between variables
+
+aov( Y ~ A * B, data=d )        # all effects between A and B, including interaction
+
+aov( Y ~ A + B + A:B, data=d )  # equivalent to the above
+
+aov( Y ~ A : B : C, data=d )    # three-waaov( Y interactions
+
+aov( Y ~ A + B + C - A:B:C, data=d )  # three-waaov( Y effects, less the interaction of all three
+
+aov( Y ~ A / B, data=d )        # B a set of conditions nested in A (equiv to A + A:B)
+
+```
+
+   
+
+#### ```Random Effects (e.g. paired samples?)```
+
+Random effects are experimental twists that ANOVA & Co. won't be natively aware of (and are 'random'/arbitrary from ANOVA's pov): a good example is sets of samples coming from the same source (as in a longitudinal or before/after study). For ANOVA, can be specified using
+
+```
+aov( Y ~ Error(ID), data=d )        # modelling on random effect ID
+
+aov( Y ~ B + Error(ID/B), data=d )  # modelling on fixed A and random effect ID
+
+``` 
+
+Can get very complicated very quickly in ANOVA, so ( [according to link above](http://conjugateprior.org/2013/01/formulae-in-r-anova/) ) can be easier to move to __```lme4```__ for these models, where the bracketed portion is a conditional statement of "either at intercept or ID". ```lme4``` can accept more complicated relationships, or perhaps, express them more clearly. You could also have a nested version, where your explanator is nested in a random effect (3) :
+
+```
+lmer( Y ~ A + (1 | ID), data=d )     # 1
+
+lmer( Y ~ A + (1 | ID), data=d )     # 2: A = fixed, ID = random
+
+lmer( Y ~ A + (1 | ID/A), data=d )   # 3: A = fixed, AND nested in ID
+
+
+# there are concerns about nesting and random effects crossing over (see link above)
+# use the following, where the second term expressly accounts for a random factor-interaction:
+
+lmer(Y ~ 1 + (1 | A) + (1 | A:B), data=d)
+
+```
+
+---
+
+### Univariate testing across groups (e.g. significance of BC-PCoA axes)
+
+
+#### Kruskal-Wallis Test (One-Way Between-Subjects ANOVA-Equivalent [page 15](http://www.stat-help.com/ANOVA%202006-01-11.pdf) )
+
+##### followed by Pairwise Wilcox Rank-Sum Test / Dunn test / Mann-Whitney U
+
+We're testing one factor (one-way, i.e. univariate) between different groups (between subjects). Possible that paired samples constitute a confounding factor, however it is exactly that difference we want to consider, so. Who knows.  
+
+The non-parametric equivalent is th KW test. KW doesn't assume normal distributions, but _does assume similar variances_ (homoscedastic). Essentailly an extension of MW U-test to several groups. 
+
+Should consider multiple testing correction, possibly filtered to the most relevant axes.
+
+```{r kw_test, eval = TRUE}
+## See appendix for all of these.
+
+library('FSA') # for summarize
+
+# summarise Axis1 ( bc_df[,12] )
+Summarize(Axis.1 ~ Description, data = bc_df)
+
+# test
+kruskal.test(Axis.1 ~ Description, data = bc_df)
+
+# followed by Pairwise Wilcox Rank-Sum Test / Dunn test / Mann-Whitney U
+dunnTest(Axis.1 ~ Description, data = bc_df, method = 'bh')
+
+```
+
+Nothing standing out! :( __BUT__ thats okay too. Sample size appears low, effects simply not apparent here. 
+
+---
+
+#### Basics: ANOVA / MANOVA
+
+Testing for ```Continuous x Categorical``` effects. Keep it simple, keep it safe. Remember that vegan::adonis is a PERMANOVA for __dissimilarities__, not just a non-par ANOVA.
+
+```{r this_is_anova, eval=FALSE}
+
+## example
+
+# do a one-way anova
+dat.anova <- aov(response ~ variable, data=data.df)
+
+# do multiple testing to see which levels in variable are significant
+TukeyHSD(dat.anova)
+
+```
+
+```{r anova_manova}
+
+## now, with PHYLO data
+PHYLO.anova <- aov(Axis.1 ~ Condition/Description , data=bc_df)  #+ Error(ID)
+summary(PHYLO.anova)
+#TukeyHSD(PHYLO.anova)
+
+## no result, nor for nearby axes
+
+# check homoscedastic - actually looks okay!
+par(mfrow=c(1,2))
+plot(PHYLO.anova, 1)
+# check normality - normality plot of residuals
+plot(PHYLO.anova, 2)
+
+# but check Levene
+library(car)
+leveneTest(Axis.1 ~ Description, data=bc_df)
+# also alright! This jarrs with what we know from betadisp/permutest below, BUT. 
+
+```
+
+---
+
+
+####  [The LDA Effect Size Package, ```LEfSe```](https://bitbucket.org/biobakery/biobakery/wiki/lefse)
+
+[Huttenhower ```galaxy_server``` page](http://huttenhower.org/galaxy/). Each feature (i.e. each taxon, glom'd at each taxonomic level, domain to ASV) is treated as an independent concern (univariate). Doing on CLR data. See text from MYP-FYP, using ```gas_lefse.txt```. Big Type-I error problem in LEfSe (i.e., no correction for multiple testing). To get your own (CLR) data out to test in LEfSe, then do the testing in the usual console-based way. In this case, LEfSe isn't impresseed with us, but as stated above we're not impresseed with LEfSe anyway.
+
+
+```{r clr_out, eval=FALSE}
+# otu
+write.table(otu_table(PHYLO_clr), 'PHYLO_clr_otu.txt', sep='\t')
+write.table(tax_table(PHYLO_clr), 'PHYLO_clr_tax.txt', sep='\t')
+write.table(sample_data(PHYLO_clr), 'PHYLO_clr_meta.txt', sep='\t')
+
+write.table(otu_table(PHYLO_clrshift), 'PHYLO_clrshift_otu.txt', sep='\t')
+
+```
+
+
+```
+Number of significantly discriminative features: 401 ( 971 ) before internal wilcoxon
+Number of discriminative features with abs LDA score > 2.0 : 1:: 'Bacteria'
+
+```
+
+Possibly an effect of LDA not appreciating small values, which accounts to some degree for LEfSe's sensitivity to scale of normalisation. 
+
+
+---
+
+
+### Multivariate testing across groups (e.g. changes in ASV w.r.t. to variables)
+
+   
+
+#### Ordered Logistic Regression [link](https://stats.idre.ucla.edu/r/dae/ordinal-logistic-regression/)
+
+Comparing change in a value across different categorical sets (i.e. treatment groups effect on Betadiversity?). Possibly our sample size is too small.  
+
+```{ r OLR}
+# not yet attempted
+
+```
+   
+
+
+#### Adonis - testing distance & dissimilarities between samples
+
+```Adonis``` tests for changes in __distance__ across factors (different sites, treatments, abiotic factors, etc.). Significance testing is done thorugh F-test and permutation. Actual multivariance method is a PCoA (?). Althoug it uses a slightly less-popular ```sum-of-squares centroid-distance partitioning``` method than most PERMANOVA methods, it a method appropriate for metric/semi-metric/euclidean distances. 
+
+Use of the ```strata``` arg is imporant (refer to manpage) to ensure permutations are between the right categories: can have situations where permuatation between certain groups is meaningless/incorrect (e.g. samples might be blocked in dissimilar replicates, in which case permutation between different replicates would be spurious) [see comment from Jari](https://r-forge.r-project.org/forum/forum.php?thread_id=2758&forum_id=194&group_id=68): 
+
+>the 'strata' argument defines how data are permuted, or the random structure.
+
+See also, [this explique (hello again Carly)](https://stats.stackexchange.com/questions/188519/adonis-in-vegan-order-of-variables-or-use-of-strata) of how to properly relate _nested_ factors (i.e. site and species) where DOF are diffrerent between conditions (that is, _unbalanced design_). Bio-boils down to the correct way of specifying nested formulae is 
+
+      adonis <- adonis(DIST ~ Site / Species, strata = Site, data = df_compare)
+      
+      adonis <- adonis(bc_dist ~ Condition / Description, strata = Condition, data = PHYLO_dat)
+                       uc.dist
+                       ait.dist
+
+BEWARE: Adonis is sensitive to the spread of data being different, which may well make this test unsuitable. See this [explique](https://thebiobucket.blogspot.com/2011/04/assumptions-for-permanova-with-adonis.html). Example taken from Jari's [Multivariate Analysis of Ecological Communities in R](http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf) vegan tutorial. 
+
+Keep in mind that PERMANOVA/adonis is itself a multivariate method - for testing MULTIPLE VARIABLES at the same time, e.g. lots of Features, or env.factors. Testing the spread of groups (CTRL, PRO, PRE, THIS, THAT) for each axes (eig1, eig2, eig3...}) is a (series of) UNIVARIATE concerns.
+
+That said, we are ultimately interested in whether groups differ by sources or variation - combinations of axes may provide effects of interest?
+
+
+```{r adonis, eval=TRUE}
+data(dune)                                # get that data
+betad <- betadiver(dune, 'z')             # make distance (Arrhenius Z)
+data(dune.env)
+
+# test difference between betadiversity distances by FACTOR, in DF, with 2000 permutations:
+adonis(betad ~ Management, dune.env, perm=2000)
+
+beta <- betadisper(betad, dune.env$Management)    #test for homoscedasticity
+permutest(beta)                       # permute test?
+plot(beta)
+
+```
+
+
+  
+  
+##### Example: ```Adonis, BetaDisper, ...``` - Yilmaz et al 
+
+Nat.Med paper (via ```Fergus/Marcus/Shriram``` ) uses Adonis extensively to test (...?) "between groups on PCoA plot". Indicates this is possible, moreover multivariate across all the PCoA axes (?). Saved into the examples folder, but takes the form below (note use of interactions in model between Disease and other conditions, via '```:```').
+
+As such, the differences reported in the paper (along margins of PCoA plot) don't relate to the axes, but to (non-visible) multivariate differences in BC Beta-Div.
+
+Also, carries out a ```vegan::betasdisper / permutest``` test, checking homoscedasticity. 
+
+
+```{r natmet_adonis_eg, eval=FALSE}
+# pruned, subset to Clinical, changed to RA
+df = data.frame(sample_data(ent))
+BC = distance(ent, "bray")
+
+# Stat_Beta_Diversity
+Stat_Beta_Diversity <- adonis(BC ~ Disease + Disease:AnatomicLocation + Disease:Gender + Disease:AgeAtSampling + Disease:EndoscopicalAssessment, data=df)
+
+beta <- betadisper(BC, df$Disease)    #test for homoscedasticity
+permutest(beta)                       # permute test?
+
+```
+
+
+
+_~~Our data sees no significant differences between variables, and comes back as heteroscedastic (which ```Adonis``` is sensitive to).~~_
+
+~~Our data now comes back as sig (```***```) diff for ID when ```Condition [nesting] Description```, despite ```ID modelled as a random effect```, and _not_ heteroscedastic.~~
+
+__Note__ :: from [the vegan FAQ](https://github.com/vegandevs/vegan/blob/master/vignettes/FAQ-vegan.Rmd), it is impossible to specify random effects in adonis and CA , ergo the (1 + ID) model is dead wrong. _Instead,_ setting ID as the first factor to apportion effect to, then apportioning the remainder to the variables of interest - suggested in a post somewhere, but not sure where (bottomoftheheap?).
+
+__See also__ [this example from biobuket.org](http://thebiobucket.blogspot.com/2011/04/repeat-measure-adonis-lately-i-had-to.html) about using adonis, with input from GSIMPSON. Great clarity in setting out experimental setup:
+
+    The design:
+    We have multivariate species data, sampled at different sites (n = 6) at 3 points in time (N = 24).
+    
+    The hypotheses:
+    H0: Species composition is the same across time. The permutation will produce the H0-population by a restricted randomization of time points.
+    H1: Species composition differs between time points
+    
+
+
+```{r natmet_adonis_PHYLO}
+##computing for our data:
+PHYLO_dat <- data.frame(sample_data(PHYLO), stringsAsFactors = FALSE)
+
+# Nested Design: Description in Condition
+  # ~~ 1+ID - Random effect: ID as a relationship between samples~~ no RE in Adonis
+  ## NO STRATA?
+
+## separate out the effects into that due to ID (first term) and that duie to Cond/Desc
+  # adonis(bc_dist ~ Condition/Description + (1 + ID), data=PHYLO_dat, permutations = 2500)   # 1+ID is nonsense
+  adonis(bc_dist ~ ID + Condition/Description, data=PHYLO_dat, permutations = 2500)           # use ID as first factor to immitate randEff
+
+# null hypothesis: variances are the same
+## result depends on variables tested - smaller samples see greater (or any) violation 
+beta <- betadisper(bc_dist, PHYLO_dat$Condition)    # double check meaning of F values =/
+beta
+permutest(beta)                                     # could also use anova(beta)
+
+plot(beta)
+```
+
+#### Adonis2
+
+See manual for adonis: adonis2 more flexible. Does it supplant adonis? Not if used on the same question.
+    
+    ## from the manual:
+    Function adonis2 is based on the principles of McArdle & Anderson (2001) and can perform sequential, marginal and overall tests. Function adonis2 also allows using additive constants or squareroot of dissimilarities to avoid negative eigenvalues. but both functions can handle semimetric indices (such as Bray-Curtis) that produce negative eigenvalues. Function adonis2 can be much slower than adonis, in particular with several terms. With the same random permutation, tests are identical in both functions, and the results are also identical to anova.cca of dbrda and capscale. 
+    
+    __by__ :: by = "terms" will assess significance for each term (sequentially from first to last), setting by = "margin" will assess the marginal effects of the terms (each marginal term analysed in a model with all other variables), and by = NULL will assess the overall significance of all terms together. The arguments is passed on to anova.cca.
+    
+  * sequential: in sequence specified
+  * marginal: each term modelled as a marginal effect(?) in a model with other variables
+  * overall: glommed together?..
+    
+
+```{r PHYLO_adonis2}
+## strata and blocking checked from vegan/permute  -   _there is no strata/blocking_ at work here.
+  # below will tell you that Condition makes a difference
+  # taken from vegan:adonis2
+  perm <- how(nperm = 2500)
+  setBlocks(perm) <- with(PHYLO_dat, Description)
+  adonis2(bc_dist ~ Description + (1 + ID), data=PHYLO_dat, permutations = perm, parallel = 10)
+
+  adonis2(bc_dist ~ ID, data=PHYLO_dat, permutations = perm, parallel = 10)
+            
+```
+
+
+
+
+
+---
+
+
+
+#### MaAsLin [link](https://huttenhower.sph.harvard.edu/maaslin) 
+
+[Maaslin page](https://huttenhower.sph.harvard.edu/maaslin) 
+
+Check this shit out, in R. Used in the  [@Yilmaz] paper. Expects proportional (RA) data, no less =S . 
+
+> performs boosted, additive general linear models between one group of data (metadata/the predictors) and another group (in our case microbial abundance/the response)
+
+```{r masslin_depend, eval = FALSE}
+# source('https://bioconductor.org/biocLite.R')
+source('~/.bL.R')
+biocLite('BiocManager')
+library(BiocManager)
+deps <- c('devtools', 'agricolae', 'gamlss', 'gbm', 'nlme', 'gam', 'glmnet', 'inlinedocs', 'logging', 'devtools','MASS', 'optparse', 'outliers','penalized', 'pscl', 'robustbase')
+lapply(deps, function(x) install(x, suppressUpdates = TRUE))
+
+## do these bits before attaching libraries etc.
+  # Install older version of gam
+  if (!packageVersion('gam')=='1.14') {
+  remove.packages('gam')
+  devtools::install_version("gam", version = "1.14", repos = "http://cran.us.r-project.org")
+  }
+  # Install older version of nlme
+  if (!packageVersion('nlme')=='3.1-127') {
+  remove.packages('nlme')
+  devtools::install_version("nlme", version = "3.1-127", repos = "http://cran.us.r-project.org")
+  }
+
+install.packages("https://cran.r-project.org/src/contrib/Archive/inlinedocs/inlinedocs_1.9.2.tar.gz", repo=NULL, type="source")
+
+install.packages("https://bitbucket.org/biobakery/maaslin/downloads/Maaslin_0.0.5.tar.gz", repo=NULL, type="source")
+
+```
+
+
+```{r maaslin_file_wrangle}
+# sort for least sparse table (i.e. 100 most abundant ASVs)
+
+# using PHYLO_full to omit GMPR normalisation
+
+PHYLO_ra <- transform_sample_counts(PHYLO_full, function(x) x/sum(x))
+PHYLO_ra_filt <- genefilter_sample(PHYLO_full, filterfun_sample(function(x) x >=0.05), A=0.1*nsamples(PHYLO_full))
+PHYLO_ra_filt <- prune_taxa(PHYLO_ra_filt, PHYLO_ra)
+summary(taxa_sums(PHYLO_ra_filt))
+
+vars <- c('Condition', 'Description' , 'Treatment' , 'GENDER')    # just the data we want 
+data <- t(sample_data(PHYLO_ra_filt)[ , sample_variables(PHYLO_ra_filt) %in% vars ])
+colnames(data) <- paste0('Sample_' , sample_names(PHYLO_ra_filt))
+
+feats <- t(data.frame(otu_table(PHYLO_ra_filt)))
+colnames(feats) <- paste0('Sample_' , sample_names(PHYLO_ra_filt))
+
+write.table(feats, '../output/maaslin/PHYLO_otu.txt', sep='\t')   # transpose!
+write.table(tax_table(PHYLO_ra_filt), '../output/maaslin/PHYLO_tax.txt', sep='\t')
+write.table(data, '../output/maaslin/PHYLO_data.txt', sep='\t')
+
+
+# y <- t( data.frame(sample_data(PHYLO), stringsAsFactors = FALSE) )
+# 
+# # replace all values with their alphabetical correpsondent by index
+# y <- apply(y , 1,  function(x) x <- letters[   which(levels(factor(y['GENDER' , ])) %in%  factor(y['GENDER' , ] )) 
+  
+
+```
+
+
+##### MaAsLin :: text wrangling
+
+Setup of abundance text file (```.tsv```) is similar to that for LEfSe. Replace ```'-'``` with ```'.'``` or similar to avoid conflating fields (- is delimiting). See also galaxy instance.
+
+* NA/NaN can mean read.config not properly configured, or other format error
+* can get errors about 100 characters - abbreviate your ASV names, though problem appears ~transient
+* Config file defines extent of metadata and abundance fields.
+
+> no difference detected
+
+```
+  Matrix: Metadata
+  Read_PCL_Columns: 11POST-9PRE       # this not necess, as consider all samples  (columns)
+  Read_PCL_Rows: -Condition           # define last meta-field
+  
+  Matrix: Abundance
+  Read_PCL_Columns: 11POST-9PRE       # this not necess, as consider all samples (columns)
+  Read_PCL_Rows: Bacteria|Firmicutes|Clostridia|Clostridiales|Family XI_2II|Family XIII UCG-001|Seq_0002561-
+
+```
+
+ 
+```{r maaslin_run, eval=FALSE, message=FALSE, warning=FALSE}
+
+
+library(Maaslin)
+# example(Maaslin)
+
+InputTSV <- '../output/maaslin/PHYLO_full_maaslin.pcl'
+InputConfig <- '../output/maaslin/PHYLO.read.config'
+Outdir <- '../output/maaslin/maaslin_out'
+
+#read.table(InputConfig, header=TRUE)
+
+
+maas <- Maaslin(strInputTSV = InputTSV, 
+        strInputConfig = InputConfig,
+        strOutputDIR = Outdir        )
+
+# ## example
+# Maaslin('tt_maaslin_genus_input_DEP.pcl','maaslin_gDEP_MZ_output',strInputConfig='DEP_MZ_maaslin.read.config',
+#         dSignificanceLevel=0.25,
+#         strRandomCovariates='mz_pair',
+#         strMultTestCorrection = "BH",         
+#         strForcedPredictors=c("dep","Age_Test","SEX"),
+#         strModelSelection="none")
+
+#redefine sprintf -> sprintf2
+
+# sprintf <- function(fmt, ...) 
+# { 
+#      MAX_NVAL <- 99L 
+#      args <- list(...) 
+#      if (length(args) <= MAX_NVAL) 
+#          return(sprintf(fmt, ...)) 
+#      stopifnot(length(fmt) == 1L) 
+#      not_a_spec_at <- gregexpr("%%", fmt, fixed=TRUE)[[1L]] 
+#      not_a_spec_at <- c(not_a_spec_at, not_a_spec_at + 1L) 
+#      spec_at <- setdiff(gregexpr("%", fmt, fixed=TRUE)[[1L]], not_a_spec_at) 
+#      nspec <- length(spec_at) 
+#      if (length(args) < nspec) 
+#          stop("too few arguments") 
+#      if (nspec <= MAX_NVAL) { 
+#          break_points <- integer(0) 
+#      } else { 
+#          break_points <- seq(MAX_NVAL + 1L, nspec, by=MAX_NVAL) 
+#      } 
+#      break_from <- c(1L, break_points) 
+#      break_to <- c(break_points - 1L, nspec) 
+#      fmt_break_at <- spec_at[break_points] 
+#      fmt_chunks <- substr(rep.int(fmt, length(fmt_break_at) + 1L), 
+#                           c(1L, fmt_break_at), 
+#                           c(fmt_break_at - 1L, nchar(fmt))) 
+#      ans_chunks <- mapply( 
+#          function(fmt_chunk, from, to) 
+#              do.call(sprintf, c(list(fmt_chunk), args[from:to])), 
+#          fmt_chunks, 
+#          break_from, 
+#          break_to 
+#      ) 
+#      paste(ans_chunks, collapse="") 
+# } 
+
+
+```
+
+
+##### MaAsLin2 :: Successor Chapter
+
+And the successor, [```MaAsLin2```](https://bitbucket.org/biobakery/maaslin2#markdown-header-installation). Uses ```metagenomeSeq``` (uh-oh). So far, gives nothing back.
+
+```{r maaslin2 , eval=FALSE}
+install.packages('devtools')
+source('https://bioconductor.org/biocLite.R')
+biocLite('edgeR')
+biocLite('metagenomeSeq')
+
+devtools::install_bitbucket("biobakery/maaslin2@default", ref="0.2")
+
+
+
+```
+
+The syntax for running M2 is a lot more simplistic - in particular, it uses two separate files for features and samples, and these can be supplied ot the workflow as dataframes. M2 knows to exclude samples in the feature table not inlcuded in feature table, and vice versa.
+
+```{r maaslin2}
+library('Maaslin2')
+
+feats <- data.frame(otu_table(PHYLO) , stringsAsFactors = FALSE )
+meta <- data.frame(sample_data(PHYLO) , stringsAsFactors = FALSE )
+
+# m2_PHYLO <- Maaslin2(input_data = feats, input_metadata = meta, output = '../output/maaslin2/m2_out', )
+
+```
+
+
+---
+
+#### MB-ZINB [link](https://github.com/jchen1981/MicrobiomeDDA) 
+
+[MB-ZINB](https://github.com/jchen1981/MicrobiomeDDA) or MicrobiomeDDA  omnibus test,  [Chen et al. 2016](https://academic.oup.com/bioinformatics/article/34/4/643/4470360).
+
+  * include all three parameters of a count distribution (Abun, Prev, and __Dispersion__)
+  * address outliers    (winsorisation or Cook's D)
+  * address library size (GMPR)
+  * address sparseness  (ZI)
+  * address count data distribution (NB)
+
+> see also [GMPR](https://github.com/jchen1981/GMPR/blob/master/GMPR.Example.R) to generate size factors
+
+Includes ```all three parameters — prevalence, abundance and dispersion, to identify associated microbial taxa``` and improve the senstivity of the test. A generalised framework for testing so should gel well with CoDa and GMPR. Apparently good control of Type 1 error. Attempts to deal with outliers. Also uses the three parameters to model structural/true 0 values, which are then filled in using a negative binomial distribution.
+
+[Use of _NB_](https://www.theanalysisfactor.com/regression-models-for-count-data/) (a specific instance of Poisson) appropriate over the use of _linear_ regression methods, as count data is not a continuous variable (non-negative integers only), and errors are both unlikely to be normally distributed (linear models) and variance and mean are unlikley to be equal (basic poisson). NB parameterises errors via a random term, whose variation can model that data variance introduced by the variance exceeding the mean (?).
+
+Winsorisation: clipping ( _not deletion!_ ) of extreme values at certain percentiles. Proposed as new method for dealing with extreme values which unnecessarily distort data.
+
+    * cij = reads for taxon J at sample I
+    
+    * cij modelled using a "point mass at zero" and NB 
+    
+    * " The ZINB model is completely specified by the prevalence, abundance and dispersion parameters: pij, μij and ϕij`, which characterize the probability of structural zeros (excess zero probability), and the mean and dispersion of the NB distribution, respectively."
+
+By allowing dispersion to vary, add another dimension with whihc to accoutn for the effects of different covariates. Gives example of DA between RheumArth groups where specific OTU is affected both by RA group and genotype: __Differential Distribution ANalysis__ as  accounts for all the factors informing count data.     
+    
+Some confusion as to which size factors estimate to use, and how to employ it - seems most likely route (replace RLE values with GMPR values) gives only 1 or 2 sig.diffs depending on specification. Excludes OTUs with prevalence ```<10%```. 
+
+      
+```{r mbzinb}
+library(mbzinb)
+library(GMPR)          # normalisation factors  -  oddly have to import GMPR
+
+# its a pairwise test >.<
+PHYLO_test <- subset_samples(PHYLO, Condition != 'POST')   # Description == 'PRE' | Description == 'POST_FED' )
+
+# easier to get out of phylo then into mbzimb in two steps
+count  <- as.matrix(as.data.frame(t(otu_table(PHYLO_test))))             # samples are COLUMNS, use as.d.f or else get X on colnames
+sample <- data.frame(sample_data(PHYLO_test), stringsAsFactors = FALSE)  # samples are ROWS
+taxon  <- data.frame(tax_table(PHYLO_test), stringsAsFactors = FALSE)    # taxa are COLUMNS
+
+# make mbzinb
+PHYLO_z <- mbzinb.dataset(count, sample, taxon)
+
+## size factors - calc (RLE) then replace
+PHYLO_z <- norm.factors(PHYLO_z)
+# GMPR
+count.gmprfactors <- GMPR(t(count))
+# count2 <- ((count) / count.gmprfactors)                              # samples are COLUMNS
+PHYLO_z$normFactors <- count.gmprfactors
+
+PHYLO_z <- filter.dataset(PHYLO_z,                    # errors here likely to be errors in construction
+                        min.prev = 0.05,
+                        min.reads = 50,               # reads per sample
+                        niter= 1 )
+PHYLO_zt <- mbzinb.test(PHYLO_z,
+                     'Condition',
+                      filter.if.unfiltered = TRUE, LRT = "omnibus", outlier.option = "winsor",
+                      upper.p = 0.97, cooks.cutoff = 1, use.zeroinfl = FALSE) # use.zeroinfl: alt method
+
+kable(head(mbzinb.results(PHYLO_zt)))
+
+# ==================
+
+## have a lük? 
+z <- mbzinb.results(PHYLO_zt, nreturn=360) # get all values
+z <- z[order(z$statistic, decreasing = TRUE) , ]
+
+par(mfrow=c(1,3)) # init 3 charts in 1 panel
+plot(z$statistic, ylab = 'Omnibus Stat' , xlab = 'ASV index', main= 'logFC : PRE v. POST')
+plot(log(z$PValue, base = 10), ylim = c(-3,0) , ylab = 'log10 raw p values    (i.e. -3 = 0.001)' , xlab = 'ASV index', main= 'log10 raw p values: PRE v. POST')
+plot(log(z$Padj, base = 10), ylim = c(-3,0) , ylab = 'log10 adj. p values    (i.e. -3 = 0.001)' , xlab = 'ASV index', main= 'log10 adjusted p values: PRE v. POST')
+
+
+
+```
+
+
+If worked through on collapsing clades, provides two families as different: _Clostridiales_ Family XI 2 and _Aerococcaceae_. Likely spurious, bizarre or irrelevant abundances.
+
+```{r mb_zinb_caldewise}
+# tax <- c( 'class' , 'order' , 'family' , 'genus')
+# sapply(tax, function(tx){
+
+  p <- tax_glom(PHYLO, taxrank = 'family')    # taxrank = tx
+  count.gmprfactors <- GMPR(data.frame(otu_table(PHYLO), stringsAsFactors = FALSE))
+
+  p_test <- subset_samples(p, Condition != 'PRE')   # Description == 'PRE' | Description == 'POST_FED' )
+  count  <- as.matrix(as.data.frame(t(otu_table(p_test))))             # samples are COLUMNS, use as.d.f or else get X on colnames
+  sample <- data.frame(sample_data(p_test), stringsAsFactors = FALSE)  # samples are ROWS
+  taxon  <- data.frame(tax_table(p_test), stringsAsFactors = FALSE)    # taxa are COLUMNS
+  
+  p_z <- mbzinb.dataset(count, sample, taxon)
+  
+  # p_z <- norm.factors(p_z)
+  p_z$normFactors <- count.gmprfactors[sample_names(p_test)]
+  
+  p_z <- filter.dataset(p_z,                    # errors here likely to be errors in construction
+                          min.prev = 0.05,
+                          min.reads = 50,
+                          niter= 1 )
+  p_zt <- mbzinb.test(p_z,
+                        'Condition',
+                        filter.if.unfiltered = TRUE, LRT = "omnibus", outlier.option = "winsor",
+                        upper.p = 0.97, use.zeroinfl = FALSE) # alt methods :  use.zeroinfl , cooks.cutoff = 1, 
+  # flab <- paste0(tx,'_PHYLO_comp.txt')
+  # write.table(mbzinb.results(p_zt,nreturn = 1000), flab,  sep = '\t')
+
+  
+## have a lük? ==================================================================#
+  z <- mbzinb.results(p_zt, nreturn=ntaxa(p)) # get all values
+  z <- z[order(z$statistic, decreasing = TRUE) , ]
+
+  kable(mbzinb.results(p_zt))  
+  par(mfrow=c(1,3)) # init 3 charts in 1 panel
+  plot(z$statistic, ylab = 'Omnibus Stat' , xlab = 'ASV index', main= 'logFC : PRE v. POST')
+  plot(z$PValue, log='y', ylab = 'raw p values' , xlab = 'ASV index', main= 'raw p values: PRE v. POST')
+  plot(z$Padj, log='y', ylab = 'adj. p values' , xlab = 'ASV index', main= 'adjusted p values: PRE v. POST')
+# })
+
+significant_grps <- mbzinb.results(p_zt, nreturn = ntaxa(p_test))$Padj < 0.05
+  
+kable(tax_table(PHYLO)[c('Seq_0000070' , 'Seq_0000081') , 1:6])
+t <- c('Family XI_2' , 'Aerococcaceae')
+t <- prune_taxa(tax_table(PHYLO)[,'family'] %in% t , PHYLO)
+plot_bar(t, fill = 'ASV') + facet_grid(family~Condition,scales = 'free_x') + theme(legend.position = 'none')
+
+```
+
+---
+
+#### ZIBR [link]](https://github.com/chvlyl/ZIBR)
+
+a.k.a :: Chen & Li' :'s Zero-Inflated Beta Regression w./ Random effects,  Referenced in Cheng's MB-ZINB (above).
+
+Already have a _Z test_ for modelling the presence or absence of 0's (Wagner 2011, Markle 2013) but only appropriate for pairwise comparisons, not longit. data. Also a _z-inf Poisson reg_ but can only handle counts (Romero, 2014). Also a _Linear Mixed Effects Model w. Arcsine sq.root_, but does not handle 0's (Kostic, La Rosa). Compare between datapoints to minimize the interdependence of longitudinal samples. Many confounding variables, so better to use multivariate methods to try incorporate these effects (where possible, e.g. antibiotics, age, gender etc.). 
+
+  [_"This motivates us to develop a flexible method that identifies the covariate-associated taxa while handling the features of the microbiome compositional data and jointly modeling data from all time point"_](http://bioinformatics.oxfordjournals.org/content/early/2016/05/14/bioinformatics.btw308.short?rss=1)
+  
+  * two part mixed effects Beta regression model
+  * model contains logistic (combination of categorical factors to a logit) and Beta (probability) regression components
+  * random effect are also included to allow correlation among repeated measures. 
+  
+##### from _How To Be a Quantitative Biologist_ :
+
+  __Beta dist.__ is a continuous 0-1 distribution with paramters ```alpha``` and ```beta```, useful in assigning probability densities in the range 0-1, where peaks in value represent higher likelihoods. __Beta extends to the Dirichlet distribution__ to allow situations where there are more than two possible outcome (each with their own H0 etc), so uses a vector of values to represent the probability of each. Takes a vector of as many parameters as there are outcomes. 
+  
+  * successes: Bernoulli , binomial
+  * ocurrences per space/time: Poisson
+  * waiting/distance: geometric, neg. binomial, exponential, gamma.
+
+
+
+
+
+---
+
+#### _DEICODE_[link](https://github.com/biocore/DEICODE) 
+
+Compositionally robust PCAs. Doesn't use pseudocounts; instead on non-zeroes, then dimensionality reduction on non-zeroes (matrix completion) 
+
+([Q2 tutorial here](https://library.qiime2.org/plugins/deicode/19/))
+
+Part of the Knightosphere, including ElDeveloper. A ```pip``` instance.
+
+```{py, eval=FALSE}
+# pip (only supported for Qiime >= 2018.8)
+pip install deicode
+
+   #  N O T   W O R K E D   T H R O U G H    Y E T
+
+
+```
+
+---
+
+
+#### _BAnOCC_ [link](https://bitbucket.org/biobakery/banocc)
+
+>    N O T   W O R K E D   T H R O U G H    Y E T
+
+__Compostiional Covariance__
+
+"A Bayesian method for detecting pairwise associations in compositional data". Bayesian compositional Covariance, MaAslin's Schwager and Huttenhower.  
+
+Other methods (e.g. SparCC, SPIEC-EASI) use a 'sparsity assumption' and _infer_ the quantities used for log-ratios, estimating a log-based covariance _or_ precision matrix, meaning the other approach must remain unknown. Use of a Bayesian approach (LASSO prior) allows correlation and precision matrices to be calculated. 
+
+LASSO is ' _least absolute shrinkage and selection operator_ ', enhancing _variable selection_ and regularisation. Optimises model fitting through selection of 'best' variables to fit. Alternative to stepwise model selection. Reduces regression coefficients of all variables, 0'ing some variables which can then be dropped, as well as reducing overfitting.  
+
+Possibly, back-fitting a LASSO from the sparse data, then reinflating? Probably still does not account for the structural zeroes problem.  
+
+"The LASSO-based methods [9–11] typically choose a shrinkage parameter and subsequently infer the log-basis covariance or precision matrix". 
+
+[See paper here](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005852&rev=2)
+
+[See BB tutorial here](https://bitbucket.org/biobakery/banocc)
+
+
+```{r banocc, eval=FALSE}
+# make an rstan model (already done?)
+rstan::stan_model(model_code=banocc::banocc_model)
+
+
+   #  N O T   W O R K E D   T H R O U G H    Y E T
+
+```
+
+
+
+---
+
+#### _propr_ [link](https://cran.r-project.org/web/packages/propr/vignettes/a_introduction.html)
+
+Paper [here](https://www.biorxiv.org/content/10.1101/104935v1) and in SciReports. 
+
+__Proportionality__ and association (over correlation) - a compositional replcaement for correlations (Rho, Pho, Bo)
+
+  * ```ρ~ρ~``` - ranges from [-1 to 1], analogous to a correlation - function ```perb```
+  * ```φ``` - with a modification (φ~s~), ranges from [0 to Inf], analogous to a dissimilarity (!) - function ```phit``` (and ```phis```.)
+
+CLR by default, but can "toogle" ALR calculated against a stable, _a priori_ known abundance which allows a more stable 'weighting' of dependence than with CLR. Zero-counts managed through +1 pseudocounts to all 0's " _for simplicity_ "(JECKENBERG: Scandalous), equivalent to multiplicative replacement. Uses C++ to perform the heavy stuff.  
+
+Subcompositional stability not mentioned in paper, but mentioned in the ```propr``` FAQ and throughout the support files: CLR is not compositionally coherent (removing data will change the ```gmean```), but the ALR (and ILR presumably as pairwise) would be. **SEE ALSO** use of the ```IQLR```, as introduced in ```ALDEx2```, which _ gets the CLR of the IQ values, and uses this as basis for ALR _, as this is the 'invariant' portion required for a stable basis. IQLR works until the IQ portion of the data becomes too large (above 25%). 
+
+##### ```propr vis```
+
+Really interesting. Package contains a number of ways to separate out different relationships in a hypothesis-free situation: 
+
+  * ```prism``` plot: graph of _var of LogRat_ versus _var of LogSums_ 
+    * important (differentially-abundant) and highly proportional features will have a low VLR and a high VLS, and should separate out when plotted via prism. 
+    * plots are further informed by ```h-clust``` of features by the dissimilarity ```(1 - abs(ρ~ρ~))``` (or ```φ```), and then cutting the dendro (choice?). Pairs in the same cluster are coloured in the prism chart. 
+
+
+```{r propr, eval=FALSE}
+
+library(propr)
+data(caneToad.counts)
+data(caneToad.groups)
+
+
+keep <- apply(caneToad.counts, 2, function(x) sum(x >= 10) >= 10)
+rho <- propr(caneToad.counts, metric = "rho", select = keep)        # HEAVY LOAD
+best <- rho[">", .995]
+
+
+plot(best)
+dendrogram(best)
+best <- simplify(best)
+pca(best, group = caneToad.groups)
+snapshot(best)
+clusts <- prism(best, k = 5)
+clusts <- bokeh(best, k = 5)
+clusts <- bucket(best, group = caneToad.groups, k = 5)
+
+
+sub <- subset(best, select = (clusts == 2))
+cyt <- cytescape(sub[">", .95])
+pca(sub, group = caneToad.groups)
+transcripts <- colnames(sub@logratio)
+
+
+```
+
+
+---
+
+#### _Chi^2^ test of independence_ 
+
+Between categorical variables. Handy to know, or start a ```stats_ledger```.
+
+---
+
+
+
+#### MetaGenomeSeq
+
+  * In case you ever doubt that this package _is_ indeed a POS, consult any of the following: the source paper, it's correction, it's issue tracker, it's release/news updates etc.
+  * Perturbing to see it written into ```MaAsLin2```. 
+  * Demonstrated to have a very high FDR in the MBZINB paper.
+  * Does normalisation (```cumNorm```) along different percentiles.
+  * fits each feature (ASV, gene etc) to a Zero-Inlf logN-model (no longer uses ZIGaussian) to address sparsity across data. 
+
+Example as per below ; instead, use the ```phyloseq_to_metagenomeseq``` fn()! Compare the recommended fn() ```fitFeatureModel``` with ```fitZig```, and with ```fitZig``` for 2+ contrasts. While ```fFM``` fails to detect any reliable difference, ```fZ``` gets _strong_ results - despite fact that ```fitZig``` appears to be clandestinely retired, with no method yet developed to supplant it. No ```fFM``` method for contrasts >2.
+
+```{r make_mgs_obj}
+
+## hardcore 
+
+# need to set a two-part AnnotatedDataFrame obj for pheno anad feature
+obj = newMRexperiment(counts = t(data.frame(otu_table(PHYLO))) ,      # samples as COLUMNS
+                      phenoData = AnnotatedDataFrame( data.frame(sample_data(PHYLO), stringsAsFactors = FALSE), data.frame(var = sample_variables(PHYLO), stringsAsFactors = FALSE) ) , 
+                      featureData = AnnotatedDataFrame( data.frame(tax_table(PHYLO), stringsAsFactors = FALSE), data.frame(tax = colnames(tax_table(PHYLO)), stringsAsFactors = FALSE ) )
+                      )
+
+```
+
+
+Possible that GMPR going to save the day, but unlikely.
+
+
+```{r metagenomeseq}
+
+## GMPR SIZE FACTORS : through geo-mean of *all* sampes: MGS needs subset.  
+# will need to REPLACE size factors with relevant GMPR values FOR EACH TEST
+otu <- data.frame(otu_table(PHYLO))   # samples as ROWS
+gmpr.size.factor <- GMPR(otu)
+
+
+## ===================
+
+# subset samples to allow 2-way testing with 'improved' method (fitFeatureModel)
+PHYLO_50 <- filter_taxa(physeq = PHYLO, prune = TRUE, function(x) sum(x) > 50)
+PHYLO_prepost <- subset_samples(PHYLO_50, Condition != 'POST')
+PHYLO_prepost <- prune_taxa(taxa_sums(PHYLO_prepost) > 0 , PHYLO_prepost)
+
+# fixed to account for stringsAsFactors
+source('~/Dropbox/SilentGeno/R/R_functions/PHYLOSEQ_phy_to_mgs_jfg.0.1.R')
+e_prepost <- phy_to_mgs(PHYLO_prepost)
+
+  ## GMPR 
+  # MGS : expSummary(e_mgs)$normFactors, but is S4 object so 
+  normFactors(e_prepost) <- gmpr.size.factor[names(gmpr.size.factor) %in% sample_names(PHYLO_prepost)]   # just the sampes being tested
+  ## not clear if it has any effect! / makes it to the testing stage unmolested
+
+# MRcoefs, MRtable and MRfulltable are useful summary tables of the model outputs.
+pd <- pData(e_prepost)    # sample data
+mod <- model.matrix(~ 1 + Condition, data = pd)   # ~1+state  : 1 is the intercept, useful but not necessary?
+e_prepost1 = fitFeatureModel(e_prepost, mod)
+head(MRcoefs(e_prepost1))
+MRcoefs(e_prepost1)
+
+## have a lk
+z <- MRcoefs(e_prepost1, number=2000) # get all values
+z <- z[order(z$adjPvalues) , ]
+
+par(mfrow=c(1,3)) # init 4 charts in 1 panel
+plot(z$logFC, ylab = 'log Fold-Change' , xlab = 'ASV index', main= 'logFC : PRE v. POST')
+plot(z$pvalues, ylim= c(0,1) , ylab = 'adjusted p values' , xlab = 'ASV index', main= 'raw p values: PRE v. POST')
+plot(z$adjPvalues, ylim= c(0,1) , ylab = 'adjusted p values' , xlab = 'ASV index', main= 'adjusted p values: PRE v. POST')
+
+
+# ## two+ way  -  'finds' LOADS of significant differences, but dubious
+# 
+# settings = zigControl(maxit = 1000, verbose = FALSE)
+# 
+# PHYLO_object <- e_mgs
+# 
+# mod = model.matrix(~pData(PHYLO_object)$Condition)
+# colnames(mod) = levels(pData(PHYLO_object)$Condition)
+# # fitting the ZIG model
+# res = fitZig(obj = PHYLO_object, mod = mod, control = settings)
+# # The output of fitZig contains a list of various useful items. hint: names(res). 
+# # Probably the most useful is the limma 'MLArrayLM' object called fit.
+# zigFit = res$fit
+# finalMod = res$fit$design
+# contrast.matrix = makeContrasts(PRE - POST, levels = finalMod)
+# fit2 = contrasts.fit(zigFit, contrast.matrix)
+# fit2 = eBayes(fit2)
+# topTable(fit2)
+
+## 
+
+```
+
+
+
+---
+
+
+
+## The Ghost in the Machine Learning 
+
+[This guide, part 1 (CVal) ](https://machinelearningmastery.com/k-fold-cross-validation/), [an unseen section on train-testing (part 3)]() [and 3 (model selection)](https://machinelearningmastery.com/train-final-machine-learning-model/) goes through the basics of CValidation, and lets be honest, this is not a simple thing (though SIAMCAT may make it so). 
+
+Models are selected based on total __performance__, a measure of the whole system (data processing, choice of algorithm, choice of K, language, reproducibiltiy, _reversibility_) and the model's __skill__ as a classifier/predictor. This can be highly intensive. Instead, __Resampling Methods__ are employed.
+
+#### Resampling: you could use train-test methods:
+
+Train and test on the same data, refining parameters after each iteration? (?)
+
+#### Resampling: you could use k-fold methods:
+
+K-fold Cross Validation often usurps direct (?) model building, instead giving a range of models to chose from which best fit _observed data_, providing statistics (mean, CI) on overall performance of models from the data. 
+
+
+  * K=fold valitation is folding/partitioning the data into ```K``` pieces (and __not__ 'K samples per piece'), then for each piece ```p``` of ```data```: model from ```(data-p)``` ; test on ```p```. 
+  * Choice of K is __a trade between bias__ (groups too large, model assumes too much) __and variance__ (groups too small, model flux too large between it's.)
+  * If ```K = nsamples```, this becomes leave-one-out validation. 
+  * ```K``` often defaults to 5 or 10, because people love decimal system and find these subgroups to trade bias:variance well. 
+  * ```K``` can also be chosen on the basis of providing realistic, _Representative_ folds, for a better accuracy.
+  * Considered best to have balanced quantities in your folds: have 65 samples here so will use ```k = 5```   
+  
+#### Considerations 
+
+But wait! There's more:   
+
+  * data should be preprocessed _within_ these iterations, to avoid so-called ```data leak```. Rethink SIAMCAT's prefiltering? Asserted that any external data (e.g. correlated features?) that could influence outcomes counts as data leakage. 
+  * once trained, __models are discarded__ (as they're built on an ephemeral subset), but their performance as classifiers are recorded. 
+  * These performances are then used to inform your model-building parameters - __you then build the model with these parameters on all the data__. 
+
+
+##### [SIAMCAT](https://bioconductor.org/packages/release/bioc/html/SIAMCAT.html)
+
+Cool DA testing and ML model evaluation. Need a bit more on ML, but lets try it. Presumbaly, isamcat stores all the preprocessing steps inside the siamcat object so it can repeat the steps when IT's time.
+
+[Importantly, vignette #2 also goes thorugh applying a developed model to a hold-out / validation dataset.](https://bioconductor.org/packages/release/bioc/vignettes/SIAMCAT/inst/doc/SIAMCAT_holdout.html)
+  
+
+
+```{r PHYLO_siamcat, eval = FALSE}
+
+## ============  QUICK START  ============ ##
+
+# library(SIAMCAT)
+## data in, in proportions
+# data("feat_crc_zeller", package="SIAMCAT")
+# data("meta_crc_zeller", package="SIAMCAT")
+feat_PHYLO <- t(otu_table(transform_sample_counts(PHYLO, function(x) x/sum(x) )))   # samples as COLUMNS 
+meta_PHYLO <- data.frame(sample_data(PHYLO) , stringsAsFactors = FALSE)
+
+# feat_PHYLO[1:3, 1:3]
+# dim(feat_PHYLO)
+# head(meta_PHYLO)
+
+label_PHYLO <- create.label(meta=meta_PHYLO,
+                                 label='Condition', case='POST')
+
+siamcat <- siamcat(feat=feat_PHYLO,
+                   label=label_PHYLO,
+                   meta=meta_PHYLO)
+# show(siamcat)
+
+siamcat <- filter.features(siamcat,
+                           filter.method = 'abundance',
+                           cutoff = 0.001)
+
+
+## ASSOCIATION TESTING                      # !!!  # no results found
+    # siamcat <- check.associations(
+    #   siamcat,
+    #   sort.by = 'fc',
+    #   alpha = 0.05,
+    #   mult.corr = "fdr",
+    #   detect.lim = 10 ^-6,
+    #   plot.type = "quantile.box",
+    #   panels = c("fc", "prevalence", "auroc"))
+
+
+## ====== MODEL BUILDING ============ # 
+
+# NORMALISE
+siamcat <- normalize.features(
+  siamcat,
+  norm.method = "log.unit",
+  norm.param = list(
+    log.n0 = 1e-06,
+    n.p = 2,
+    norm.margin = 1) )
+
+# CROSS-VALIDATE
+siamcat <-  create.data.split(
+  siamcat,
+  num.folds = 5,      # k folds: split data to this many partitions for CVal 
+  num.resample = 10   # iterations
+)
+
+# TRAIN
+siamcat <- train.model(
+  siamcat,
+  method = "lasso"
+)
+
+  # TRAIN                             # !!!
+  plan(multiprocess)
+  siamcat %<-% train.model(
+    siamcat,
+    method = "lasso"
+  )
+
+model_type(siamcat)
+
+models <- models(siamcat)
+models[[1]]
+
+# PREDICTIONS
+siamcat <- make.predictions(siamcat)
+pred_matrix <- pred_matrix(siamcat)
+head(pred_matrix)
+
+
+
+### ============ MODEL EVAL AND INTERP.  ============ ##
+siamcat <-  evaluate.predictions(siamcat)
+
+# EVALUATION PLOT
+model.evaluation.plot(siamcat)
+
+# INTERPRETATION PLOT
+model.interpretation.plot(
+  siamcat,
+  fn.plot = 'interpretation.pdf',
+  consens.thres = 0.5,
+#  norm.models = TRUE,
+  limits = c(-3, 3),
+  heatmap.type = 'zscore',
+  prompt = FALSE
+)
+
+
+```
+
+---
+
+---
+
+## Appendix
+
+#### Apply'cation of KW & Dunn tests across axes.
+
+only result is Post-Steroid and Pretreatment, on PCoA axis 7. Double check _what_ bc_df that was though! Probably UniFrac.
+
+
+```{r kw_test_all, eval = TRUE, results='hold'}
+
+library('FSA')
+
+# output for some of the axes, total is no more informative
+
+# summarise Axes
+lapply(grep(pattern = 'Axis', colnames(bc_df))[1:3], function(x){ 
+     Summarize(bc_df[,x] ~ Description, data = bc_df)
+})
+
+# test Axes...
+lapply(grep(pattern = 'Axis', colnames(bc_df))[1:10], function(x){ 
+     kruskal.test(bc_df[,x] ~ Description , data = bc_df)
+})
+
+# ...followed by Pairwise Wilcox Rank-Sum Test / Dunn test / Mann-Whitney U
+lapply(grep(pattern = 'Axis', colnames(bc_df))[1:10], function(x){ 
+    dunnTest(bc_df[,x] ~ Description , data = bc_df, method = 'bh')
+})
+
+```

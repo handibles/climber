@@ -1,0 +1,2256 @@
+---
+title: 'PHYLO :: Community Metrics'
+author: "jfg"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+      toc: TRUE
+  pdf_document: 
+      toc: TRUE
+---
+
+
+
+
+#### REMEMBER
+
+  * THINK about the problem you're working on -
+    - what are you looking for?
+    
+  * what is required to _solve_, not erradicate, that problem?
+  * what approaches are worth trying?
+  * what solutions are for another day?
+    
+And try to remember to _read back over what you've written already_.     
+
+#### ASK
+
+  * how do you separate noise fropm signal? Intelligent prevalence filtering
+  * Consider the other types of ordination. 
+    * DB-RDA is of interest in that it allows extrication from  a distance/dissim matrix
+    * PCA allows biplot of samples & species in helpful wayt (if singled out as via Rho).
+    * DCA over CA, and is the default in ```phyloseq```
+    * partialling in ```CCA``` & ```RDA``` allows removal of confounders
+  * Compositional ordination plot of samples and species, with clustering visualised for both parties (ellipse, colouring)
+  * How does rarefaction affect b-div? And how does compositionality affect this? Could you represent using a super/stepwise procrustes? gganimate?
+  
+
+---
+
+## Layout - from talking with Marcus
+
+  * present summary of steps taken, in good sensible order
+  * make sure your legend is highly intelligible, tidy
+  * compositionality: have a loaded blurb, include Gloor as reference. 
+
+
+## TODO
+
+  * preprocessing and cleaning
+    * neg-ctrl / decontam
+    * DADA2 parameters?
+    * quality...
+  * sig testing of axes
+  * sig diff in a div?
+  * See then this paper on the CoDa workflow: [Quinn et al, preprint 2018](https://www.biorxiv.org/content/biorxiv/early/2018/12/03/484766.full.pdf)
+
+
+## joey711's F1000 paper:
+
+  * rank transformations
+  * DPCoA
+  * CCspnA
+  * LMs
+  * Networks & graph-testing
+  * Random Forests   (data too small)
+
+  
+  
+---
+      
+      
+
+# Prepare PHYLO data
+
+  * 3 categories are emphasised by EJL: 'control', 'post-treatment', and 'pre-treatment'.
+  * Exclude samples 18PRE (DOA), 23POST and 23PRE from all analysis ; further retirements as warranted by testing. 
+  * Alpha Diversity: Present the gamut of values, as well as usabel values for each.
+  * Beta Diversity: requested PCoA (likely do DPCoA as implemented in phylosq) via BC (unsure) and/or UF.
+  * Ordination and conversion to __CoDa__ ```(CLR/ILR)``` is a priority.
+  * compare negative controls to 'real' samples
+
+## Steps Taken:
+
+  * used _rounded_ GMPR values
+  * filtered out samples <400 reads
+    * did _not_ filter samples that appear to "distort ordinations" (not clear which ordination this refers to, samples in question not outliers)  
+  
+----  
+  
+#### Data Preprocessing
+
+  * Negative controls included in data and should be described in a pre-processing section, alongside decontam etc..
+  
+---
+
+#### Prime
+
+```{r prepare_load, results='hold', collapse=TRUE, message=FALSE}
+
+## ecostats
+library('phyloseq')
+library('ade4')  # dudi.pco
+library('ape')
+library('cluster')     # pam
+library('clusterSim')
+library('vegan')
+library('GMPR')
+library('ggvegan')    # ggplot & CCA
+
+## clustering 
+library('ComplexHeatmap')
+library('circlize')
+library('WGCNA')
+library('dynamicTreeCut')
+# library('DECIPHER')   # eval = FALSE
+
+## CoDa
+library('ALDEx2')
+library('robCompositions')
+library('zCompositions')
+library('philr')
+library('propr')
+
+## visuals
+library('RColorBrewer')
+library('scales')
+library('ggplot2')
+library('igraph')
+library('knitr')
+library('reshape')    # melt
+library('ggpubr')
+library('cowplot')
+library('viridis')
+# library('readr')
+# library('plyr')
+
+# RMD opts
+theme_set(theme_classic())   #prob not gona hold like that
+knitr::opts_chunk$set(collapse=TRUE)
+knitr::opts_chunk$set(echo=TRUE)       # difference between echo and include?
+knitr::opts_chunk$set(error=FALSE)
+knitr::opts_chunk$set(eval=TRUE)
+knitr::opts_chunk$set(include=TRUE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(results='hold')
+knitr::opts_chunk$set(warning=FALSE)
+# knitr::opts_knit$set(root.dir = '..' )
+
+# source
+source('../../SilentGeno/R/R_functions/FN_crush_ranks_jfg.0.4.R')
+source('../../SilentGeno/R/R_functions/FN_shade_ranks_jfg.0.4.R')
+source('~/Dropbox/SilentGeno/R/R_functions/ggrare.R') # from # https://github.com/joey711/phyloseq/issues/143#issuecomment-329028119 - richness.R copied to local
+source("../../SilentGeno/R/R_functions/propr-functions_GGLOO.R")
+
+## get this fn (https://gist.github.com/Jfortin1/72ef064469d1703c6b30)
+    darken <- function(color, factor=1.4){
+        col <- col2rgb(color)
+        col <- col/factor
+        col <- rgb(t(col), maxColorValue=255)
+        col
+    }
+
+
+```
+
+---
+
+read the ready-made file in:
+
+```{r just_load_data, results='hold', eval=TRUE}
+## processed pre-fabricated version
+  # saveRDS(PHYLO_full, '../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS')   # fix Description (?)
+  PHYLO_full <- readRDS('../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS')
+
+```
+
+
+Next, choose some colours: in this case, _these_ colours, with boring colours for controls, in a named vector.
+
+``` {r data_in, results='hold'}
+
+# manage levels of plots
+sample_data(PHYLO_full)$Condition <- factor(sample_data(PHYLO_full)$Condition, levels=c('CONTROL', 'PRE', 'POST'))
+colnames(sample_data(PHYLO_full))[7] <- c('Treatment')
+sample_data(PHYLO_full)$Description <- as.character(sample_data(PHYLO_full)$Condition)
+sample_data(PHYLO_full)$Description[(sample_data(PHYLO_full)$Condition =='POST') ] <- paste0(
+                                                                  sample_data(PHYLO_full)$Condition[(sample_data(PHYLO_full)$Condition =='POST') ],
+                                                                  '_',
+                                                                  sample_data(PHYLO_full)$Treatment[ (sample_data(PHYLO_full)$Condition =='POST') ]
+                                                                  )
+sample_data(PHYLO_full)$Description <- gsub('\\dFED','FED',sample_data(PHYLO_full)$Description)
+sample_data(PHYLO_full)$Description <- factor(sample_data(PHYLO_full)$Description , levels = c("PRE",  "CONTROL", "POST_STEROIDS" , "POST_PPIs", "POST_FED"))
+
+# ===
+
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' , 'Neg_Co' = 'lavenderblush3' )
+
+e.treat <- brewer.pal(n = length(unique(sample_data(PHYLO_full)$Treatment)), name = 'Dark2')  
+names(e.treat) <- c("2FED" , "4FED" , "CONTROL" , "PPIs" , "STEROIDS")
+
+## awful!
+# e.desc <- brewer.pal(n = length(unique(sample_data(PHYLO_full)$Description)), name = 'Dark2')  
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","Neg_Co", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+# show_col(e.desc)
+
+```
+
+
+----
+
+### Phylogenetics Patch-Up
+
+#### Fixing Purified, Dechimera'd Tree
+
+When using tree (i.e. ```unifrac, phILR```), can get the following error if abundance table has been pruned after phylotree was constructed (e.g. by ```decontam```/similar):
+
+     ```data length [4825] is not a sub-multiple or multiple of the number of rows [2413]```
+
+[Github guidance here](github.com/joey711/phyloseq/issues/936). This shouldn't happen if ```decontam``` carried out prior to tree building, but not done this time it seems. 
+
+```{r re-root, eval=FALSE}
+## lack of root can sometimes be the problem, reroot     (not run)
+phy_tree(PHYLO_full) <- midpoint.root(phy_tree(PHYLO_full)) 
+any(is.na(phy_tree(PHYLO_full)))
+is.rooted(phy_tree(PHYLO_full))
+
+```
+
+#### Make a New Tree from ASV sequences
+
+If re-rooting the tree is no joy, can try recomputing the phylo-tree. Could be the solution of choice, especially if you've gone pruning or subsetting the ASVs that displease you. _Note_: ```jfg``` hasn't a fucking clue what's happening here and needs to spend a day reading up on methodology.
+
+  * GTR is the nucelotide (substitution?) model being used (as opposed to Jukes-Cantor, symmetric or F81) or alternative models for Amino Acids or codons: (...)
+  * ...
+
+``` {r phytools_reroot, include=TRUE, eval=FALSE, message=FALSE}
+library('phangorn')
+library('phytools')
+library('DECIPHER')
+
+  ## DECIPHER  -  get seqs from tax_table instead of from SeqTab
+    seqs <- unlist(lapply(tax_table(PHYLO_full)[,8] , as.character))
+    names(seqs) <- taxa_names(PHYLO_full) # propagate IDs to tips or can't remerge later
+    alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA, processors = 10)
+    
+  ## Phangorn  -  better done in DECIPHER?
+    print('Phangorn: - Using Max-Likelihood, JC69 and then GTR substitution models, Neighbour-Joining, GTR .. read up Jamie!')
+    phang.align <- phyDat(as(alignment, "matrix"), type="DNA")
+    dm <- dist.ml(phang.align)
+    treeNJ <- NJ(dm) # Note, tip order != sequence order
+    fit = pml(treeNJ, data=phang.align)
+    fitGTR <- update(fit, k=4, inv=0.2)
+    fitGTR <- optim.pml(fitGTR,                             ##     < ! >  >40min with 2k ASV!
+                        model="GTR",                        ##            >10min with 1k ASV!
+                        optInv=TRUE,
+                        optGamma=TRUE,
+                        rearrangement = "stochastic",
+                        control = pml.control(trace = 0)
+                        )
+
+saveRDS(fitGTR, '../output/7_phyout/PHYLO_run1_phango_uc_pur.RDS')
+saveRDS(fitGTR$tree, '../output/7_phyout/PHYLO_run1_phango_uc_pur_tree.RDS')
+# pur_tree <- readRDS('../output/7_phyout/PHYLO_run1_phango_uc_pur_tree.RDS')
+
+phy_tree(PHYLO_full) <- midpoint.root(fitGTR$tree) 
+
+saveRDS(PHYLO_full, '../output/7_phyout/PHYLO_uc_purMAN_full.RDS')  # avoid o/r original
+# PHYLO_full <- readRDS('../output/7_phyout/PHYLO_uc_purMAN_full.RDS')
+
+```
+
+#### Load the Data Directly
+
+Just to be clear, now using phylo object with phy-tree computer through ```DECIPHER```.
+```{r read_in_phytree_phylo_object, eval=TRUE}
+PHYLO_full <- readRDS('../output/7_phyout/PHYLO_uc_purMAN_full.RDS')
+
+```
+
+
+### Check the Data
+
+```{r check_data, eval = TRUE, echo=TRUE}
+PHYLO_full
+
+kable( data.frame(sample_data(PHYLO_full)) )
+
+```
+
+---
+
+
+# Analysing PHYLO Data
+
+### Diversity: Richness Plots & Rarefaction Curves
+
+With the diversity measures provided through phyloseq (vegan?): ```c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")```. Note in Shannon and Simpson two ```POST``` samples stand out as having anomalously low diversity. Likely low read, could consider removing as diversity visibly distorted (18Post, 30Post?)? __Can this be tested?__
+
+Additionally, produce rarefaction curves, a handy visual aid for determining coverage.  __Improve__: Rarefaction of alpha diversity measures, a la ```phyloseq-tools``` implementation.
+
+#### On Sampling versus Sequencing Depth
+
+PCA of the unfiltered ASV table shows that samples ```1PRE, 17POST, 32C and 39C``` carry a much higher proportion of variance in the dataset, and condense all other samples to the origin. k/A filtering removes this effect, suggesting these are by-and-large the result of low abundance / transient ASVs. However, consulting the rarefaction curves shows that most samples level out in their  
+
+```{r plot_richness, echo=FALSE, results='hide', warning=FALSE}
+  
+PHYLO_rich <- cbind( SeqDepth = sample_data(PHYLO_full)$SeqDepth, Condition = sample_data(PHYLO_full)$Condition , estimate_richness(PHYLO_full) ) 
+rownames(PHYLO_rich) <- gsub('X' , '' , rownames(PHYLO_rich))    # clean those names
+#write.table(PHYLO_rich, '../output/7_physeq_out/PHYLO_richness_est.txt', sep = '\t')
+
+
+## SEQDEPTHs
+
+# plot
+p.depth <- ggplot(PHYLO_rich, aes(y=SeqDepth, x=rownames(PHYLO_rich))) +
+              geom_point(size=1, aes(colour = Condition)) + 
+              scale_color_manual(values =  e.desc) +
+              facet_grid(facets = ~Condition, scales = 'free') +
+              theme(panel.background = element_rect(fill = NA),
+                panel.grid.major = element_line(colour = "grey80", size = 0.2),
+                panel.ontop = FALSE,  
+                axis.text.x=element_text(angle=90)) +    # ROTATE ION SHIELDS
+              ylab('SeqDepth') +
+              xlab('Samples')
+
+# rarefy seqdepth, i.e. SeqDepth v. Observed
+  #make sure all samples are >1
+p.rare <- ggrare(PHYLO_full, step = 1000, color = "SeqDepth", label = 'ID_Sample', se = TRUE, plot = FALSE) + facet_grid(~Description) + theme_classic() + theme(axis.text.x=element_text(angle=90))
+
+ggarrange(p.depth, p.rare, 
+          ncol = 2, nrow = 1,  align = "hv",
+          widths = c(1, 1), heights = c(1, 1),
+          common.legend = FALSE,
+          legend='bottom')  #labels = 'Alpha Diversity Measures') , 
+
+
+
+
+# MEAS MOR AMACH GO DTI AN LAPPLY MASSSSSSSSSSIVVE
+meas <- c("Observed", "Chao1", "ACE", "Shannon",  "InvSimpson")  #, "Fisher","Simpson",
+
+## DEPTH V. INDEX
+p.seq_riches <-lapply(meas, function(x) {
+  save <- FALSE   # switch here if required
+  p <- ggplot(PHYLO_rich, aes( x=SeqDepth, y=PHYLO_rich[ , x])) + #, color='Condition' , title = x
+    geom_smooth(method = 'lm', color = 'grey20', size=0.1, fill = 'lightskyblue') + # method = lm
+    geom_point(size=1, aes(colour = Condition)) + 
+    scale_color_manual(values =  e.desc) +
+    facet_grid(facets = ~Condition, scales = 'free') +
+    theme(panel.background = element_rect(fill = NA),
+      panel.grid.major = element_line(colour = "grey80", size = 0.2),
+      panel.ontop = FALSE,  
+      axis.text.x=element_text(angle=90) ) +
+    xlab('SeqDepth') +
+    ylab(x)
+  return(p)
+  if(save){ ggsave(filename = paste0(x,'_adiv_plot.png'), device='png', plot=p)}
+  } )
+
+ggarrange(p.seq_riches[[1]], p.seq_riches[[2]], p.seq_riches[[3]], p.seq_riches[[4]], p.seq_riches[[5]], # p.seq_riches[[6]] , 
+          ncol = 3, nrow = 2,  align = "hv",
+          widths = c(1, 1, 1), heights = c(1, 1, 1),
+          common.legend = TRUE,
+          legend='bottom')  #labels = 'Alpha Diversity Measures') , 
+
+
+
+# ## PLOT RICHNESS
+# p.list <-lapply(meas, function(x) {
+#   save <- FALSE   # switch here if required
+#   p <- plot_richness(PHYLO_full, measures = x, color='Condition', title = x) +
+#     # geom_smooth(method = 'lm', color = 'grey20', size=0.1, fill = 'lightskyblue')     # meaningless as arranged by sample!
+#     scale_color_manual(values =  e.desc) +
+#     facet_grid(facets = ~Condition, scales = 'free') +
+#     theme(panel.background = element_rect(fill = NA),
+#       panel.grid.major = element_line(colour = "grey80", size = 0.2),
+#       panel.ontop = FALSE ) +
+#     ylab(x)
+#   return(p)
+#   if(save){ ggsave(filename = paste0(x,'_adiv_plot.png'), device='png', plot=p)}
+#   } )
+# 
+# ggarrange(p.list[[1]], p.list[[2]], p.list[[3]], p.list[[4]], p.list[[5]], # p.list[[6]] , 
+#           ncol = 3, nrow = 2,  align = "hv",
+#           widths = c(1, 1, 1), heights = c(1, 1, 1),
+#           common.legend = TRUE,
+#           legend='bottom')  #labels = 'Alpha Diversity Measures') , 
+# 
+
+```
+
+---
+
+
+### GMPR Normalisation of Read Abundances
+
+Many methods out there (via DESeq2, ALDEx2, metagenomeSeq, GMPR). All consider themselves hot shit, and have supplanted more traditional ecological methods through techniques leveraging Bayesianism, Monte-Carlo sampling, Dirichlet, Negative-Binomial, Gaussian etc. distributions, Geometric means, and friends for bamboozlement. 
+
+GMPR nodifies the size-factor estimation steps of several different techniques (e.g. DESeq2, MGS, edgeR). Rather than taking the geo-mean of a common OTU (?), or geo-mean of all non-zero features per sample (edgeR, DESeq2), or picking one 'reference' sample (MGS), bases size factors on pairwise comparisons before geo-mean calculations, maximising amount of info incorportated and minimising 0-counts (as less likely among pairwise comparisons, after discarding double-zeros) providing possibly more robust estimates and therefore more accurately normalised counts. Not AFAIK compatible with CLR, but as uses GMean takes compositionality partially into account. CLR should take it out of the realm of being a huge effect 
+
+[jchen points out](https://github.com/jchen1981/GMPR/issues/2#issuecomment-379298749):
+
+> GMPR-normalized data are most useful for taxon-level analysis. _It may not have an advantage for alpha and beta-diversity analysis_.
+
+So don't act so surprised below when it gives identical PCoA results. Needs to be combined with a transforming/testing approach - not an independent approach. 
+
+[Additionally (see line 6)](https://github.com/jchen1981/GMPR/blob/master/GMPR.R): 
+
+ > The size factors can be used as offsets in count-based regression models or as __divisors to produce normalized data__
+
+__Rounded the GMPR results to return to being count/integer values__
+
+
+```{r gmpr_norm, eval=TRUE}
+
+# orientation of OTU table matters - want samples as COLUMNS
+PHYLO_otu <- t(data.frame(otu_table(PHYLO_full), stringsAsFactors = TRUE) )
+
+PHYLO_gmpr.sf <- GMPR(t(PHYLO_otu))
+PHYLO_otu_gmpr <- t(t(PHYLO_otu) / PHYLO_gmpr.sf)   # double t(t/) : reorient for div, then restore
+
+# plot
+par(mfrow = c(1, 3))
+
+dist.mat1 <- vegdist(t(PHYLO_otu))
+PCs1 <- cmdscale(dist.mat1, k=2)
+plot(PCs1[, 1], PCs1[, 2], col=factor(sample_data(PHYLO_full)$Description), main = 'raw MDS/PCoA')
+
+dist.mat2 <- vegdist(t(PHYLO_otu_gmpr))
+PCs2 <- cmdscale(dist.mat2, k=2)
+plot(PCs2[, 1], PCs2[, 2], col=factor(sample_data(PHYLO_full)$Description), main = 'GMPR norm`d MDS/PCoA')
+
+# not sure if this is sensible
+PHYLO_otu_ra <- apply(PHYLO_otu, 2, function(x) (x/sum(x))*100 )     #  trasnaform
+PHYLO_gmpr_ra <- apply(PHYLO_otu_gmpr, 2, function(x) (x/sum(x))*100 )     #  TRASNAFORM!
+plot(PHYLO_otu_ra, PHYLO_gmpr_ra, main='GMPR% == raw%, proportions preserved')
+
+
+## R O U N D   A N D   I N C O R P O R A T E
+PHYLO_otu_gmpr <- round(PHYLO_otu_gmpr)
+## move transformed values to phylo-object
+
+PHYLO_gmpr <- PHYLO_full
+otu_table(PHYLO_gmpr) <- otu_table(t(PHYLO_otu_gmpr), taxa_are_rows = FALSE)
+
+## <  ! ! ! !  >
+# original object REPLACED by transformed version
+PHYLO_full <- PHYLO_gmpr
+
+
+
+```
+
+
+
+----
+
+### Grouping, Sorting and Colouring
+
+Help summarise for plotting purposes. Uses the homebrew functions ```crush_ranks``` and ```shade_ranks```. These still require work as it should not scare you to think about them.
+ Of particular interest:
+
+  * ```grouping``` together taxa that are too varied to plot in an informative way
+  * ```ordering``` taxa in a way that is intuitive rather than e.g. default alphanumerical
+  * intelligent ```colouring``` & ```shaping``` of points of interest - should be able to easily distinguish higher orders through presentation
+
+  * Samples with fewer than 400 reads are removed (samples 18PRE, 23 PRE & POST), leaving 65 samples.
+
+Prevalence filtering (below) before using ```crush_ranks``` should be unnecessary as have a ```misc.``` bin for low-prevalence ASVs.
+
+```
+
+  * To reduce sparseness (high frequency of 0 in abundance tables), samples / taxa are filtered by prevalence (number of samples present) and abundance (number of reads) to remove the least informative (most sparse) ASVs.
+  * ASVs must have an abundance >5% in at least 5% of samples.
+
+```
+
+```{r crush_shade}
+
+  # from progrep2_v3
+
+  ## ==========  SUBSETS, TRANSFORMS ================= ##
+
+  # decided cutoff with collaborator                                ~~(2419 taxa)~~  (1014 taxa!)
+  PHYLO <- subset_samples(PHYLO_gmpr, sample_sums(PHYLO_gmpr) >= 750)  # PHYLO_bup <- PHYLO
+  
+  # arbiter: at least 5 reads in at least 5% of samples             ~~(394 taxa)~~  (242 taxa!)
+  prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=5), A=0.05*nsamples(PHYLO))
+  PHYLO_5 = prune_taxa(prunA, PHYLO)
+  PHYLO_5
+  PHYLO_ra <- transform_sample_counts(PHYLO, function(x) ( x/sum(x) ) *100 )
+
+  
+  ## ============   CRUSH AND FORMAT   ===========#  
+  
+  # double check the ranks you want to plot
+  prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.1*nsamples(PHYLO))  # same as PHYLO_5?
+  plot_rank <- 'genus'
+  facet_rank <- 'phylum'
+  moniker = 'misc.'
+  NA_sub <- 'unknown'
+  
+  ## CRUSH  -  double crush, by abundance and by logical (pruneA)
+  PHYLO_crush <- crush_ranks(phylo = PHYLO_ra, moniker = moniker, thresh=0.20, rank = facet_rank)
+  PHYLO_crush <- crush_ranks(phylo = PHYLO_crush, moniker = moniker, hitlist = !prunA, rank = plot_rank, NA_sub = NA_sub)
+  
+  
+  ## ============   SHADE AND COLOUR   ===========#  
+  e.col <- shade_ranks(phylo = PHYLO_crush,
+                        colour_by = facet_rank,
+                        shade_by = plot_rank,
+                        moniker = moniker, 
+                        NA_sub = NA_sub,
+                        plot_masters = FALSE,
+                        colour_and_shade = TRUE  )
+  
+  # separate colours/shades   (would a 2-element list be better?)
+  e.col2 <- e.col[ 1:(match( NA_sub, names(e.col) )) ]
+  e.col3 <- e.col[(match( NA_sub, names(e.col) ) + 1 ):(length(e.col)) ]
+  
+    
+
+  ##====  CRUCIAL FORMAT FOR DATA ORDER  ===========
+  z.rm5 <- psmelt(PHYLO_crush)
+    ## < !!! > slight improvement: colours separated so no need to call by index
+    z.rm5[ , plot_rank] <- factor( z.rm5[ , plot_rank], levels = names(rev(e.col2)))      # or ::  x <- within(x , x[,y] <- factor(x[,y] , levels = z ) )
+
+  # ## if have a desired non-canonical sample ordering:   
+  # z.rm5$hclust_order <- factor(z.rm5$hclust_order, levels  = labels(e_clust1) )
+  
+
+```
+
+
+```{r demo_data_colours,  eval=FALSE}
+
+# observe data heading in
+kable(data.frame(sample_data(PHYLO)), caption='Sample Data')
+
+show_col(e.col2)
+# show_col(clr_phy2)
+
+```
+
+---
+
+### Abundances - barcharts
+
+Force order of plotting (phylum, then e.g. family) by setting order of factor levels using ```data$data <- factor(data$data, level=ordered_obj)```, and then force colouration through (consistent) use of named colour vectors.
+
+  * kill z.rm4 early to save power, time etc...
+  * then glom to plot_taxa level
+
+
+
+```{r barplot}
+
+relab <- ggplot(z.rm5, aes(x=ID_Sample,y=Abundance, fill = genus)) +
+          facet_grid(phylum~Description, scales='free', space='free') +                                  # scale/size control
+          geom_bar(aes(fill = genus, color = NULL ), stat ="identity", position="stack", width=1 ) +      #, color='black'
+          theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+          theme(strip.text.x = element_text(size = 10, angle = 90), strip.text.y = element_text(size = 9)) +    # bigger
+          theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  # rotate
+          scale_fill_manual(values = e.col2, na.value='grey')  +         # the shape-filling colours
+          scale_color_manual(values = e.col2, na.value='grey')  +        # are same as the outline colours
+          theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +   #, strip.text.x = element_text(size = 12, colour = "red", angle = 90)
+          guides(fill = guide_legend(ncol = 2)) +
+          theme(legend.position = 'right', legend.box = "vertical")
+
+relab
+
+# theme(plot.margin = margin(t = -1, r = -1, b = -1, l = -1)) +
+# theme_transparent() +  # this bit interferes with the legend pos +
+#, aspect.ratio = 2:1) #) 
+    
+```
+
+
+----
+
+### Abundances - Clustering & Heatmap 
+
+See the ```PHYLO_ledger_heatmap-cluster.rmd``` for beating around the bush. Not scary. As per instructions, choices made for us:
+
+  * BC distance matrix of samples
+  * clustered using ```hclust``` and ```ward.D``` / ```ward.D2``` clustering
+  * ```dynamicHybrid``` from ```dynamicTreeCut``` - experiment with settings (e.g. ```deepSplit``` etc)
+  * ```ComplexHeatmap``` plot of Z-Scores
+  
+```{r dtc_PHYLO, results='hold', eval=TRUE, warnings=FALSE, messages=FALSE }
+##    - vegdist :: samples are ROWS
+##    - scale :: samples are COLUMNS
+##    - BC needs RA DATA
+
+## subset taxa for clustering
+  prunA <- genefilter_sample(PHYLO, filterfun_sample(function(x) x >=100), A=0.05*nsamples(PHYLO)) # same as crush2
+  PHYLO_h<- prune_taxa(prunA, PHYLO)
+
+  # name taxa by phylum for colouring
+  tax_df <- t(data.frame(tax_table(PHYLO_h), stringsAsFactors = FALSE)) # transp to rename COLUMNS
+  colnames(tax_df) <- tax_table(PHYLO_h)[,2]    # make phylum the colnames
+  
+## BC clust
+ # BC uses RA values
+  PHYLO_h<- transform_sample_counts(PHYLO_h, function(x) x/sum(x))
+  e_df <- data.frame(otu_table(PHYLO_h), stringsAsFactors = FALSE)    # rownames(e_df)[1:4]   # samples are ROWS
+  e_df <- e_df[ , colSums(e_df) > 0]
+  e_bc <- vegdist( e_df, method='bray')        # vegdist - samples are ROWS
+  e_clust1 <- hclust( e_bc, method="ward.D")   # dist.mat is symmetrical, no row/col bias
+  e_bc_mat <- as.matrix(e_bc)
+
+## DTC cluster definition
+  labels = cutreeDynamic(e_clust1,               # dendro
+                         distM = e_bc_mat,      # distM, required for DynamicHybrid
+                         method='hybrid', 
+                         maxCoreScatter = NULL,
+                         minGap = NULL,
+                         minClusterSize = 10,   # def = 20
+                         pamStage = TRUE,
+                         pamRespectsDendro = TRUE,
+                         useMedoids = TRUE,
+                         deepSplit = 3, verbose = FALSE)
+  # plotDendroAndColors(e_clust, labels, main = 'BC/Ward-L on Samples')
+
+
+# ==============
+
+## spearman correlation of taxa
+sp_cor <- cor(e_df, method='spearman')    # relate abundances by correlation 
+e_taxspcor <- as.dist(1 - sp_cor)         # correlation is a similarity, you want a distance
+e_taxclust1 <- hclust(e_taxspcor, method ="ward.D")
+e_taxspcor_mat1 <- as.matrix(e_taxspcor)
+## DTC cluster definition
+labels_tax = cutreeDynamic(e_taxclust1,               # dendro
+                       distM = e_taxspcor_mat1,      # distM, required for DynamicHybrid
+                       method='hybrid',
+                       maxCoreScatter = NULL,
+                       minGap = NULL,
+                       minClusterSize = 10,   # def = 20
+                       pamStage = TRUE,
+                       pamRespectsDendro = TRUE,
+                       useMedoids = TRUE,
+                       deepSplit = 3)
+  # plotDendroAndColors(e_taxclust1 , labels_tax, main = 'BC/Ward-L on Samples')
+
+
+## Z-SCORE
+    e_df2 <- data.frame(otu_table(PHYLO_h), stringsAsFactors = FALSE)
+    colnames(e_df2) <- tax_table(PHYLO_h)[,6]    # genera as row names
+    e_df2 <- e_df2[ , colSums(e_df2) > 0]
+    
+  # COLUMNwise scaling of samples (illustrate recurring abundnace patterns WITHIN samples OF taxa)
+  e_z <- scale(t(e_df2))  
+  # dim(e_z) # rownames(e_df2)
+
+  
+
+# ====================
+# =====  jfg  fn   ===
+# ====================
+
+  
+      ## ============  duplicated from barcharts parts  ===========#  
+      plot_rank <- 'genus'
+      facet_rank <- 'phylum'
+      moniker = 'misc.'
+      NA_sub <- 'unknown'
+      PHYLO_ra <- transform_sample_counts(PHYLO, function(x) ( x/sum(x) ) *100 )
+      prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.1*nsamples(PHYLO))  # same as PHYLO_f
+      
+      ## CRUSH  -  double crush, by abundance and by logical (pruneA)
+      PHYLO_crush1 <- crush_ranks(phylo = PHYLO_ra, moniker = moniker, thresh=0.20, rank = facet_rank)
+      PHYLO_crush2 <- crush_ranks(phylo = PHYLO_crush1, moniker = moniker, hitlist = !prunA, rank = plot_rank, NA_sub = NA_sub)
+      
+      ## COLOUR  by condensed taxa
+      e.col <- shade_ranks(phylo = PHYLO_crush2,
+                            colour_by = facet_rank,
+                            shade_by = plot_rank,
+                            moniker = moniker, 
+                            NA_sub = NA_sub,
+                            plot_masters = FALSE,
+                            colour_and_shade = TRUE  )
+      
+      # separate colours/shades   (would a 2-element list be better?)
+      e.col2 <- e.col[ 1:(match( NA_sub, names(e.col) )) ]
+      e.col3 <- e.col[(match( NA_sub, names(e.col) ) + 1 ):(length(e.col)) ]
+      
+      
+## ============  ==================  ===========#  
+## ============  ==================  ===========#  
+## ============  ==================  ===========#  
+      
+      
+# use the phylum part of e.col2 in the heatmap row annotation
+
+      
+        
+### Heatmap
+  
+## col annotate
+  clust_cols <- brewer.pal(length(unique(labels)), 'Set1')[1:length(unique(labels))]    # catch cases where palette bigger than cluster
+  names(clust_cols) <- as.character(c(1:(length(unique(labels)))))
+  annot <- HeatmapAnnotation( samples_cluster = labels,
+                              # condition = sample_data(PHYLO_h)$Condition,
+                              description = sample_data(PHYLO_h)$Description,
+                              col=list( samples_cluster = clust_cols, description = e.desc) ,  #condition = e.col,
+                              annotation_height = 0.1 )
+
+## row annotate  
+  # tax_clust_cols <-  brewer.pal(length(unique(labels_tax)), name = 'Dark2')    # 8 cluster limit
+  tax_clust_cols <-  hue_pal( l = 65, c = 250 )(length(unique(labels_tax)))    # 8 cluster limit
+  names(tax_clust_cols) <- as.character( 1:length(tax_clust_cols) )
+  # taxon_cols <- hue_pal( l = 65, c = 250 )(length(get_taxa_unique(PHYLO_h, taxonomic.rank = 'phylum')))   # colnames(e_df2)
+  # grab colours from subset above
+  taxon_cols <- e.col3   # show_col(taxon_cols)
+  names(taxon_cols) <- as.vector( abbreviate( get_taxa_unique(PHYLO_h, taxonomic.rank = 'phylum'), minlength=10, strict=TRUE) )
+  names(taxon_cols)[ is.na(names(taxon_cols)) ] <- 'NA'
+  taxon <- as.vector( abbreviate(tax_table(PHYLO_h)[,'phylum'] , minlength=10, strict=TRUE) )
+  b_annot <- HeatmapAnnotation( 
+                            SprW_cluster = labels_tax,
+                            Phylum = taxon,
+                            col=list(  Phylum = taxon_cols, SprW_cluster = tax_clust_cols), # 
+                            which='row')# ,
+                            # annotation_width = unit(10, "mm") ,
+                            # annotation_height = unit(10, "mm") )
+
+## colours  
+  col = viridis(length(round(min(e_z)):round(max(e_z))), option = 'B')
+  col_this = colorRamp2( round(min(e_z)):round(max(e_z)) , col)
+
+
+## heatmap
+# grob_heat = grid.grabExpr(draw(Heatmap(...))) 
+  Heatmap(e_z, 
+                                          col = col_this,
+                                          name = 'z-score',
+                                          cluster_rows = e_taxclust1,
+                                          cluster_columns = e_clust1,
+                                          top_annotation = annot,
+                                          show_row_names = TRUE,
+                                          row_names_gp = gpar(fontsize = 6),
+                                          left_annotation = b_annot,    # problematic one if annotation components wrong length / all same
+                                          column_names_gp = gpar(fontsize = 7) 
+                                          ) 
+
+```
+
+
+---
+
+### Ordination
+
+  Captures patterns in sample-sample comparisons (i.e. distances, ```Bray-Curtis``` in this case), returning the trends most often as axes in an ordination. Although the largest axes contain the greatest variety, lower axes can represent weaker trends in community dissimilarity that are more relevant to the study. 
+
+  It can be useful to examine the most informative axes, in this case through boxplots. Separation between coloured boxes (representing the inter-quartile ranges) suggests differences between groups, and can be examined in a 2-axes ordination. However keep in mind that the smaller an axes is the less variance in the data it represents, and effects can rapidly lose relevance, even if they test as "significantly different". 
+
+From checking sequencing depth, most interested in looking for clustering of points by depth, i.e. _how distorted are the low-coverage samples?_  Of at least equivalent interest is UNIFRAC distance between samples, especially as strain-level ID comes to the fore.  
+
+[Jari Oksanen's __```Vegantutor.pdf```__ (esp section 2.4 Eigenvector methods)](http://cc.oulu.fi/~jarioksa/opetus/metodi/vegantutor.pdf) is a brilliant (if subjective, and conflicting) account of ordination and methods to use. 
+
+  * PCoA = MDS
+  * PCoA[euclid dist] == PCA
+  * DCA > PCA (more robust), but also states that DCA (or the school that favours it) is 'a fragile and vague back (sic) of tricks that is better avoided'. So. Wtf?
+  * PCA & DCA: euclidean ; CA: chi^2 ; 
+  
+  
+However, in ordination methods, intertia is often variance, or can be correlation. We have accpeted that correlation is not an acceptable presentation of relationships, and have tried to implement Aitchison geometry. As CoDa should capture some of the essential true relation of the data, possibly a better method to performing PCA/PCoA/etc. In any case, use with CoDa should ensure that the variance or correlations being used are of the right form?.. 
+
+
+#### Ordinations in Phyloseq 
+
+Note also that ```phyloseq``` ordinations are largely wrappers to get phylo-data to the real sweatshops (```ape```, ```vegan``` etc.). As such, the objects generated are the same as those usually generated, and can be spliced like e.g. the PCoA object you're used to working with. ```Phyloseq``` compatible with a range of methods, C/CA, DCA, RDA, PCoA-BD, PCoA-UF, NMDS, DPCoA. 
+
+##### Boxplots
+
+Can be relatively easily found and subset for ```PCoA``` and ```PCA```. For ```CCA/RDA```, axial values are stored in different areas of different objects: ```object$CA$u``` and ```object$CCA$u```. Partialled-out terms in ```object$pCCA$u```. Same methodology for CCA and RDA.  
+
+---
+
+#### PCA 
+
+The new interest. Again, from the Ordination Homepage and M. Palmer, in PCA, the arrows' directions represent increasing species abundances. 
+
+From [analyze-it](https://analyse-it.com/docs/user-guide/multivariate/biplot), the relationship between the arrow tip/direction and the sample point is "the inner product between variables and observations".
+
+And from other approaches (incl. but not limited to ord.homepage and Ryan et al): the suggestion of including the Beta-div alongside the species features decomposed through PCA. It is, after all, simply another value to be measured. __Would require z-scaling__ so variables are all within a similar range. 
+
+
+##### _PCA_ and scaling
+
+The ```scale``` option in ```prcomp()``` (or related methods) standardises data supplied to PCA (PCoA? RDA? CCA?...). According to M/ PALMER, not appropriate for ecological data.
+
+PCA as a method attempts to maximise variance in the data set into a minimal number of dimensions. In order for these minimal PCs to be faithful and comparable, the data from which they're composed must be normalised to standard unit variance (mean = 0, var = 1), so that variables with a greater range or higher value don't drown out numerically small or more discrete variables. Go crawl "scale PCA" if you're curious.  __However__, [Palmer, in discussing PCA and biplots](http://ordination.okstate.edu/overview.htm#Principal_Components_Analysis), mentions that scaling is for different types of variable, and ecological observations should _not_ be scaled. ?  
+
+From ```prcomp()``` :
+
+```
+scale.	
+a logical value indicating whether the variables should be scaled to have unit variance before the analysis takes place. The default is FALSE for consistency with S, __but in general scaling is advisable.__ Alternatively, a vector of length equal the number of columns of x can be supplied. The value is passed to scale.
+
+```
+-----
+
+##### _plotting_ and scaling
+
+  * this is not the same as the scaling in the __```plot()```__ step - that is detailed below.
+
+See the info provided in ```biplot.rda()``` on the scaling methods used in generic __plots__:
+
+```
+scaling  
+Scaling for species and site scores. Either species (2) or site (1) scores are scaled by eigenvalues, and the other set of scores is left unscaled, or with 3 both are scaled symmetrically by square root of eigenvalues. With negative scaling values in rda, species scores are divided by standard deviation of each species and multiplied with an equalizing constant. Unscaled raw scores stored in the result can be accessed with scaling = 0.
+The type of scores can also be specified as one of "none", "sites", "species", or "symmetric", which correspond to the values 0, 1, 2, and 3 respectively. Argument correlation can be used in combination with these character descriptions to get the corresponding negative value.
+
+```
+
+
+---
+
+
+### DCA, p(C)CA, CCA & (p)RDA
+
+  * - __(Detrended) Correspondence Analysis__ : an indirect gradient method, partitioning data into the largest sets or correlations betwen samples and species. Note ```not``` _correlation_ analysis. Suffers from the _arch effect_, and so supplemented by detrending: as above but mathematically corrected to be a better representation of what's going on. ```function vegan::decorana```.
+  * - __Constrained Correspondence Analysis__ : extract just that part of the data relating to the constraining variable (e.g. you know _a priori_ what you're asking, and display it - a Direct Gradient Analysis )
+  * - __Redundancy Analysis__ : an Indirect Gradient Analysis method, which assumes a _linear_ relationship between samples and features (therefore suited to short gradients / limited variety of observations?).
+
+
+#### Model specification and "partialling"
+
+Previously we had modelled ID as a random effect: this can be achieved in CCA/RDA using p(artial)CA/CCA/RDA, and the formula notation. Unlike ANOVA, seems that random effects are ```Condition( )```'d out, as per:
+
+  * ```ordinate(PHYLO, method='RDA', formula = (~Description + Condition(ID)) )``` (for ```phy::ordinate```)
+  * ```cca( o ~ Description + Condition(ID), s``` (for ```vegan::cca```)
+  
+"Partialling out" is apparently the ordination ```X ~ Y``` minus the difference between ``` X ~ Z``` and ```X ~ Y + Z```. 
+  
+> __Artefact__: using ```Condition``` on strongest effect seems to leave little behind, possible causing apparent symmetry in the plots.  
+
+
+----
+
+
+#### DCA - Detrended
+
+
+```{r ord_dca, eval=TRUE, include=TRUE}
+
+ord_DCA <- ordinate(PHYLO, method='DCA', formula = (~Description + Condition()))  
+ca.sp <- fortify(ord_DCA, display = "sites")
+# summary(ord_pDCA)
+# get the sample labels so can pinpoint outliers
+
+
+## the DCA by Description w. ID partialled
+  pl.a <- plot_scree(ord_DCA)
+  pl.b <- plot_ordination(PHYLO, ord_DCA, color='Description', shape='Condition') +  #axes=c(5,1), 
+    stat_ellipse(aes(fill=Description , color=NULL) , level=0.95, geom='polygon', alpha=0.1) +
+    geom_point(size = 2) +
+    geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+    theme_classic() + 
+    scale_color_manual("Description", values = e.desc) +
+    scale_fill_manual("Description", values=e.desc)
+  # pl.c <- plot_ordination(PHYLO, ord_DCA, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+  #   theme_transparent() + geom_label(data = ca.sp, mapping = aes(x = CA1, y = CA2, label = Label))
+  
+## boxplots
+  dca_bp <- cbind(ord_DCA$rproj , sample_data(PHYLO)[,7:9] )
+  dca_bp <- melt(dca_bp)
+  pl.cabp <- ggboxplot(dca_bp, 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+      theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position =  'none')   
+  
+  pl.a <- ggarrange(pl.b, pl.a, ncol = 2, nrow = 1, widths = c(1, 0.4), common.legend = TRUE)
+  ggarrange(pl.cabp, pl.a, ncol=1 , nrow=2, common.legend = FALSE)
+
+  
+```
+
+
+#### CCA & Partialling
+
+PHYLO CCA: Enormous segregation here of minimal eigens (1%, 1.1%). CCA~Condition shows some samples highly dissimilar (CA1: 7POST, 17PRE, 33C ; CA2: 17PRE, 37C ; CA3: 5POST; etc.. ) - rather than "contamination" or random outliers etc.: likley these are the _actual_ stochastic composition of sampes. In that case, the enormous amount of variation not contained within limited axes is simply the high variation between composition of samples (or subsets of samples). For instance, the main unconstrained axis (CA1, axis 5) below segregates samples ```7POST, 17PRE and 33C``` but carries no other strong influence. Shared ASVs are reflected in the plot - there's more than one! 
+
+Note the difference in scree plot indicating the most important sources of variation are still not in the formula specified.
+
+Segregation of data along two axes when partialled represents paired nature of samples: each ```ID``` centroid is at the axis, therefore where an ```ID``` comprises a pair of samples it must also pass through the axis - ```Controls``` have only one sample so remain condensed in the centre. Different levels of ```Description``` are orthogonal: representing unrelated changes in composition. 
+
+
+```{r ord_cca, eval=TRUE, include=TRUE}
+
+ord_cca <- ordinate(PHYLO, method='CCA', formula = (~Description))  
+ord_pcca <- ordinate(PHYLO, method='CCA', formula = (~ Description + Condition(ID)))  
+ord_cca_id <- ordinate(PHYLO, method='CCA', formula = (~ID))  
+# summary(ord_pcca)
+# get the sample labels so can pinpoint outliers
+
+
+## CCA by Description  ============  
+  pl.a <- plot_scree(ord_cca)
+  ca.sp <- fortify(ord_cca, display = "sites")
+  pl.b <- plot_ordination(PHYLO, ord_cca, type = 'samples', axes=c(1,2), color='Description', shape='Condition') +  #
+    stat_ellipse(aes(fill=Description , color=NULL) , level=0.95, geom='polygon', alpha=0.05) +
+    geom_point(size = 2) +
+    theme_classic() + 
+    scale_color_manual("Description" ,values = e.desc) +
+    scale_fill_manual("Description" , values=e.desc)
+
+  pl.c <- plot_ordination(PHYLO, ord_cca, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+    theme_transparent() + geom_label(data = ca.sp, mapping = aes(x = CCA1, y = CCA2, label = Label), size=2)  # could add Description to ca.sp for colouring
+
+  pl.b <- ggarrange(pl.b, pl.c, ncol = 2, nrow = 1, widths = c(1,0.75), common.legend = TRUE)
+  
+      
+    ## boxplots
+      ca_bp <- cbind(ord_cca$CCA$u , ord_cca$CA$u , sample_data(PHYLO)[,7:9] )
+      ca_bp <- melt(ca_bp)
+      pl.cabp <- ggboxplot(ca_bp[1:(0.3 * nrow(ca_bp)) , ], 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+          theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position =  'none') +    
+          labs(title='CCA of Description')
+    
+      pl.cabp <- ggarrange(pl.cabp, pl.a, ncol=2 , nrow=1, widths = c(1 , 0.5), common.legend = FALSE)
+       
+  ggarrange(pl.cabp, pl.b, ncol=1 , nrow=2, heights = c(0.6, 1), common.legend = FALSE)
+    
+  
+## CCA by Description w. partialled ID  ============  
+  
+  pl.a <- plot_scree(ord_pcca)
+  ca.sp <- fortify(ord_pcca, display = "sites")
+  pl.b <- plot_ordination(PHYLO, ord_pcca, type = 'samples', axes=c(1,2), color='Description', shape='Condition') +  #
+    stat_ellipse(aes(fill=Description , color=NULL) , level=0.95, geom='polygon', alpha=0.05) +
+    geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+    geom_point(size = 2) +
+    theme_classic() + 
+    scale_color_manual("Description" ,values = e.desc) +
+    scale_fill_manual("Description" , values=e.desc)
+
+  pl.c <- plot_ordination(PHYLO, ord_pcca, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+    theme_transparent() + geom_label(data = ca.sp, mapping = aes(x = CCA1, y = CCA2, label = Label), size=2)  # could add Description to ca.sp for colouring
+
+  pl.b <- ggarrange(pl.b, pl.c, ncol = 2, nrow = 1, widths = c(1,0.75), common.legend = TRUE)
+  
+      
+    ## boxplots
+      ca_bp <- cbind(ord_pcca$CCA$u , ord_pcca$CA$u , sample_data(PHYLO)[,7:9] )
+      ca_bp <- melt(ca_bp)
+      pl.cabp <- ggboxplot(ca_bp[1:(0.3 * nrow(ca_bp)) , ], 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+          theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position =  'none') +    
+          labs(title='CCA of Description, w. partialled ID')
+    
+      pl.cabp <- ggarrange(pl.cabp, pl.a, ncol=2 , nrow=1, widths = c(1 , 0.5), common.legend = FALSE)
+       
+  ggarrange(pl.cabp, pl.b, ncol=1 , nrow=2, heights = c(0.6, 1), common.legend = FALSE)
+   
+  
+   
+      
+    # ## plot CCA ASVs
+    #   cca.spe <- fortify(ord_cca, display = "species")
+    #   cca.spe <- cca.spe[cca.spe$Label %in% taxa_names(PHYLO_h), ]
+    #   cca.spe$Label <- gsub('Seq_000' , '' , cca.spe$Label)        # mangle labels
+    #   plot_ordination(PHYLO, ord_cca, type = 'species', axes=c(1,2)) +  #
+    #       # stat_ellipse(level=0.95, geom='polygon', alpha=0.5) +   # aes(fill=phylum , color=NULL) - leads to empty plots
+    #       geom_label(data = cca.spe, mapping = aes(x = CCA1, y = CCA2, label = Label)) +
+    #       theme_classic() + labs(title='ASVs segregated by the strongest CA component')
+      
+  
+## get the sample labels so can pinpoint outliers
+  # pl.f <- plot_ordination(PHYLO, ord_pcca, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+  #   theme_transparent() + geom_label(data = cca.sp, mapping = aes(x = CA1, y = CA2, label = Label))
+
+```
+
+
+
+#### RDA & Partialling
+
+Attempt to use RDA for analysis. From Michael Palmer : _ "we do need to be aware that the linear face of CA/CCA focusses on species composition (i.e. relative data), rather than overall trends in abundance.  PCA and RDA would be more appropriate for such data._ " . Ask yourself: what would a unimodal composition look like? Linear abundances imply that abundance would just continue increasing forever - which seems unlikely in any environment, let alone the oesophagus. This is defined somewhat by the underlying gradient: effects of short gradients will appear linear, whereas "longer" observed gradients will eventually generate a unimodal   
+
+
+
+
+```{r ord_rda, eval=TRUE, include=TRUE}
+
+ord_rda <- ordinate(PHYLO, method='RDA', formula = (~Description))  
+ord_prda <- ordinate(PHYLO, method='RDA', formula = (~ Description + Condition(ID)))  
+# summary(ord_prda)
+# get the sample labels so can pinpoint outliers
+
+
+## the RDA by Description
+  pl.a <- plot_scree(ord_rda)
+  ca.sp <- fortify(ord_rda, display = "sites")
+  pl.b <- plot_ordination(PHYLO, ord_rda, type = 'samples', axes=c(1,5), color='Description', shape='Condition') +  #
+    stat_ellipse(aes(fill=Description , color=NULL) , level=0.95, geom='polygon', alpha=0.1) +
+    geom_point(size = 2) +
+    geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+    theme_classic() + 
+    scale_color_manual("Description" ,values = e.desc) +
+    scale_fill_manual("Description" , values=e.desc)
+  # pl.c <- plot_ordination(PHYLO, ord_rda, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+  #   theme_transparent() + geom_label(data = ca.sp, mapping = aes(x = CA1, y = CA2, label = Label))
+  
+  # -wont- WILL work as both samples and species have coordinates for each axis, and _thats_ what your plotting  :: see obj_cca$CA$u
+  ca_bp <- cbind(ord_rda$CCA$u , ord_rda$CA$u , sample_data(PHYLO)[,7:9] )
+  ca_bp <- melt(ca_bp)
+  pl.cabp <- ggboxplot(ca_bp[1:(0.15 * nrow(ca_bp)) , ], 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+      theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position =  'none') #+   
+      # labs(title='CCA sample coordinates (across 0.5 of axes)')
+   
+  pl.a <- ggarrange(pl.b, pl.a, ncol = 2, nrow = 1, widths = c(1, 0.4), common.legend = TRUE)
+
+  ggarrange(pl.cabp, pl.a, ncol=1 , nrow=2, common.legend = FALSE)
+
+# ## plot CCA ASVs
+# cca.spe <- fortify(ord_rda, display = "species")
+# plot_ordination(PHYLO, ord_rda, type = 'species', axes=c(5,1)) +  #
+#     stat_ellipse(level=0.95, geom='polygon', alpha=0.5) +   # aes(fill=phylum , color=NULL) - leads to empty plots
+#     geom_label(data = cca.spe, mapping = aes(x = PC1, y = RDA1, label = Label)) +
+#     theme_classic()   
+  
+  
+
+
+## the RDA by Description
+  pl.d <- plot_scree(ord_prda)
+  cca.sp <- fortify(ord_prda, display = "sites")
+  pl.e <- plot_ordination(PHYLO, ord_prda, type = 'samples', axes=c(4,1), color='Description', shape='Condition') + #
+    stat_ellipse(aes(fill=Description , color=NULL) , level=0.95, geom='polygon', alpha=0.1) +
+    geom_point(size = 2) +
+    theme_classic() + 
+    scale_color_manual("Description" ,values = e.desc) +
+    scale_fill_manual("Description" , values=e.desc)
+  
+  ## get the sample labels so can pinpoint outliers
+  # pl.f <- plot_ordination(PHYLO, ord_prda, type = 'samples', axes=c(1,2)) +  # color='Description', shape='Description',
+  #   theme_transparent() + geom_label(data = cca.sp, mapping = aes(x = CA1, y = CA2, label = Label))
+
+  
+  cca_bp <- cbind(ord_prda$CCA$u , ord_prda$CA$u , sample_data(PHYLO)[,7:9] ) # ord_prda$CCA$u , 
+  cca_bp <- melt(cca_bp)
+  pl.ccabp <- ggboxplot(cca_bp[1:(0.3 * nrow(cca_bp)) , ], 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+      theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position = 'none')  # + 
+      # labs(title='CCA sample coordinates (across 0.5 of axes)')
+   
+  pl.e <- ggarrange(pl.e, pl.d, ncol = 2, nrow = 1, widths = c(1, 0.4), common.legend = TRUE)
+
+  ggarrange(pl.ccabp, pl.e, ncol=1 , nrow=2, common.legend = FALSE)
+ 
+
+# ## some sort of graveyard
+  
+# pl.g <-   
+# plot_ordination(PHYLO, ord_prda, type = 'samples', axes=c(9,10), color='Description', shape='Condition') + #
+#   theme_classic() + scale_color_manual( values = e.desc)
+# 
+# pl.h <- plot_ordination(PHYLO, ord_prda, type = 'samples', axes=c(25, 26), color='Description', shape='Condition') + #
+#   theme_classic() + scale_color_manual( values = e.desc) 
+# 
+
+# ggarrange(pl.g, pl.h, ncol = 2, nrow = 1, common.legend = TRUE)   #  widths = c(1, 0.4, 0.6),
+
+```
+
+-----
+
+#### RY_way :: Beta Diversity Analysis
+
+Need to skip methods that require integers, lost through GMPR transformation.
+
+```{r ry_way_alpha, message=FALSE, results='hold' }
+
+	# assumes you've scrubbed out neg-ctrls and empty samples
+  count_table <- data.frame(otu_table(PHYLO_5))   # use the CRUSHed dataset
+	mapping <- data.frame(sample_data(PHYLO_5))
+  taxa <- tax_table(PHYLO_5)[,1:7] ; taxa[is.na(taxa)] <- 'na'   # not sure why suddenly necessary to crush NAs, but
+  taxa <- as.data.frame( taxa )
+
+	cnts <- count_table
+	cnts_filt10 = cnts[,apply(cnts>0,2,sum)>=round(nrow(cnts)*0.05)]  #rationalise: keep ASV >0 in >5% of samples 
+	cnts_filt10_prop = prop.table(as.matrix(cnts_filt10),2)
+	cnts_filt10_prop = cnts_filt10_prop * 100
+
+	OTU_raw = otu_table(cnts,taxa_are_rows = FALSE)      # DCHECK taxa are rows!
+	physeq_raw = phyloseq(OTU_raw)
+	meas_GMPR <- c( "Shannon", "Simpson", "InvSimpson") #, "ACE", "Chao1")
+	alpha_div = estimate_richness(physeq_raw, measures = meas_GMPR)
+
+
+## Won't work with transformed values	
+  ## classic RY:
+    	# adds a column to c_alpha_div to check the ratio of Chao1 to ACE to see if read depth has affected family presence.
+  # require(dplyr)
+  # alpha_div = tbl_df(alpha_div)
+  # 
+  #   # Chao1: est of actual diversity ; ACE: v similar
+  # 	alpha_div = alpha_div %>% mutate(family = ACE/Chao1)     
+  # 	summary(alpha_div$family)
+  # 	alpha_div = as.data.frame(alpha_div)
+	
+```
+
+
+---
+
+
+#### RY_way :: PCoA of Bray-Curtis
+
+
+
+```{r ry_way_pcoa}
+
+  ## Scale pre-Bray-Curtis
+    # BC senstivie to size of sample, so advised to scale all counts prior to calculation
+    # considered scaling to largest/smallest/medianest sample size, so dealing with integers.
+    # simple RA might be preferable?
+    PHYLO_5RA <- transform_sample_counts(PHYLO_5, function(x) ( x/sum(x) ) *100 ) 
+
+    
+      ## PCoA
+    	bc_dist <- vegdist(otu_table(PHYLO_5RA),method="bray")  ## .....! BC on subset of data?   
+    	bc_pcoa <-pcoa(bc_dist)
+
+      ## labels: PCoA has pre-calcd this for you (relative eigen)
+      PCo1 <- paste0('PCoA1: ',round(bc_pcoa$values[[2]][1]*100, 0),'%')
+      PCo2 <- paste0('PCoA2: ',round(bc_pcoa$values[[2]][2]*100, 0),'%')
+      PCo3 <- paste0('PCoA3: ',round(bc_pcoa$values[[2]][3]*100, 0),'%')
+      PCo4 <- paste0('PCoA4: ',round(bc_pcoa$values[[2]][4]*100, 0),'%')
+      PCo5 <- paste0('PCoA5: ',round(bc_pcoa$values[[2]][5]*100, 0),'%')
+      PCo6 <- paste0('PCoA6: ',round(bc_pcoa$values[[2]][6]*100, 0),'%')
+      PCo7 <- paste0('PCoA7: ',round(bc_pcoa$values[[2]][7]*100, 0),'%')
+      PCo8 <- paste0('PCoA8: ',round(bc_pcoa$values[[2]][8]*100, 0),'%')
+      PCo9 <- paste0('PCoA8: ',round(bc_pcoa$values[[2]][9]*100, 0),'%')
+      PCo10 <- paste0('PCoA10: ',round(bc_pcoa$values[[2]][10]*100, 0),'%')
+
+      PHYLO_rich <- estimate_richness(PHYLO_full, measures = meas) # _GMPR)
+      bc_df = data.frame(data.frame(sample_data(PHYLO), stringsAsFactors = FALSE), 
+                         PHYLO_rich,
+      		                "PCoA1" = bc_pcoa$vectors[,1]*-1,
+      		                "PCoA2" = bc_pcoa$vectors[,2]*-1,
+      		                "PCoA3" = bc_pcoa$vectors[,3]*-1,
+      		                "PCoA4" = bc_pcoa$vectors[,4]*-1,
+      		                "PCoA5" = bc_pcoa$vectors[,5]*-1,
+      		                "PCoA6" = bc_pcoa$vectors[,6]*-1,
+      		                "PCoA7" = bc_pcoa$vectors[,7]*-1,
+      		                "PCoA8" = bc_pcoa$vectors[,8]*-1,
+      		                "PCoA9" = bc_pcoa$vectors[,9]*-1,
+      		                "PCoA10" = bc_pcoa$vectors[,10]*-1,
+      		                "PCoA11" = bc_pcoa$vectors[,11])
+
+## do we care about this      
+# 	# a-div  -  violin plot, grouped by col of choice
+# 	ggplot(bc_df,aes(x=Description,y=bc_df$Shannon,fill=Description)) + 
+# 	  geom_violin() +
+# 	  scale_fill_manual("Description",values=c(e.desc)) +
+#   geom_dotplot(binaxis="y",stackdir = "center",dotsize=1,binwidth = 0.03, fill="black") + # take black out of the aes bracket!
+# 	  theme_classic() + 
+# 	  ylab('Shannon Diversity Index (entropy)')
+
+
+  ## axial plots    
+	##- display significance
+    # library('ggsignif') 
+    # 	+ geom_signif(comparisons = list(c("CONTROL", "POST", "PRE")), map_signif_level=TRUE)
+	bc_pcoa_boxp = cbind(data.frame(sample_data(PHYLO)$Condition), data.frame(sample_data(PHYLO)$Treatment),  data.frame(sample_data(PHYLO)$Description), bc_pcoa$vectors)
+	bc_pcoa_boxp <- melt(bc_pcoa_boxp)
+	colnames(bc_pcoa_boxp) <- c('Condition', 'Treatment', 'Description' , 'PC','value')
+ 
+	# note low number of axes
+   ggboxplot(bc_pcoa_boxp[1:(0.4*nrow(bc_pcoa_boxp)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCoA eigenvalues (18 of 64) of treatment*pre/post')
+	
+ 
+# ```
+# #### RY_way :: Visualise 
+# ```{r ry_way_vis}
+
+## ================================================================================================
+  
+  gg.pcoa <- ggplot(bc_df,aes(x = PCoA1, y = PCoA3, color=Description, shape=Description)) +
+                          stat_ellipse(aes(x = PCoA1,y =PCoA3, fill=Description), geom="polygon" , level=0.8 , alpha=0.2) +   #, linetype=Description
+                          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                          panel.background = element_blank(), axis.line = element_line(colour = "grey80") ) +
+                          scale_fill_manual("Description",values=e.desc) +
+                          scale_color_manual("Description",values=e.desc ) +
+                          scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+                          geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+                          geom_point(color='grey28', aes(fill=factor(bc_df$Description)), size = 4) +
+                          xlab(PCo1) +
+                          ylab(PCo3) + border(color = 'grey35') +
+                          theme(legend.position='left', plot.margin = margin(2, 2, 0, 0, 'cm'))
+
+# put boxplots inside plot, not alongside.  
+xbp <- ggboxplot(bc_df, "Description", "PCoA1", fill = "Description", size=0.3, palette = e.desc, width = 0.5 ) +
+  ggpubr::rotate() +  theme_transparent() +  theme(legend.position='none')
+
+ybp <- ggboxplot(bc_df, "Description", "PCoA3", fill = "Description", size=0.3, palette = e.desc, width = 0.5 ) +
+  theme_transparent() +  theme(legend.position='none')
+
+xbp_grob <- ggplotGrob(xbp) ; ybp_grob <- ggplotGrob(ybp)
+
+# add spacer, insert
+gg.pcoa + annotation_custom(grob = xbp_grob, 
+                            xmin = -0.5, xmax = 0.5, 
+                            ymin = 0.35, ymax = 0.48) +
+          annotation_custom(grob = ybp_grob,
+                            xmin = 0.55, xmax = 0.72, 
+                            ymin = -0.4, ymax = 0.4)
+	
+## ================================================================================================
+
+```
+
+
+---
+
+<!-- #### Testing Axial Plots   -->
+
+<!-- __NB:__ moved to ```PHYLO_ledger_DATesting.rmd```. -->
+
+#### ADONIS  /  ADONIS_2
+
+See ```PHYLO_DATetsting_ledger.rmd```. ID confounding testing, suggesting intra-effects (random effects) are masking inter-effects
+
+```{r PHYLO_adonis, echo = TRUE, include = TRUE}
+PHYLO_dat <- data.frame(sample_data(PHYLO), stringsAsFactors = FALSE)
+
+# Nested Design: Description in Condition
+# Random effect: ID as a relationship between samples
+  # pretty sure this is (1 | ID), not (1 + ID) as below?
+ ## NO STRATA?
+adonis(bc_dist ~ Condition/Description + (1 + ID), data=PHYLO_dat, permutations = 2500)
+
+# null hypothesis: variances are the same
+## result depends on variables tested - smaller samples see greater (or any) violation 
+beta <- betadisper(bc_dist, PHYLO_dat$Condition)    # double check meaning of F values =/
+beta
+permutest(beta)                                     # could also use anova(beta)
+
+
+## strata and blocking checked from vegan/permute  -   _there is no strata/blocking_ at work here.
+  # below will tell you that Condition makes a difference
+  #     but really its ID. 
+  # taken from vegan:adonis2
+  perm <- how(nperm = 2500)
+  setBlocks(perm) <- with(PHYLO_dat, Condition)
+  adonis2(bc_dist ~ Condition + (1 + ID), data=PHYLO_dat, permutations = perm, parallel = 10)
+
+```
+  
+  
+```{r plot_beta, }    
+
+plot(beta, main = 'betadispersion plot determining suitablity for testing in ADONIS')
+  
+```
+   
+
+#### Kruskal-Wallis Test (One-Way Between-Subjects ANOVA-Equivalent )
+
+[See page 15 of this stat-help pdf. ](http://www.stat-help.com/ANOVA%202006-01-11.pdf) Still nothing standing out as significant when aware of ID affect :(
+
+```{r kw_test, eval = TRUE}
+library('FSA')
+
+# PC1
+kruskal.test(bc_df[,20] ~ Description, data = bc_df)
+dunnTest(bc_df[,20] ~ Description, data = bc_df, method = 'bh')
+# # PC2
+# kruskal.test(bc_df[,21] ~ Description, data = bc_df)
+# dunnTest(bc_df[,21] ~ Description, data = bc_df, method = 'bh')
+
+## only result is Post-Steroid and Pretreatment, on Axis 7 
+
+```
+
+----
+
+### Networks
+
+HEY NETWORKS!
+
+Need to decide ahead of time what sort of networks - correlation (Sp, Pea) or some robust measure of co-association (see Ait section for Phi, Rho...) Interestingly, could do a PCoA (PCoA collapse to PCA) as well as a network of a correlation matrix. 
+
+
+####  Correlation Network
+
+Covering:
+
+  * creation of correlation values
+  * plotting to a graph
+  * PCA overlayed with those correlated taxa 
+  
+```{r corrletation_net, echo = TRUE}
+
+## ========================  C o r r e l a t e   ================================= ##
+
+  ## Replace Ai-Phi with Correlation method, as per Sp.corr or similar
+  cutoff <- 0.6       # zero correlations below x
+  min_clust <- 3      # remove clusters with fewer than x members
+  z <- cor(otu_table(PHYLO_5), method='spearman')    # relate abundances (COLUMNS) by correlation 
+  
+  # can't figure out how to do this in apply/sapply/mapply, but can use the graph_from_adj(diag = FALSE) arg below
+  for ( i in 1:nrow(z)){  z[i,i] <- 0  }
+  
+  z[z < cutoff ] <- 0    # nuke
+  y <- apply(z, 1, max) > cutoff
+  y <- z[y, y]
+  # Heatmap(y)  #  just to check
+  g <- graph_from_adjacency_matrix(y , 
+                                   weighted=T,          # ???
+                                   mode="undirected",   # ???
+                                   diag = FALSE)        # plot(g) ; diag = F nukes the diagonal
+
+
+## ========================  A n n o t a t e   ================================= ##
+
+  # delete vertices in clusters below the min_clust size
+  g <- delete_vertices(g, (clusters(g)$membership %in% ( which(clusters(g)$csize < min_clust) )) )
+
+  # backup ASV IDs of interest, could also directly invoke the names from the graph.data.frame fn above
+  g.id <- V(g)$name
+  
+  # V(iewing) g gives you a list of filtered taxa: need to assign names here to match e.col2 : FAMILY
+  V(g)$name <- tax_table(PHYLO_full)[ (g.id) , 6]
+
+  ## build vector to colour by resident PHYLUM (rather than from e.col3, avoiding issues with crushing out unrepresented taxa)    
+  my_colors <- e.col3[ match( tax_table(PHYLO_full)[ (g.id), 2] , names(e.col3)) ] 
+  my_colors[ is.na(names(my_colors)) ] <- 'grey70'     # for NA names
+  
+  ## df to examine the cluster membership by hand
+  # igraph: find the clusters
+    g.clust <- clusters(g)
+    g.df <- data.frame(Systematic.name=V(g)$name, ASV.ID=g.id, cluster=g.clust$membership, cluster.size=g.clust$csize[g.clust$membership])
+
+  # set of clusters >x, for later use below
+    big <- g.df[which(g.df$cluster.size >= min_clust),]   # filtered by clusters above
+    colnames(big) <- colnames(g.df)
+    rownames(big) <- big$ASV.ID
+    
+
+  
+  # see part 3 of the CoDa walkthrough for original
+  #                     allow gsub of '['                                      swap here
+  V(g)$name <- gsub("(^[\\[\\]A-Za-z]{6}).+", "\\1", as.vector(tax_table(PHYLO)[ ( g.id ) , "genus"]), perl=TRUE)
+  V(g)$name[ is.na(V(g)$name) ] <- 'unk.'
+  
+  # name vector for phylum-colour legend
+  net_phy <- as.vector(unique(tax_table(PHYLO)[ g.id , 'phylum']))
+
+  
+## ========================  P l o t u l a t e   ================================= ##
+
+plot(g,
+     vertex.size=10,
+     vertex.color=my_colors,
+     vertex.label.cex=0.9,
+     vertex.label.color="black",
+     vertex.label.dist=3,                          # Distance between the label and the vertex
+     # font?
+     vertex.frame.color="black",
+     edge.color = 'grey40',
+     # edge.width = cut(d.sma.lo.phi$phi, breaks= 5))  # binnning of edge weights controlled by breaks
+     edge.width = cut(z, breaks= 3))  # binnning of edge weights controlled by breaks
+
+# legend
+legend(x=-2.5,
+       y=1,
+       legend= net_phy,
+       col = e.col3[match(net_phy, names(e.col3))],
+       bty = "n",
+       pch=20 ,
+       pt.cex = 2,
+       cex = 1,
+       text.col="black" ,
+       horiz = F)
+
+```
+
+```{r corr_tax_table}
+z <- data.frame(tax_table(PHYLO_5)[g.id,2:6] , row.names = 1:length(g.id) )
+kable(z)
+
+```
+
+
+
+```{r another_pca, eval=TRUE}
+
+##========= Another PCA of CLR values =====================
+
+## this is exactly the same procedure as for the biplot example, 
+## just a larger (?) table
+# d.czm <- cmultRepl(t(d.1),  label=0, method="CZM")
+# d.clr <- t(apply(d.czm, 1, function(x){log(x) - mean(log(x))}))  # samp = ROW, scale samples
+
+## include the diverstiy metrics : shannon, inv_simpson
+# REQUIRE SCALING
+e.pca <- cbind(otu_table(PHYLO_5) , Shannon = PHYLO_rich$Shannon, InvSimpson = PHYLO_rich$InvSimpson) 
+e.pca <- scale(e.pca) 
+e.pcx <- prcomp(e.pca, scale. = TRUE)        # samp = ROW
+
+# visuals
+e.mvar <- sum(e.pcx$sdev^2)
+PC1 <- paste("PC1: ", round(sum(e.pcx$sdev[1]^2)/e.mvar, 3))
+PC2 <- paste("PC2: ", round(sum(e.pcx$sdev[2]^2)/e.mvar, 3))
+col.g <- c("black" , "red")  # port colour properly    # 
+size.g=c(0.5, 0.01)   # Relative scale, 1 is 100%
+
+# theme for clusters
+# clust_cols <- hue_pal()( length(unique(big$cluster)))
+clust_cols1 <- darken(brewer.pal (n = max(big$cluster), name = 'Dark2'))
+names(clust_cols1) <- c(paste0('cluster ' , 1:max(big$cluster)))
+
+clust_cols2 <- clust_cols1[big$cluster]
+
+# ============
+
+PC <- e.pcx
+x <- 'PC1'
+y <- 'PC2'
+Feats <- g.id 
+ADiv <- c('Shannon' ) #, 'InvSimpson')
+
+# cluster colours defined above 
+
+## samples
+data <- data.frame(obsnames=row.names(PC$x), PC$x, Condition=sample_data(PHYLO_full)$Condition, Description=sample_data(PHYLO_full)$Description) 
+
+## species (Feats)                                                                                
+datapc <- data.frame(varnames = rownames(PC$rotation) , PC$rotation, stringsAsFactors = FALSE)   # force sAF=F so can apply names
+# feat_cluster = c( big[ rownames(PC$rotation)[1:208] , 'cluster' ] , NA, NA) ,     #  NO JAMIE NOT PROGRAMMATIC
+
+# mutilation: change names to for those ID'd in Phi seciton as being associated, via obj __Feats__
+datapc[ Feats , 'varnames'] <- gsub("(^[A-Za-z]{4}).+", "\\1", tax_table(PHYLO)[Feats,"genus"], perl=TRUE)  # crimp names
+datapc[ is.na(datapc$varnames) , 'varnames'] <- 'unk.'
+
+mult <- min(                                                            #
+  (max(data[,y]) - min(data[,y])/(max(datapc[,y])-min(datapc[,y]))),    # smaller ratio vlaue from x or y
+  (max(data[,x]) - min(data[,x])/(max(datapc[,x])-min(datapc[,x])))     #  
+)                                                                       # 
+datapc <- transform(datapc,                                             #
+                    v1 = 2 * mult * (get(x)),                          # haven't got a fucking clue why doing this  -  scaling but why/how?
+                    v2 = 2 * mult * (get(y))                           # all going into v1 and v2
+)
+
+
+```
+
+
+<!-- # # samples <- sample_data(PHYLO)$ID_Sample   -->
+<!-- # samples <- unlist(sample_data(PHYLO)$Description) -->
+<!-- # samples <- sapply(samples, function(x) match(x, levels(samples))) -->
+<!-- #  -->
+<!-- # biplot(e.pcx, cex=size.g, col= col.g , var.axes=F, xlab=PC1, ylab=PC2, xlabs=samples, scale=0)   # samples = vector of state -->
+<!-- #  -->
+<!-- # # get the names of the clusters in big -->
+<!-- # lev <- factor(big$cluster) -->
+<!-- #  -->
+<!-- # # step through each cluster and plot the genus name                                         <  {¬-} !  > -->
+<!-- # # at the point in the biplot that the OTU would have been plotted -->
+<!-- # # OTU positions are in pcx$rotation -->
+<!-- # for(i in as.numeric(levels(lev))){  -->
+<!-- #   nms <- rownames(big)[big$cluster==i] -->
+<!-- #   text(e.pcx$rotation[nms,][,1], e.pcx$rotation[nms,][,2], -->
+<!-- #      labels = gsub("(^[A-Za-z]{6}).+", "\\1", tax_table(PHYLO)[rownames(big)[big$cluster==i],"genus"],  -->
+<!-- #                    # perl=TRUE), col=colours[i], cex=0.7) -->
+<!-- #                    perl=TRUE), col= clust_cols1[i], cex=0.7) -->
+<!-- # } -->
+<!-- #  -->
+<!-- # abline(h=0, lty=2, col='grey70') -->
+<!-- # abline(v=0, lty=2, col='grey70') -->
+
+
+Recapit in ggplot for flexibility, coherence
+
+```{r ggplot_pca}
+
+## ========================  g g b i p l o t  ================================= ##
+
+# # hmm. Do we feel this isn't subscribing to our autodidactery agenda?
+# library(ggbiplot)
+# ggbiplot(d.pcx, #labels =  rownames(d.clr), 
+#          groups = sample_data(PHYLO)$Condition, ellipse = FALSE,
+#          var.axes = TRUE, varname.size = 0.5)
+
+plot <-   ggplot(data, aes_string(x=x, y=y)) +
+    geom_text(alpha=.6, size=3, aes(label=obsnames)) +   # remove labels to remove labels
+    stat_ellipse(aes(x = PC1 , y = PC2, fill = Description), geom="polygon" , level=0.95 , alpha=0.1) +   #, linetype=Description
+    geom_point(aes(fill = Description, shape = Description), color = 'black'  , size=4, alpha = 0.65) +
+    scale_color_manual( values = e.desc) +
+    scale_fill_manual( values = e.desc) +
+    scale_shape_manual(values=c(21,24, 22, 22, 22)) +
+    # geom_hline(aes(0), size=.2, yintercept = c(0,0),  color="grey35") +
+    # geom_vline(aes(0), size=.2, xintercept = c(0,0),  color="grey35") +
+    geom_segment(data=datapc[Feats , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.1, color="grey10") +
+    geom_text(data=datapc[Feats , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color=clust_cols2 )  + 
+    geom_segment(data=datapc[ADiv , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.4, color="black") +
+    geom_text(data=datapc[ADiv , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color='grey11') +
+    border(color = 'grey35')
+    # geom_label(aes(fill = feat_cluster)) #aes(fill = factor(cyl)), colour = "white", fontface = "bold"    #  ARGH
+
+plot
+
+```
+
+---
+
+### Correlation Analyses and Networks
+
+Here combine two previous approaches, ASVs which appear co-correlated and correlation analysis (with a check on the effects of constraint by ```Description```). 
+
+
+
+```{r cca_ggplot2, eval=FALSE, include=FALSE, echo = FALSE}
+
+# use ggvegan via gsimpson
+
+o <- data.frame(otu_table(PHYLO, taxa_are_rows = FALSE))
+s <- data.frame(sample_data(PHYLO)[ , c(3,8,10)])
+v.ca <- cca( o, s)
+v.sp <- fortify(v.ca, display = "species" )
+
+autoplot(v.ca) + 
+  # geom_label(data = v.sp[v.sp$Label %in% Feats , ], mapping = aes(x = CCA1, y = CCA2, label = Label)) +
+  # scale_color_manual(values = clust_cols2) +
+  geom_text(data= v.sp[v.sp$Label %in% Feats , ], aes(x=CCA1, y=CCA2, label=Label), size = 2, vjust=1, color=clust_cols2 )   
+
+screeplot(v.ca) 
+
+
+```
+
+-------
+
+```
+#########################################################################################
+
+```
+-------
+
+
+
+-----
+
+# Compositionality
+
+The new hot biscuit, maintaining approaches that do not take the simplex-space nature of sampling data into account risk elevating false-positives and missing true patterns. It offers an alternative set of approaches which should (according to the authors) supplant/support existing methods of correlation, distance, multivariate ordination etc. As such, there is an Aitchison alternatives to all the analyses above. 
+
+### Alpha Diversity
+
+Shannon actually _kinda_ close, but remember a-div is dictated (I think?) by species _in_ a sample, while e.g. CLR also takes into account 0s, so is sparse-sensitive. (A-div metrics are asymmetric?) Firstly, is it necessary? Given that alpha diversity measures are used (e.g.) for sample-wise comparison or to supervise sample depth across a study*, what would distortion due to the simplex issue look like? Is it tenable? Proportions used to calculate SImpson and Shannon indices suggests they could be adapted to use a more Aitchisonian-approach, but it's not clear to me if this is beneficial/informative/an improvement etc. Some diversity measures such as counting  'presence' are mooted by the use of pseudocounts, unless pseudocounted values are 'backfilled' by setting an average cutoff of previously '0' below which a species does not 'effectively' contribute.  
+
+As it turns out, Shannon's index is already a fairly close-to-composition methods
+
+    __via Gloor:__
+    The clr is not advisable for alpha diversity metrics at all. The best metric for this is Shannon's since it is a true entropy measure. All alpha diversity metrics are transforms of the others in some way. 
+    
+    The only reasons to use log-ratio approaches are for multivariate analyses of beta-diversity, univariate analysis of difference and correlation   
+
+> Resolved!
+
+### Translation of Values
+
+See also this tutorial on [Microbial Aitchisonism](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki) and work through parts [1](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-1:-Exploratory-Compositional-PCA-biplot), [2](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-2:-ALDEx2-for-differential-expression-analysis), [3](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-3:-OTU-Correlations-with-Phi), and [4](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-4:-Visual-Data-Exploration). Start by making CLR values, then make Aitch dist (```robCompositions```), then plot in ggplot2.
+
+
+See then this paper on the CoDa workflow:
+[Quinn et al, preprint 2018](https://www.biorxiv.org/content/biorxiv/early/2018/12/03/484766.full.pdf)
+
+
+```{r coda_transform}
+
+## transform first, then subset (although probably robust to such things)
+
+d.1 <- data.frame(otu_table(PHYLO))
+dim(d.1)
+## Zeroes
+  # choice of 0-wrangling here important :: GBM v. CZM - joey711 argues GBM not applicable to micro (i.e. no real zeroes)
+d.czm <- cmultRepl(d.1, method='CZM', output = 'p-counts')   #  SAMPLES AS ROWS
+
+## CLR, note transpose - SAMPLES AS ROWS
+  # watch orientation here - want SAMPLES AS ROWS
+d.clr <- t(apply(d.czm, 1, function(x){log(x) - gmean(log(x), margin = 1)})) 
+PHYLO_clr <- PHYLO_5 ; otu_table(PHYLO_clr) <- otu_table(d.clr, taxa_are_rows = FALSE)
+
+
+## meaning? utility?
+  # # check alpha div?
+  # meas1 <- c( "Shannon", "Simpson")  #, "InvSimpson", "Fisher", "Chao1", "ACE",
+  # 
+  # ## shifting all values into positive
+  # PHYLO_clr2 <- PHYLO_clr
+  # otu <- data.frame(otu_table(PHYLO_clr2))
+  # otu_table(PHYLO_clr2) <- otu_table( apply(otu, 1, function(x) x + abs(min(x)) ), taxa_are_rows = TRUE )
+  # plot_richness(PHYLO_clr2, measures = meas1, color = 'Condition')
+  # # plot_richness(PHYLO_5, measures = meas1, color = 'Condition')
+
+
+```
+
+---
+
+### Barplots of Aitchison
+
+Knackered, see previous. Boxplots of Aitchison?
+
+---
+
+### Ordination
+
+  * Compositionally Robust Ordination?
+  * CCA won't run with negative values: distances between ratios are meaningful in Aitchison space (could the values be transposed to positive?)
+
+#### ~~PCoA~~ PCA of Aitchison
+
+  * Aitchison _Distances_ from Aitchison values before ordination through PCoA
+  * _Additionally_, an Euclidean PCoA ```==``` PCA. So these are not PCoAs, but rather PCAs of euclidean Aitchison distances.
+
+
+#### Aitch PCoA plot #1a and 1b: ape, ade4, clustering, ggplot
+
+The ```nclusters``` plot below can be unclear about optimal ```k``` clusters - 2, 3, or 4? Currently at::
+
+  * 2 @ 15(29.04.19)
+  * 3 @ 4 (02.05.19)
+  * 2 @ 15(02.05.19) (clear env and recalc)
+
+``` {r ade4_pca}
+
+d1.clr <- d.clr    #  from above
+
+## Make euclidean distances of aitchison values
+dist.d1.clr <- dist(d1.clr, method="euclidian")    # needs to transpose as ALDEx has it bumways?
+
+## clusters
+nclusters= (0)
+for (i in 2:11) {       # cluster of 1 returns NaN
+    data.cluster_temp <- as.vector(pam(dist.d1.clr, i)$cluster)    # find mediod clusters and return a vector of clusters
+    nclusters[i] <- index.G1(d1.clr,data.cluster_temp,  d = dist.d1.clr,    # determine the fit to the cluster
+    centrotypes = "medoids")
+}
+
+par(fig=c( 0, 1 , 0.4, 1), new = TRUE) # co-ords for plotting clusters
+
+# plot the results. More uneven, higher CH index values are 'best'
+plot(nclusters, type="h", xlab="k clusters", ylab="CH index", main = 'clustering value')
+
+# optimal sample cluster-membership, with k taken from 'best' CH value
+k <- 2    	
+data.cluster <- as.vector(pam(dist.d1.clr, k)$cluster)
+
+## A D E 4
+# do, plot, & textify PCoA, coloured by clusters determined above
+par(fig=c(0, 1 , 0, 0.4), new = TRUE) # co-ords for plotting PCA
+obs.pcoa <- dudi.pco(dist.d1.clr, scannf=F, nf=3)
+s.class(obs.pcoa$li, fac=as.factor(data.cluster), grid=F, col= darken(brewer.pal(n = k , 'Dark2'))) # e.desc
+text(obs.pcoa$li,labels=rownames(d1.clr),cex=0.8, col= e.desc[match(sample_data(PHYLO)$Condition , names(e.desc))] )
+
+```
+
+
+#### Aitchison euc-dist PCoA (PCA) plot
+
+``` {r aitch_pca_basic, results = 'hold', message = FALSE }
+
+a.dist <- aDist(d.clr)    #robCompositions
+  # # could also
+  # dist.d1.clr <- dist(d1.clr, method="euclidian")    # needs to transpose as ALDEx has it bumways?
+ 
+
+# basic plot() deleted
+
+## ====   PCA of Aitchison distance   ============================================== ##
+d.pcoa <- pcoa(a.dist, rn=rownames(d.clr))
+PCo1 <- paste0("PCoA1: ", round(100*d.pcoa$values$Relative_eig[1], 1), '%')
+PCo2 <- paste0("PCoA2: ", round(100*d.pcoa$values$Relative_eig[2], 1), '%')
+aitch.df2 = data.frame(sample_data(PHYLO),
+                      "PCoA1" = d.pcoa$vectors[,1],
+                      "PCoA2" = d.pcoa$vectors[,2],
+                      "PCoA3" = d.pcoa$vectors[,3]
+                        )
+
+
+## ====   PCA barplots   ===================================================== ##
+
+	aitch_pcoa_boxp = cbind(data.frame(sample_data(PHYLO)$Condition), data.frame(sample_data(PHYLO)$Treatment),  data.frame(sample_data(PHYLO)$Description), d.pcoa$vectors)
+	aitch_pcoa_boxp <- melt(aitch_pcoa_boxp)
+	colnames(aitch_pcoa_boxp) <- c('Condition', 'Treatment', 'Description' , 'PC','value')
+ 
+	# note low number of axes
+   ggboxplot(aitch_pcoa_boxp[1:(0.25*nrow(aitch_pcoa_boxp)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCA Variance (18 of 64) of treatment*pre/post')
+
+
+## ====   PCA ggplots   ===================================================== ##
+
+ggplot(aitch.df2,aes(x = PCoA1, y = PCoA2, color=Description, shape=Description)) +
+  stat_ellipse(aes(x = PCoA1,y =PCoA2, fill=Description), geom="polygon", colour=NA, level=0.8 , alpha=0.2) +   #, linetype=Description
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+  panel.background = element_blank(), axis.line = element_line(colour = "grey80") ) +
+  scale_fill_manual("Description",values=e.desc) +
+  scale_color_manual("Description",values=e.desc ) +
+  scale_shape_manual("Description",values=c(21,24, 22,22,22)) +
+  geom_line(aes(group = ID), alpha=0.65, size=0.3, colour='grey58') +
+  geom_point(color='grey28', aes(fill=factor(aitch.df2$Description)), alpha=1, size = 4) +
+  labs(title=paste('PCA of Aitch : PC1 -', PCo1, '& PC2 -', PCo2, ', ellipses are 80% t ...probabilities?')) +
+  border(color = 'grey35') +
+  theme(legend.position='bottom')
+
+```
+
+
+----
+
+### The ```philr``` package
+
+Combination of ILR transformation and phylogenetic infromation. Attractive given the strong patterning seen in the UniFrac ordination. [Paper here](http://doi.org/10.7554/eLife.21887), and the [source tutorial is here](https://bioconductor.org/packages/release/bioc/vignettes/philr/inst/doc/philr-intro.html).
+
+ 
+```{r philr, warning = FALSE, message = FALSE}
+
+## Whoooole other ball game
+library(philr); packageVersion("philr")
+
+    # PHYLO_ph <-  filter_taxa(PHYLO, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
+    # # PHYLO_ph <-  filter_taxa(PHYLO_ph, function(x) sd(x)/mean(x) > 3.0, TRUE)  # too harsh
+    # PHYLO_ph <- transform_sample_counts(PHYLO_ph, function(x) x+1)
+    
+    # PHYLO_ph <- PHYLO_crush
+    # prunPH = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=5), A=0.05*nsamples(PHYLO_ph))
+    # PHYLO_ph = prune_taxa(prunPH, PHYLO)
+
+PHYLO_ph <- PHYLO_5
+
+# check tree good
+is.rooted(phy_tree(PHYLO_ph)) # Is the tree Rooted?
+is.binary.tree(phy_tree(PHYLO_ph)) # All multichotomies resolved?
+
+## philr material
+phy_tree(PHYLO_ph) <- makeNodeLabel(phy_tree(PHYLO_ph), method="number", prefix='n')
+name.balance(phy_tree(PHYLO_ph), tax_table(PHYLO_ph), 'n1')
+otu.table <- (otu_table(PHYLO_ph))  # transpose! (?)
+tree <- phy_tree(PHYLO_ph)
+metadata <- sample_data(PHYLO_ph)
+tax <- tax_table(PHYLO_ph)
+# otu.table[1:2,1:2] # OTU Table
+# tree # Phylogenetic Tree
+# head(metadata,2) # Metadata
+# head(tax,2) # taxonomy table
+
+# replace zeroes - CZM
+otu.table <- cmultRepl(otu.table)   # using default, GeometBayesianMultiplic Replacement    <  !  >   Joey says no to this..
+
+# ILR transform (requires abundance and tree)
+PHYLO_ph.philr <- philr(otu.table, tree,                
+                  part.weights='enorm.x.gm.counts',
+                  ilr.weights='blw.sqrt'
+                  )
+
+# then dist as norm
+PHYLO_ph.dist <- dist(PHYLO_ph.philr, method="euclidean")
+PHYLO_ph.pca <- ordinate(PHYLO_ph, 'PCoA', distance=PHYLO_ph.dist)
+
+aitch.df3 <- data.frame(sample_data(PHYLO_ph),
+                        PC1 = PHYLO_ph.pca$vectors[,1],
+                        PC2 = PHYLO_ph.pca$vectors[,2],
+                        PC3 = PHYLO_ph.pca$vectors[,3],
+                        stringsAsFactors = FALSE )
+
+PClab1 <- paste0("PC1: ", round( 100*PHYLO_ph.pca$values$Relative_eig[1], 1 ), '%')   #making axes labels
+PClab2 <- paste0("PC2: ", round( 100*PHYLO_ph.pca$values$Relative_eig[2], 1 ), '%')
+
+
+## PCA axial boxplots
+	aitch_pca_boxp = cbind(data.frame(sample_data(PHYLO_ph)$Condition), data.frame(sample_data(PHYLO_ph)$Treatment),  data.frame(sample_data(PHYLO_ph)$Description), PHYLO_ph.pca$vectors)
+	aitch_pca_boxp <- melt(aitch_pca_boxp)
+	colnames(aitch_pca_boxp) <- c('Condition', 'Treatment', 'Description' , 'PC','value')
+ 
+	# note low number of axes
+   ggboxplot(aitch_pca_boxp[1:(0.25*nrow(aitch_pca_boxp)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCA Variance (18 of 64) of treatment*pre/post')
+	
+
+
+
+## PCoA / PCA
+# ai_ph_pcoa <- plot_ordination(PHYLO_ph, PHYLO_ph.pca, color='Description', type = 'samples') +
+ai_ph_pcoa <- ggplot(aitch.df3, aes(x = PC1, y = PC2, color=Description, shape=Description)) +
+                        stat_ellipse(aes(fill=Description, color=NULL), type = 't', geom="polygon" , level=0.8 , alpha=0.2) +
+                        geom_line(aes(group = ID), alpha=0.65, size=0.3, colour='grey38') +
+                        geom_point(color='grey28', aes(fill=factor(aitch.df3$Description)), alpha=1, size = 4) +
+                        scale_fill_manual("Description",values=e.desc) +
+                        scale_color_manual("Description",values=e.desc ) +
+                        scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+                        xlab(PClab1) +
+                        ylab(PClab2) +
+                        border(color = 'grey35') +
+                        theme(legend.position='left', plot.margin = margin(2, 2, 0, 0, 'cm'))
+# labs(title=paste('PCA of phILR values: PC1 -', PClab1, '& PC2 -', PClab2, ', w./ 80% t-prob?')) +
+# stat_ellipse(aes(x = PHYLO_ph.pca$vectors[,1],y =PHYLO_ph.pca$vectors[,2], fill=Description), type = 't', geom="polygon" , level=0.8 , alpha=0.2) +
+
+
+# put boxplots inside plot, not alongside.   ## ggdensity
+xbp <- ggboxplot(aitch.df3, "Description", "PC1", fill = "Description", size=0.3, palette = e.desc, width = 0.5 ) +  border(color = 'grey35') +
+  ggpubr::rotate() +  theme(legend.position='none') #+ theme_transparent()
+ybp <- ggboxplot(aitch.df3,  "Description", "PC2", fill = "Description", size=0.3, palette = e.desc) +  border(color = 'grey35') +
+  theme(legend.position='none')# + theme_transparent()
+
+# ## calibrate ?
+# xbp_grob <- ggplotGrob(xbp) ; xmin <- min(aitch.df2$PCoA1); xmax <- max(aitch.df2$PCoA1)
+# ybp_grob <- ggplotGrob(ybp) ; ymin <- min(aitch.df2$PCoA2); ymax <- max(aitch.df2$PCoA2)
+# #yoffset <- (1/7)*ymax; xoffset <- (1/7)*xmax
+
+# add spacer, insert
+ai_ph_pcoa + annotation_custom(grob = xbp_grob,
+                            xmin = -.17, xmax = .16,
+                            ymin = .135, ymax = .185) +
+          annotation_custom(grob = ybp_grob,
+                            xmin = .15, xmax = .2,
+                            ymin = -.12, ymax = .16)
+
+print(paste('PCA of phILR values: PC1 -', PClab1, '& PC2 -', PClab2, ', w./ 80% t-prob?'))
+
+
+# ## what of species?
+# plot_ordination(PHYLO_ph, PHYLO_ph.pca, color='phylum', type = 'species') + 
+#   stat_ellipse() 
+# # consider plotting PRE and POST? If worthwhile, should be discernable on PCA/PCoA
+
+
+## see philr tutorial for more
+
+```
+
+
+
+
+
+---
+
+### Aitchison Networks - Phi
+
+Although this network approach is provided above, it's original form was implementing the Aitchison-sensitive co-abundance measure ```Phi```, as below.
+
+#####  [ASV Correlations with Phi](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-3:-OTU-Correlations-with-Phi)
+
+
+```{r 3_phi_corrletations}
+# Imported the Phi function at beginning
+
+# Keep only those OTUs with a mean count of greater than 1 for this exercise (this is the same cutoff we used for ALDEx)
+# Remove OTUs <= mean read count
+count <- 1
+
+# filter your table
+d.r <- t( otu_table(PHYLO_full))  # aldex expects ROWS AS SPECIES/FEATURES????
+d.1 <- data.frame(d.r[which(apply(d.r, 1, function(x){mean(x)}) > count),], 
+                  check.names=F)
+conds <- as.character( sample_data(PHYLO_full)$Condition )           #   using all samples?..
+
+x <- aldex.clr(d.1, conds, mc.samples=128, verbose=TRUE)
+
+
+## =================================   P h i   ================================= ##
+
+# propr: calculate the phi statistic.
+d.sma.df <- propr.aldex.phi(x)
+# d.sma.df2 <- propr::proprPhit(counts = x , symmetrize = FALSE )
+
+  #
+  ## A N   P A R A M E T E R   I S   T A B H A C H T A C H
+  phi.cutoff <- 0.4
+  #
+
+
+# get the subset of OTUs that are joined by one or more low phi connections
+d.sma.lo.phi <- subset(d.sma.df, phi < phi.cutoff)
+
+# igraph: convert the connections into a graphical object
+g <- graph.data.frame(d.sma.lo.phi, directed=FALSE)
+
+```
+
+#### Make a network from Correlations
+
+```{r network_aitchison}
+
+## ========================  A n n o t a t e   ================================= ##
+
+  # backup ASV IDs of interest, could also directly invoke the names from the graph.data.frame fn above
+  g.id <- V(g)$name
+  
+  # V(iewing) g gives you a list of filtered taxa: need to assign names here to match e.col2 : FAMILY
+  V(g)$name <- tax_table(PHYLO_full)[ (g.id) , 6]
+
+  ## works if all taxa survived crush :: better/clearer to build color vector based on resident phylum
+  # my_colors <- e.col2[ match( V(g)$name , names(e.col2)) ]    
+  ## build vector to colour by PHYLUM
+  my_colors <- e.col3[ match( tax_table(PHYLO_full)[ (g.id), 2] , names(e.col3)) ]
+  # fill in blanks for NA values
+  my_colors[ is.na(names(my_colors)) ] <- 'grey70'
+
+  
+  
+## make a table to examine the cluster membership by hand
+# igraph: find the clusters
+  g.clust <- clusters(g)
+  g.df <- data.frame(Systematic.name=V(g)$name, ASV.ID=g.id, cluster=g.clust$membership, cluster.size=g.clust$csize[g.clust$membership])
+# set of clusters >x, for later use below
+  big <- g.df[which(g.df$cluster.size >= 2),]
+  colnames(big) <- colnames(g.df)
+  rownames(big) <- big$ASV.ID
+
+  
+  # see part 3 of the CoDa walkthrough for original
+  #                     allow gsub of '['                                      swap here
+  V(g)$name <- gsub("(^[\\[\\]A-Za-z]{6}).+", "\\1", as.vector(tax_table(PHYLO)[ ( g.id ) , "genus"]), perl=TRUE)
+  V(g)$name[ is.na(V(g)$name) ] <- 'unk.'
+  
+  # name vector for phylum-colour legend
+  net_phy <- as.vector(unique(tax_table(PHYLO)[ g.id , 'phylum']))
+
+
+plot(g,
+     vertex.size=20,
+     vertex.color=my_colors,
+     vertex.label.cex=0.9,
+     vertex.label.color="black",
+     vertex.label.dist=3,                          # Distance between the label and the vertex
+     # font?
+     vertex.frame.color="black",
+     edge.color = 'grey40',
+     edge.width = cut(d.sma.lo.phi$phi, breaks= 5))  # binnning of edge weights controlled by breaks
+
+# legend
+legend(x=-2.5,
+       y=1,
+       legend= net_phy,
+       col = e.col3[match(net_phy, names(e.col3))],
+       bty = "n",
+       pch=20 ,
+       pt.cex = 2,
+       cex = 1,
+       text.col="black" ,
+       horiz = F)
+
+# show_col(my_colors)
+# names(my_colors)
+
+```
+ 
+ 
+```{r phi_corr_tax_table}
+z <- data.frame(tax_table(PHYLO_5)[g.id,2:6] , row.names = 1:length(g.id) )
+kable(z)
+
+```
+ 
+ 
+```{r ait_pca_ggplot}
+## ========================  g g b i p l o t  ================================= ##
+
+#   # replace labels with a colour code
+# 
+# # hmm. Do we feel this isn't subscribing to our autodidactery agenda?
+# library(ggbiplot)
+# ggbiplot(d.pcx, #labels =  rownames(d.clr), 
+#          groups = sample_data(PHYLO)$Condition, ellipse = FALSE,
+#          var.axes = TRUE, varname.size = 0.5)
+
+
+# theme for clusters
+# clust_cols <- hue_pal()( length(unique(big$cluster)))
+clust_cols1 <- darken(brewer.pal (n = max(big$cluster), name = 'Dark2'))
+names(clust_cols1) <- c(paste0('cluster ' , 1:max(big$cluster)))
+clust_cols2 <- clust_cols1[big$cluster]
+
+
+
+d.czm <- cmultRepl(t(d.1),  label=0, method="CZM")
+d.clr <- t(apply(d.czm, 1, function(x){log(x) - mean(log(x))}))  # samp = ROW, scale samples 
+
+  # could add in the shannon values, but scaling might unset the meaning?
+  d.clr <- scale(cbind(d.clr , Shannon = PHYLO_rich$Shannon )) # , InvSimpson = PHYLO_rich$InvSimpson)
+
+d.pcx <- prcomp(d.clr, scale. = TRUE)        # samp = ROW, scale. = T is the advised setting (unit variance among samples)
+PC <- d.pcx 
+x <- 'PC1' 
+y <- 'PC2'
+Feats <- g.id 
+ADiv <- c('Shannon' ) #, 'InvSimpson')
+
+# cluster colours defined above 
+
+## samples
+data <- data.frame(obsnames=row.names(PC$x), PC$x, Condition=sample_data(PHYLO_full)$Condition, Description=sample_data(PHYLO_full)$Description) 
+
+## species (Feats)                                                                                
+datapc <- data.frame(varnames = rownames(PC$rotation) , PC$rotation, stringsAsFactors = FALSE)   # force sAF=F so can apply names
+# feat_cluster = c( big[ rownames(PC$rotation)[1:208] , 'cluster' ] , NA, NA) ,     #  NO JAMIE NOT PROGRAMMATIC
+
+# mutilation: change names to for those ID'd in Phi seciton as being associated, via obj __Feats__
+datapc[ Feats , 'varnames'] <- gsub("(^[A-Za-z]{4}).+", "\\1", tax_table(PHYLO)[Feats,"genus"], perl=TRUE)  # crimp names
+  # # catch a.div names
+  # feat.names <- gsub("(^[A-Za-z]{4}).+", "\\1", tax_table(PHYLO)[Feats,"genus"], perl=TRUE)  # crimp names
+  # adiv.names <- c('Shan' , 'iSimp')
+  # datapc[ Feats , 'varnames'] <- c( feat.names , adiv.names)
+datapc[ is.na(datapc$varnames) , 'varnames'] <- 'unk.'
+
+
+mult <- min(                                                            #
+  (max(data[,y]) - min(data[,y])/(max(datapc[,y])-min(datapc[,y]))),    # smaller ratio vlaue from x or y
+  (max(data[,x]) - min(data[,x])/(max(datapc[,x])-min(datapc[,x])))     #  
+)                                                                       # 
+datapc <- transform(datapc,                                             #
+                    v1 = 2 * mult * (get(x)),                          # haven't got a fucking clue why doing this  -  scaling but why/how?
+                    v2 = 2 * mult * (get(y))                           # all going into v1 and v2
+)
+
+plot <-   ggplot(data, aes_string(x=x, y=y)) +
+    geom_text(alpha=.6, size=3, aes(label=obsnames)) +   # remove labels to remove labels
+    stat_ellipse(aes(x = PC1 , y = PC2, fill = Description), geom="polygon" , level=0.95 , alpha=0.2) +   #, linetype=Description
+    geom_point(aes(fill = Description, shape = Description), color = 'black'  , size=4, alpha = 0.8) +
+    scale_color_manual( values = e.desc) +
+    scale_fill_manual( values = e.desc) +
+    scale_shape_manual(values=c(21,24, 22, 22, 22)) +
+    # geom_hline(aes(0), size=.2, yintercept = c(0,0),  color="grey35") +
+    # geom_vline(aes(0), size=.2, xintercept = c(0,0),  color="grey35") +
+    geom_segment(data=datapc[Feats , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.1, color="grey10") +
+    geom_text(data=datapc[Feats , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color=clust_cols2 )  + 
+    geom_segment(data=datapc[ADiv , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.4, color="black") +
+    geom_text(data=datapc[ADiv , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color='grey11') +
+    border(color = 'grey35')
+    # geom_label(aes(fill = feat_cluster)) #aes(fill = factor(cyl)), colour = "white", fontface = "bold"
+
+plot
+
+```
+
+---
+
+
+### Clustering & Heatmap (Aitchison CLR-Euclidean Distance)
+
+Moved here to take advantage of phi ASVs. __Need to cluster the heatmap by phi__.
+
+<!-- Note also the abundance plot rearranged in the same order as defined through clustering. -->
+
+```{r hmap_aitch}
+
+prunA <- genefilter_sample(PHYLO_clr, filterfun_sample(function(x) x >=0.5), A=0.05*nsamples(PHYLO_clr)) 
+prunA[g.id] <- TRUE
+
+PHYLO_f<- prune_taxa(prunA, PHYLO_clr)
+
+e_df <- data.frame(otu_table(PHYLO_f), stringsAsFactors = FALSE)
+colnames(e_df) <- tax_table(PHYLO_f)[,6]
+# e_df <- e_df[ , colSums(e_df) > 0]   # meaningless in Aitchison
+
+e_bc <- vegdist( e_df, method='euclidean')   
+
+## clustering
+e_clust <- hclust( e_bc, method="ward.D") 
+e_bc_mat <- as.matrix(e_bc)
+## DTC cluster definition
+labels_samp = cutreeDynamic(e_clust,               # dendro
+                       distM = e_bc_mat,      # distM, required for DynamicHybrid
+                       method='hybrid', 
+                       maxCoreScatter = NULL,
+                       minGap = NULL,
+                       minClusterSize = 6,   # def = 20
+                       # pamStage = TRUE,
+                       # pamRespectsDendro = FALSE,
+                       # useMedoids = TRUE,
+                       deepSplit = 3)
+
+
+
+## heretical BC, Ward linked taxa matrix
+e_taxbc <- vegdist(t(e_df), method='euclidean')    # Bray-Curtis distance on taxa
+e_taxclust <- hclust(e_taxbc, method="ward.D")
+e_taxbc_mat <- as.matrix(e_taxbc)
+## DTC cluster definition
+labels_tax = cutreeDynamic(e_taxclust,               # dendro
+                       distM = e_taxbc_mat,      # distM, required for DynamicHybrid
+                       method='hybrid',
+                       maxCoreScatter = NULL,
+                       minGap = NULL,
+                       minClusterSize = 20,   # def
+                       pamStage = TRUE,
+                       pamRespectsDendro = FALSE,
+                       useMedoids = TRUE,
+                       deepSplit = 3)
+
+
+
+e_z <- t((e_df))  # z-score
+
+# colours  # display.brewer.all()
+clust_cols <- brewer.pal(length(unique(labels_samp)), 'Set1')
+names(clust_cols) <- as.character(c(1:(length(unique(labels_samp)))))
+
+# make annotations
+# condition=c('PRE' = 'red', 'CONTROL' = 'grey12', 'POST'='green')
+annot <- HeatmapAnnotation( cluster = labels_samp,
+                            # condition = sample_data(PHYLO_f)$Condition,
+                            description = sample_data(PHYLO_f)$Description,
+                            col=list( cluster = clust_cols ,
+                                      # condition = e.desc,
+                                      description = e.desc) )
+
+## heatmap
+Heatmap(e_z,
+        name = 'Ait-Euc Heatmap',
+        col = viridis(5)[2:5],
+        cluster_rows = e_taxclust,
+        cluster_columns = e_clust,
+        top_annotation = annot,
+#        bottom_annotation = b_annot,
+        show_row_names = TRUE,
+        row_names_gp = gpar(fontsize = 7),
+        column_names_gp = gpar(fontsize = 7)
+        ) 
+
+# ggplot(z.rm5, aes(x=hclust,y=Abundance, fill = class)) +
+# #    facet_grid(phylum~Condition,scales='free',space='free') +                                  # scale/size control
+#     geom_bar(aes(fill = class , color = class ), stat ="identity", position="stack" ) +      #, color='black'
+#     theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+#     theme(strip.text.x = element_text(size = 12), strip.text.y = element_text(size = 9)) +    # bigger
+#     theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  # rotate
+#     scale_fill_manual(values = e.col2, na.value='grey')  +         # the shape-filling colours 
+#     scale_color_manual(values = e.col2, na.value='grey')  +        # are same as the outline colours
+#     theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +                    # horiz lines, not vis here
+#     guides(fill=guide_legend(reverse=FALSE), color=guide_legend(reverse=FALSE)) +
+#     ggtitle("PHYLO ASVs")+ theme(legend.position = 'right', legend.box = "vertical") #, aspect.ratio = 2:1)
+
+#detach(name='package:philr', unload = TRUE)
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+---
+
+# Transmission Ends
+
+---
+
+### Graveyard Groupings 
+
+nice code for grouping (see use of apply and for loops), but doesn't work as CRUSHES small ASVs at higher levels (e.g. small firmicute taxa get glommed to misc (and plotted as misc) if ASV not significant)
+
+``` {r eval=FALSE, include=FALSE}
+filter out the clamouring masses
+prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.23*nsamples(PHYLO))
+PHYLO_un10 = prune_taxa(!prunA, PHYLO)
+
+
+
+##===== indiscriminate testing
+# # summarise
+# lapply(grep(pattern = 'PC', colnames(bc_df)), function(x){ 
+#    Summarize(bc_df[,x] ~ Condition, data = bc_df)
+# })
+# 
+# # test
+# lapply(grep(pattern = 'PC', colnames(bc_df)), function(x){ 
+#      kruskal.test(bc_df[,x] ~ Description, data = bc_df)
+# })
+# 
+# # followed by Pairwise Wilcox Rank-Sum Test / Dunn test / Mann-Whitney U
+# lapply(grep(pattern = 'PC', colnames(bc_df)), function(x){ 
+#     dunnTest(bc_df[,x] ~ Description, data = bc_df, method = 'bh')
+# })
+
+
+
+  ## THIS IS NO GOOD
+  ## this crushes everyone below a threshold, NOT all negligible groups (i.e. crushes firmicutes etc.)
+
+  ## need more intelligent way to parcel low-significance taxa
+
+PHYLO_5 <- PHYLO
+
+# NUKE v.1 :: nuke the taxon of the clamouring masses
+## good idea, but we can do better:
+# tax_table(PHYLO_5)[rownames(tax_table(PHYLO_un10)),] <- 'Misc. '
+
+# NUKE v.2 :: intelligent strike on proletariat ranks
+tax_ranks <- colnames(tax_table(PHYLO))[1:7]    # preserve ASVs!
+unASV <- rownames(tax_table(PHYLO_un10))
+
+# doing this on a matrix takes INFINITE long (?) - swap thru df
+tax_df <- data.frame(tax_table(PHYLO_5), stringsAsFactors = FALSE)          # <  !  > stringsAsFactors
+
+
+# v.2.3 :: works if change to df!
+for (a in unASV){
+  for (t in tax_ranks){
+    tax_df[ a , t ] <- paste('misc.', t, sep = ' ')
+  }
+}
+# back home
+tax_table(PHYLO_5) <- as.matrix(tax_df)
+
+        ## again, these steps much much faster on Blip than Asp    =S
+
+        # # v.2.1 :: never worked - too long
+        # lapply(tax_ranks, function(x) {                  # takes a While - consider swapping tax_rank / ASV
+        #   for (ASV in rownames(tax_table(PHYLO_un10))){
+        #     tax_table(PHYLO_5)[ ASV , which(x %in% tax_ranks) ] <- paste0('Misc. ',x)
+        #   }
+        # })
+
+        # v.2.2 :: never worked - too long
+        # lapply(unASV, function(x) {                  # takes a WHILE - consider swapping tax_rank / ASV
+        #   for (t in tax_ranks){
+        #     tax_table(PHYLO_5)[ x , t ] <- paste0('Misc. ',x)
+        #   }
+        # })
+
+        # # v.2.2.1 :: never worked - too long
+        # lapply(tax_ranks, function(x) {                  # takes a While - consider swapping tax_rank / ASV
+        #   for (ASV in unASV){
+        #     tax_df[ ASV , which(x %in% tax_ranks) ] <- paste0('Misc. ',x)
+        #   }
+#         # })
+
+
+## hack GGPLOT
+
+p <- plot_ordination(PHYLO_5, PHYLO_ord, color='class', shape='Description', type = 'biplot') +
+  theme_classic() +
+  geom_point(alpha=0.4)
+
+str(p)
+# could try better setting of factors, but not worthwhile: will not affect order of colours (therefore a bad call)
+levels(p$data[['class']]) <- factor(c('Misc._n/a', 'Misc._class', 'Negativicutes', 'Gammaproteobacteria', 'Bacteroidia', 'Bacilli' , 'Samples') ,
+                                    levels = c('Misc._n/a', 'Misc._class', 'Negativicutes', 'Gammaproteobacteria', 'Bacteroidia', 'Bacilli', 'Samples'))
+
+
+```

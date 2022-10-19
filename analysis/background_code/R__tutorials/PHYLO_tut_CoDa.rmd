@@ -1,0 +1,820 @@
+---
+title: "PHYLO_CoDa"
+author: "jfg"
+date: "21 December 2018"
+output: html_document
+---
+  
+## ALDEX tutorial material
+### See also
+
+  * https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/
+  * PHYLO_CoDa_Ord
+
+---
+  
+  
+
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(eval= TRUE)
+library('ggpubr')
+library('cowplot')
+library('readr')
+library('phyloseq')
+library('vegan')
+library('ggplot2')
+library('reshape')
+library('RColorBrewer')
+library('scales')
+library('plyr')
+library('ape')
+library('ALDEx2')
+library('robCompositions')
+library('zCompositions')
+#library('base.coda') # availability?
+
+
+theme_set(theme_classic())   #prob not gonna hold like that
+```
+
+```{r load_data}
+# list.files()
+PHYLO <- readRDS('../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS')         # Chimera cleaned, N_CTRL-stripped data from PHYLO DADA2 run
+
+sample_data(PHYLO)$Condition <- factor(sample_data(PHYLO)$Condition, levels=c('CONTROL', 'PRE', 'POST'))
+colnames(sample_data(PHYLO))[7] <- c('Treatment')
+sample_data(PHYLO)$Description <- as.character(sample_data(PHYLO)$Condition)
+sample_data(PHYLO)$Description[(sample_data(PHYLO)$Condition =='POST') ] <- paste0(
+                                                              sample_data(PHYLO)$Condition[(sample_data(PHYLO)$Condition =='POST') ],
+                                                                  '_',
+                                                                  sample_data(PHYLO)$Treatment[ (sample_data(PHYLO)$Condition =='POST') ]
+                                                                  )
+sample_data(PHYLO)$Description <- gsub('\\dFED','FED',sample_data(PHYLO)$Description)
+sample_data(PHYLO)$Description <- factor(sample_data(PHYLO)$Description , levels = c("PRE",  "CONTROL", "POST_STEROIDS" , "POST_PPIs", "POST_FED"))
+
+prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=5), A=0.01*nsamples(PHYLO))
+PHYLO_5 = prune_taxa(prunA, PHYLO)
+
+
+# ===
+
+## commander hadley recommends using a named vector
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' , 'Neg_Co' = 'lavenderblush3' )
+
+e.treat <- brewer.pal(n = length(unique(sample_data(PHYLO)$Treatment)), name = 'Dark2')  
+names(e.treat) <- c("2FED" , "4FED" , "CONTROL" , "PPIs" , "STEROIDS")
+
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","Neg_Co", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+
+# ===== taxa colours ======================
+
+#unique phyla, cut 'NA'
+unq <-  get_taxa_unique(PHYLO_5, taxonomic.rank = 'phylum') ; unq <- unq[!is.na(unq)]
+
+
+## a colour for each phylum
+clr_phy2 <- hue_pal( l = 56, c = 150 )(length(unq))
+# show_col(clr_phy2)
+
+# Failsafe: grab a spectral colour set too, as long as ```nphyla(PHYLO_m) + `1```, for easy ordination colours.
+# clr_phy2 <- c('Bacteroidetes' ='#A51876', 'Firmicutes'='#1E78D2', 'Epsilonbacteraeota'= '#117878', 'Actinobacteria' ='#18A55E', 'Proteobacteria' ='#D2D21E', 'Fusobacteria' ='#D2781E', 'Patescibacteria' ='#E43F5B')  #, 'misc'= 'grey50'
+names(clr_phy2) <- unq
+clr_phy2 <- c(clr_phy2, 'misc' = 'grey50')
+
+##======a shade for each rank int that phylum======================== 
+plot_rank <- 'family'   # set to level of interest
+padding <- 1            # lower = paler end of palette, higher = less intelligible breaks
+e.col2 <- NULL
+# colourRamp
+for (x in unq) {
+  # pad end of vector
+    col_grad <- colorRampPalette( color = c(clr_phy2[x], 'ivory'), space='rgb' )( length(get_taxa_unique( tax_table(subset_taxa(PHYLO_5, phylum == x)), taxonomic.rank = plot_rank)) + padding )
+    col_grad <- col_grad[1:(length(col_grad) - padding)]
+    names(col_grad) <- get_taxa_unique( tax_table(subset_taxa(PHYLO_5, phylum == x)), taxonomic.rank = plot_rank)
+  # CURTAIL final two
+   e.col2 <- c( e.col2 ,  col_grad)  
+               } 
+e.col2 <- c(e.col2, 'misc'='grey45', 'NA'='grey70')
+##===================================
+
+```
+
+
+# Centred Log Ratio
+
+The idea here is, for each feature in a sample:
+
+  * get the log of - 
+  * the ratio between:
+    - that feature's value in that samples
+    - the geometric mean (i.e. root^n(X.X.X.X)) for that sample
+    
+Because you're using logs, worth noting that ```log(x/y)``` is equivalent to ```log(x) - log(y)```. 
+
+However, also worth asking, why are we so interested in using the geometric mean?.. a [little reading](https://towardsdatascience.com/on-average-youre-using-the-wrong-average-geometric-harmonic-means-in-data-analysis-2a703e21ea0) tells us that the g-mean is more reliable when your values have a multiplicative relationship. [W](https://en.wikipedia.org/wiki/Geometric_mean) further clarifies by suggesting gmean is appropriate for number with different scales, relationships, or __ranges__,  (as independent OTUs should presumably be).  
+
+```{r logeg1}
+log(10/1000)
+log(10) - log(1000)
+log(10/1000) == log(10) - log(1000)
+
+```
+
+### Approaches: 
+
+#### YES:
+
+  * ```log(x/y)```
+  * ```log(x) - log(y)```
+  * ```log(x/y) == log(x) - log(y)```
+  * Calls to ``` __s__apply ``` call ```x``` and its parent ```set```
+  * Calls to ```apply``` refer only to ```x``` in the function (and not ```set```)
+  
+
+#### NO: 
+
+  * ```gmean =/= mean```
+  * __Don't__ try ```log(x) - mean(log(y))```
+
+
+```{r logeg2}
+## on a vector
+
+# different for vectors and dfs/matrices
+set <- c(1,32,6,712,23,235,67,872,1,22334,51,64,57,21,1,22,43,4,87,85,79,2,12,3,6,9,09,24,3432,658,79)
+
+# equivalent methods, not use of g/mean on set instead of on x
+# note also using SAPPLY not apply
+set_clr1 <- sapply(set, function(x) log(x) - log(gmean(set)) )
+set_clr2 <- sapply(set, function(x){ log(x / gmean(set)) } )
+set_clr1 == set_clr2     # Rounding FloP errors, as visually identical
+all.equal(set_clr1 , set_clr2)
+
+
+## on a matrix/df
+
+set <- c(1,32,6,712,23,235,67,872,1,22334,51,64,57,21,1,22,43,4,87,85,79,2,12,3,6,9,09,24,3432,658,79)
+set2 <- cbind(da1=set , da10 =(set*10), da100 = (set*100))
+# note calling on x, not on set2 within apply
+set2_clr1 <- apply(set2, 2, function(x){ log(x) - log(gmean(x))} )     # margin not required, as specified to apply?...
+set2_clr2 <- apply(set2, 2, function(x){ log(x/gmean(x))} )
+all.equal(set2_clr1 , set2_clr2)
+
+## MEAN v. GMEAN
+# linear replationship with product of g/mean,  but not the same. 
+set2_clr3 <- apply(set2, 2, function(x){ log(x / mean(set2)) } )
+set2_clr3
+plot(set2_clr2 , set2_clr3)
+set2_clr1 == set2_clr3
+all.equal(set2_clr1, set2_clr2)
+
+```
+
+
+#### Harmonic Mean
+
+A third option (to the different means) is the [harmonic mean](https://en.wikipedia.org/wiki/Harmonic_mean), the ```reciprocal of the arithmetic mean of the reciprocals```. The first link above explains that harmonic means (which are always the smallest of the three means) allow another level of multiplication/division over that of g-means (which tolerates scale differences), improving estimates of the average between different scales _and different observational frames (e.g. interest rates per-annum v. per-century) without having to explicitly account for them. So the h-mean is _doubly tolerant_ to differences in the origin of values - could this be used to improve comparability between ASVs _and_ samples? Still intolerant of zeroes however (NO DIVIDE BY ZERO). 
+
+Correct weighting of these means can be very important. Look it up, I suppose. Aaaand read more.
+
+
+```{r harm_mean}
+set <- c(1,32,6,712,23,235,67,872,1,22334,51,64,57,21,1,22,43,4,87,85,79,2,12,3,6,9,09,24,3432,658,79)
+set2 <- cbind(da1=set , da10 =(set*10), da100 = (set*100))
+
+# manually define the arith mean
+apply(set2 , 2 , function(x) sum(x)/length(x))           # apply(set2, 2, mean)
+
+# manually define the geo mean
+apply(set2 , 2 , function(x) prod(x)^(1/length(x)) )     # gmean(set2, margin = 2)
+
+# manually define the harm mean
+apply(set2 , 2 , function(x) 1/(mean(1/x)))
+
+# CLR of harm-mean
+set_clr1 <- sapply(set, function(x) log(x) - log(gmean(set)) )
+
+
+```
+
+----
+
+### Subset
+
+In microbial ecology, lots of zeroes. Often remove OTUs with a mean read count across all samples less than or equal to our ```cutoff```, especially as the sparser the data the more the zero-count step will alter the original data. See also the question of _subcompositions_.
+
+Rethink this filtering step. 
+
+```{r subset_asv}
+
+# better way
+prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=20), A=0.05*nsamples(PHYLO))
+PHYLO_sub = prune_taxa(prunA, PHYLO)
+d_sub <- as.data.frame(otu_table(PHYLO_sub))    # samples as ROWS
+
+
+d.1 <- d_sub  
+# d.1 <- as.data.frame(otu_table(PHYLO))  # or dont!
+
+```
+
+
+## The Zero Problem - Additive, MultRep, and BayesMultRep.
+
+samples must be ROWS. These functions are from the zCompositons package. Several different methods: GBM most advanced but applicability to microbiome? CZM most general.
+
+Can't get GBM to work on full otu_table : ```Error in if (any(X2[i, z] > colmins[z])) { : missing value where TRUE/FALSE needed```. Not empty OTUs. 
+
+``` {r}
+# samples as ROWS
+
+# d.czm <- cmultRepl(d.1,  label=0, method="GBM")
+
+d.czm <- cmultRepl(d.1,  label=0, method="GBM")
+dim(d.1)
+```
+
+
+## CLR Transform
+
+__note:__ ```mean``` is (arguably...) the wrong fn() to use for this case - here we use gmean, which gets the geomeric mean.
+
+
+``` {r}
+d.clr <- t(apply(d.czm, 1, function(x){ log(x/gmean(x)) }) )
+dim(d.clr)
+
+```
+
+
+## CoDa PCA biplot
+This is bascially just a PCA on CoDa data (Aitchison Distance). Unlike Phyloseq, we have to got through some extra steps here to make our plot, and it won't be pretty!  
+  
+  Consider: PCoA on euclidean distance equates to PCA - ```PCoA(CoDa) == PCA(CoDa)?```
+
+Samples must be ROWs and features/OTUs as COLUMNS. This is a convention held for a number of methods, so make sure that the data is correctly orientated when you feed it in.
+
+``` {r 1_pca}
+d.pcx <- prcomp(d.clr)
+
+
+# Sum the total variance
+d.mvar <- sum(d.pcx$sdev^2)
+# Calculate the PC1 and PC2 variance
+PC1 <- paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3))
+PC2 <- paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3))
+
+# # basic PCA biplot
+# biplot(d.pcx, var.axes=T, scale=0, xlab=PC1, ylab=PC2)
+
+# samples as points instead of labels  -  assumes labels plotted in same order..
+points <- c(rep("sp", nrow(d.pcx$rotation)) )
+samples <- rownames(d.pcx$x) 
+col=c("black",rgb(1,0,0,0.2))
+size=c(0.5, 0.5) #Relative scale, 1 is 100%
+
+biplot(d.pcx, cex=size, col=col, var.axes=T,
+       xlab=PC1, ylab=PC2,
+       scale=0, ylabs=points, xlabs=samples
+)
+
+# check PCA stats ouptut
+summary(d.pcx)
+str(d.pcx)
+screeplot(d.pcx)
+
+
+```
+
+
+Make pretty, i.e. better to look at, but also should make it easier to understand. 
+
+``` {r 1_spec_pca}
+
+col.g=c("black",'blue')
+size.g=c(0.5, 0.4) #Relative scale, 1 is 100%
+genera <- tax_table(PHYLO)[(rownames(d.pcx$rotation)), 'genus']
+short.gen <- gsub("(^[A-Za-z]{4}).+", "\\1", genera, perl=TRUE)
+
+biplot(d.pcx, cex=size.g, col=col.g, var.axes=F,
+       xlab=paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3)),
+       ylab=paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3)),
+       scale=0, ylabs=short.gen, xlabs=samples
+)
+abline(h=0, lty=2, col=rgb(0,0,0,0.1))
+abline(v=0, lty=2, col=rgb(0,0,0,0.1))
+```
+
+
+
+## Dendrogram
+
+We are using default parameters (i.e. our distance is 'euclidean' , clustering method (hclust) = complete linkage)
+
+``` {r 1_sample_denrdo}
+hc <- hclust(dist(d.clr))
+plot(hc)
+
+# save.image('PHYLO_CoDa_runthrough.RData')
+
+```
+
+---
+
+## RY-way PCoA plot
+
+
+#### RY_way :: PCoA of Bray-Curtis
+
+
+
+```{r ry_way_pcoa}
+
+    # aitchison distance stuff
+
+      ## PCoA
+    	ait_dist <- vegdist(d.clr,method="euclidean")  
+    	ait_pcoa <-pcoa(ait_dist)
+
+      ## labels: PCoA has pre-calcd this for you (relative eigen)
+      PCo1 <- paste0('PCoA1: ',round(ait_pcoa$values[[2]][1]*100, 0),'%')
+      PCo2 <- paste0('PCoA2: ',round(ait_pcoa$values[[2]][2]*100, 0),'%')
+      PCo3 <- paste0('PCoA3: ',round(ait_pcoa$values[[2]][3]*100, 0),'%')
+      PCo4 <- paste0('PCoA4: ',round(ait_pcoa$values[[2]][4]*100, 0),'%')
+      PCo5 <- paste0('PCoA5: ',round(ait_pcoa$values[[2]][5]*100, 0),'%')
+      PCo6 <- paste0('PCoA6: ',round(ait_pcoa$values[[2]][6]*100, 0),'%')
+      PCo7 <- paste0('PCoA7: ',round(ait_pcoa$values[[2]][7]*100, 0),'%')
+      PCo8 <- paste0('PCoA8: ',round(ait_pcoa$values[[2]][8]*100, 0),'%')
+      PCo9 <- paste0('PCoA8: ',round(ait_pcoa$values[[2]][9]*100, 0),'%')
+      PCo10 <- paste0('PCoA10: ',round(ait_pcoa$values[[2]][10]*100, 0),'%')
+
+      ait_df = data.frame(data.frame(sample_data(PHYLO), stringsAsFactors = FALSE),
+      		                "PCoA1" = ait_pcoa$vectors[,1]*-1,
+      		                "PCoA2" = ait_pcoa$vectors[,2]*-1,
+      		                "PCoA3" = ait_pcoa$vectors[,3]*-1,
+      		                "PCoA4" = ait_pcoa$vectors[,4]*-1,
+      		                "PCoA5" = ait_pcoa$vectors[,5]*-1,
+      		                "PCoA6" = ait_pcoa$vectors[,6]*-1,
+      		                "PCoA7" = ait_pcoa$vectors[,7]*-1,
+      		                "PCoA8" = ait_pcoa$vectors[,8]*-1,
+      		                "PCoA9" = ait_pcoa$vectors[,9]*-1,
+      		                "PCoA10" = ait_pcoa$vectors[,10]*-1,
+      		                "PCoA11" = ait_pcoa$vectors[,11])
+
+	ait_pcoa_boxp = cbind(data.frame(sample_data(PHYLO)$Condition), data.frame(sample_data(PHYLO)$Treatment),  data.frame(sample_data(PHYLO)$Description), ait_pcoa$vectors)
+	ait_pcoa_boxp <- melt(ait_pcoa_boxp)
+	colnames(ait_pcoa_boxp) <- c('Condition', 'Treatment', 'Description' , 'PC','value')
+ 
+	# note low number of axes
+   ggboxplot(ait_pcoa_boxp[1:(0.2*nrow(ait_pcoa_boxp)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCoA eigenvalues (14 of 64) of treatment*pre/post')
+	
+
+```
+
+
+```{r adonis1_PHYLO, echo=TRUE}
+PHYLO_dat <- data.frame(sample_data(PHYLO), stringsAsFactors = FALSE) 
+
+## adonis 1
+# randEffects partially accounted for by placing ID first 
+adonis(ait_dist ~ ID + Condition/Description, data=PHYLO_dat, permutations = 2500)
+  
+## Kruskal-Wallis & post-hoc Dunn's test
+kruskal.test(PCoA1 ~ Description, data = ait_df)
+
+# # followed by Pairwise Wilcox Rank-Sum Test / Dunn test / Mann-Whitney U
+# dunnTest(Axis.1 ~ Description, data = ait_df, metho = 'bh')
+
+```
+
+ 
+#### RY_way :: Visualise 
+
+```{r ry_way_vis}
+ 
+## ================================================================================================
+  
+  gg.pcoa <- ggplot(ait_df,aes(x = PCoA1, y = PCoA3, color=Description, shape=Description)) +
+                          stat_ellipse(aes(x = PCoA1,y =PCoA3, fill=Description), geom="polygon" , level=0.8 , alpha=0.2) +   #, linetype=Description
+                          theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                          panel.background = element_blank(), axis.line = element_line(colour = "grey80") ) +
+                          scale_fill_manual("Description",values=e.desc) +
+                          scale_color_manual("Description",values=e.desc ) +
+                          scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+                          geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+                          geom_point(color='grey28', aes(fill=factor(ait_df$Description)), size = 4) +
+                          xlab(PCo1) +
+                          ylab(PCo3) + border(color = 'grey35') +
+                          theme(legend.position='left', plot.margin = margin(2, 2, 0, 0, 'cm'))
+
+# put boxplots inside plot, not alongside.  
+xbp <- ggboxplot(ait_df, "Description", "PCoA1", fill = "Description", size=0.3, palette = e.desc, width = 0.5 ) +
+  ggpubr::rotate() +  theme_transparent() +  theme(legend.position='none')
+
+ybp <- ggboxplot(ait_df, "Description", "PCoA3", fill = "Description", size=0.3, palette = e.desc, width = 0.5 ) +
+  theme_transparent() +  theme(legend.position='none')
+
+xbp_grob <- ggplotGrob(xbp) ; ybp_grob <- ggplotGrob(ybp)
+
+# add spacer, insert
+gg.pcoa + annotation_custom(grob = xbp_grob, 
+                            xmin = -16, xmax = 17, 
+                            ymin = 13.5, ymax = 18) +
+          annotation_custom(grob = ybp_grob,
+                            xmin = 16, xmax = 21, 
+                            ymin = -12, ymax = 15)
+	
+## ================================================================================================
+
+```
+
+
+
+---
+  
+## [Differential Abundance Testing](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-2:-ALDEx2-for-Differential-Expression-Analysis)
+
+Again, we need ot set up our tutorial space: loading phylo, ALDEx2 etc. Remember to doublecheck the filenames are correct. Most of this already run above but kept for explication. Get taxa so can easily look up what Seq IDs mean...
+
+Doing pairwise testing (1 v. 1). Keep more OTUs than the tutorial. Make a data frame called __d.r__ that we'll use for testing.
+
+``` {r 2_prep_DA_testing}
+taxa <- data.frame(tax_table(PHYLO)[,1:7], stringsAsFactors = FALSE )
+
+d.r <- t( otu_table(PHYLO))  # aldex expects ROWS AS SPECIES/FEATURES????
+
+# our random cutoff value: 1 (removes ASVs that only appear once, as they're not informative)
+count <- 1
+aldex.in <- data.frame(d.r[which(apply(d.r, 1, function(x){mean(x)}) > count),], 
+                       check.names=F)
+
+# list of samples from phyloseq sample_data, or from names if necessary - author has bizarre way to do the below, see link.
+conds <- as.character( sample_data(PHYLO)$Condition )
+```
+
+
+Our sample __Conditions__: 
+
+  * ```PRE```
+  * ```POST```
+  * ```CONTROL``` 
+  
+  
+``` {r 2_DA_define_test} 
+# smooth this code
+dim(aldex.in) # check size    # bup_aldex.in <- aldex.in
+aldex.in <- aldex.in[ , !(sample_data(PHYLO)$Condition == 'CONTROL') ]
+dim(aldex.in) # check change in size
+
+conds # look at conds, no more CONTROL
+# now, exclude all the CONTROL samples, as we're not going to test them now. 
+conds <- conds[ !(conds == 'CONTROL') ]
+```
+
+
+
+## ALDEx2 Function
+This is the main ALDEx function for all downstream analyses. Here, ```aldex.clr``` will do the more complicated  __probability-based__ _multiplicative replacement_, and uses Monte-Carlo sampling to estimate the different probabilities for replacing species abundance zeroes in the samples. Similar but different (?) to the Geometric Bayesian Multiplication used above. 
+
+``` {r 2_DA_transform}
+#mc.samples=128 is often sufficient. This is the number of Monte-Carlo samples from the Dirichlet distribution   
+x <- aldex.clr(aldex.in, conds, mc.samples=200, verbose=TRUE)
+```
+
+
+
+## Tests!
+
+Both __Welches__ and __Wilcoxon__ rank-sum t-test. Up to you to go find the difference between the two tests! In this instance, Gloor is simply showing us that both can be done with his R library. 
+
+ALDEx2 will _also_ do Benjamini-Hochberg multiple testing correction, which accounts for the fact that the more you test for a significant difference, the more likely you are to eventually find one! Usually, Multiple Testing Correction will involve something nasty like multiplying your p value by the number of tests you did, which can drastically reduce the significance of some outcomes. The idea is to keep your false-positives low without increasing your false-negatives.  
+
+```{r 2_DA_ttesting}
+# # moar info
+# ?aldex.ttest   # function to test for differences
+# ?aldex.effect  # function that estimates how how big the difference is (if it's there at all)
+# ?aldex.plot    # plot the outputs
+
+x.tt <- aldex.ttest(x, conds, paired.test=FALSE)
+
+## Calculate effect size (standardized mean difference)
+x.effect <- aldex.effect(x, conds, include.sample.summary=FALSE, verbose=TRUE)
+x.all <- data.frame(x.tt, x.effect, stringsAsFactors=FALSE)
+# View(x.all) ; write.table(x.all, file="./output/PHYLO_aldex_output.txt", sep="\t", quote=F, col.names=NA)
+
+
+## plot Outputs for an easier/quicker way of investigating the outputs. 
+# significant differences in red, CLR value (y axis), differential abundance (x axis)
+aldex.plot(x.all, type="MA", test="welch")   # + usual args to plotting
+aldex.plot(x.all, type="MW", test="welch")
+```
+
+
+
+Get OTUs with a BH corrected p-value <0.05 AND effect size >1
+OTUs with a higher relative abundance in the 'after' condition (?) will have positive effect values, OTUs higher in the 'initial' condition (?) will have negative effect values
+Use Wilcoxon test results: wi.eBH, or raw p values (wi.ep, we.ep) from either test
+
+```{r 2_sig_taxa}
+sig.ak <- rownames(x.all)[which(x.all$we.eBH < 0.05 & x.all$effect < -1)]
+sig.op <- rownames(x.all)[which(x.all$we.eBH < 0.05 & x.all$effect > 1)]
+
+# What are the taxa that are significantly different?
+# Using the OTU names, we can get the taxonomy from our taxon table
+taxa[sig.ak,]
+
+# We can also look at the ALDEx output for the significant OTUs
+x.all[sig.ak,]
+```
+
+```__0 rows__``` - none of the taxa were found to be differentially abundant between PRE and POST. This __does not mean__ there are no differences in our samples: this means that there are no significant differences found between PRE and POST. L
+
+
+#### The most important thing 
+
+- is ~~teamwork~~ that we can accurately investigate the samples at hand, using relevant techniqeus, and be able to characterise the communities supported. 
+
+    Q: What is the Effect Size in ALDEx? What does it mean?
+    
+    Q: Why/when would you use a Wilcoxon rank-sum t-test vs a Welches t-test?
+    
+    Q: What happens to zeros?
+    
+    Q: What are the relative abundance values (e.g. rab.all, rab.win.ak, rab.win.op) relative to?
+    
+    
+---
+  
+##   [Part 3: OTU Correlations with Phi](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-3:-OTU-Correlations-with-Phi)
+
+
+```{r 3_phi_corrletations}
+# Import the Phi function
+# source("/home/jfg/Dropbox/SilentGeno/R/propr-functions_GGLOO.R")
+source("~/Jamie blipping/Dropbox/SilentGeno/R/propr-functions_GGLOO.R")
+
+# Keep only those OTUs with a mean count of greater than 1 for this exercise (this is the same cutoff we used for ALDEx)
+# Remove OTUs <= mean read count
+count <- 1
+
+# filter your table
+d.1 <- data.frame(d.r[which(apply(d.r, 1, function(x){mean(x)}) > count),], 
+                  check.names=F)
+conds <- as.character( sample_data(PHYLO)$Condition )           #   using all samples?..
+
+x <- aldex.clr(d.1, conds, mc.samples=128, verbose=TRUE)
+
+
+## P h i
+
+# propr: calculate the phi statistic.
+d.sma.df <- propr.aldex.phi(x)
+phi.cutoff <- 0.4
+
+# get the subset of OTUs that are joined by one or more low phi connections
+d.sma.lo.phi <- subset(d.sma.df, phi < phi.cutoff)
+
+# igraph: convert the connections into a graphical object
+library('igraph')
+g <- graph.data.frame(d.sma.lo.phi, directed=FALSE)
+
+# igraph: find the clusters
+g.clust <- clusters(g)
+
+# make a table to examine the cluster membership by hand
+g.df <- data.frame(Systematic.name=V(g)$name, cluster=g.clust$membership, 
+                   cluster.size=g.clust$csize[g.clust$membership])
+
+# generate a set of clusters larger than some size # minimum is 2 (obviously)
+big <- g.df[which(g.df$cluster.size >= 2),] 
+colnames(big) <- colnames(g.df)
+
+my_colors <- e.col2[ names(V(g)) ]
+# fill in blanks for NA values
+my_colors[ is.na(my_colors) ] <- 'grey70'
+show_col(my_colors)
+
+V(g)$name <- gsub("(^[A-Za-z]{3}).+", "\\1", as.vector(tax_table(PHYLO)[(names(V(g))),"genus"]), 
+                  perl=TRUE)
+
+
+
+net_phy <- as.vector(unique(tax_table(PHYLO)[rownames(g.df) , 'phylum']))
+
+
+plot(g,
+     vertex.size=10,
+     vertex.color=e.col2,
+     vertex.label.cex=1,
+     vertex.label.color="black",
+     vertex.label.dist=2,                          # Distance between the label and the vertex
+     vertex.frame.color="black",
+     # edge.width = 2,       
+     edge.color = 'grey40',
+     # edge.type = cut(d.sma.lo.phi$phi, breaks= 5))
+     edge.width = cut(d.sma.lo.phi$phi, breaks= 3))
+
+# legend
+legend(x=-2.5,
+       y=1,
+       legend= net_phy,
+       col = clr_phy2[net_phy],
+       bty = "n",
+       pch=20 ,
+       pt.cex = 2,
+       cex = 1,
+       text.col="black" ,
+       horiz = F)
+
+
+
+##========= Another PCA =====================
+
+# this is exactly the same procedure as for the biplot example, 
+# just a larger table
+
+d.czm <- cmultRepl(t(d.1),  label=0, method="CZM")
+d.clr <- t(apply(d.czm, 1, function(x){log(x) - mean(log(x))}))
+d.pcx <- prcomp(d.clr)
+d.mvar <- sum(d.pcx$sdev^2)
+PC1 <- paste("PC1: ", round(sum(d.pcx$sdev[1]^2)/d.mvar, 3))
+PC2 <- paste("PC2: ", round(sum(d.pcx$sdev[2]^2)/d.mvar, 3))
+col.g=c("black",rgb(0,0,0,0))
+size.g=c(0.5, 0.01) #Relative scale, 1 is 100%
+
+biplot(d.pcx, cex=size.g, col=col.g, var.axes=F, xlab=PC1, ylab=PC2, scale=0, xlabs=samples  )
+
+# get the names of the clusters in big
+lev <- factor(big$cluster)
+
+# step through each cluster and plot the genus name                                         <  {¬-} !  >
+# at the point in the biplot that the OTU would have been plotted
+# OTU positions are in pcx$rotation
+for(i in as.numeric(levels(lev))){ nms <- rownames(big)[big$cluster==i]
+text(d.pcx$rotation[nms,][,1], d.pcx$rotation[nms,][,2],
+     labels = gsub("(^[A-Za-z]{6}).+", "\\1", tax_table(PHYLO)[rownames(big)[big$cluster==i],"genus"], 
+                   perl=TRUE),col=colours[i], cex=0.7)
+}
+abline(h=0, lty=2, col='grey70')
+abline(v=0, lty=2, col='grey70')
+```
+
+----
+
+## [Part 4: Visual Data Exploration](https://github.com/ggloor/CoDa_microbiome_tutorial/wiki/Part-4:-Visual-Data-Exploration)
+
+AS always, thieved from the above. 
+
+### Part 1: generating strip charts showing difference by taxonomic level
+
+```{r 4_1__ALDEX_stripchart}
+
+# first source the stripchart function which was pasta'd from Gloor's link above.
+source('/home/jfg/Dropbox/SilentGeno/R/stripchart_GGLOO.R')
+
+# make this taxon/aldex.out shit theyre looking for : 
+# a tax_df
+taxon <- data.frame(tax_table(PHYLO), stringsAsFactors = FALSE)
+# a filtered abundance df, taken from above
+aldex.out <- d.1
+  
+  
+aldex.stripchart(aldex.out=x.all, group.label="genus", x.axis="diff.btw", cex=0.8, cutoff=0.1)
+aldex.stripchart(aldex.out=x.all, group.label="genus", x.axis="effect", cex=0.8, cutoff=0.1)
+aldex.stripchart(aldex.out=x.all, group.label="phylum", x.axis="diff.btw", cex=0.8, cutoff=0.1)
+
+```
+
+### Part 2: an example bargraph at the genus level
+
+    @Jean Maclain
+    Add a prior expectation for 0 count reads, all OTUs have at least one column with > 0 reads
+    so our prior expectation is that the value of 0 represents a sampling depth problem and not
+    in practice it does not make much difference if we use an additive pseudo-count as here
+    or an actual prior (add 0.5 to all), or if we use the count zero multiplicative approach
+    of zCompositions.
+    
+    Remember, distances between ratios are linear, so we can use euclidian distances (and average linkage distance).
+
+```{r 4_2__ALDEX_barplot}
+
+# get a vector of genus names in the same order as in the dataset
+
+
+tax <- taxon[rownames(d.1), "family"]
+
+# sum counts by name
+d1.agg <- aggregate(d.1, by=list(tax), FUN=sum)
+tax.agg <- d1.agg$Group.1
+d1.agg$Group.1 <- NULL
+
+# convert to  abundances
+d1.prop <- apply(d1.agg, 2, function(x){x/sum(x)})
+
+abund <- 0.01
+d1.abund <- d1.agg[apply(d1.prop, 1, max) > abund,]
+tax.abund.u <- tax.agg[apply(d1.prop, 1, max) > abund]
+
+d1.abund <- t(cmultRepl(t(d1.abund), label=0, method="CZM"))
+
+
+# get proportions of the filtered data for plotting below
+# in log-ratio speak, you are re-closing your dataset
+d1.P.u <- apply(d1.abund, 2, function(x){x/sum(x)})
+
+# order by OTU abundances
+new.order <- rownames(d1.P.u)[ order( apply(d1.P.u, 1, sum), decreasing=T)]
+tax.abund <- tax.abund.u[ order( apply(d1.P.u, 1, sum), decreasing=T)]
+d1.P <- d1.P.u[new.order,]
+
+
+d1.clr <- apply(d1.P, 2, function(x){log2(x) - mean(log2(x))})    # CLR
+
+# the stats::dist fn makes dist using a number of methods, one of which is euclidean. 
+dist.d1.clr <- dist(t(d1.clr), method="euclidian")                # euc dist of aitch values (not an Aitchison distance, really)
+clust.d1 <- hclust(dist.d1.clr, method="average")
+
+
+## PLOTTING AND ARRANGEMENT
+
+# standard colour scheme (Jean Macklaim)
+colours <- c("steelblue3", "skyblue1", "indianred1", "mediumpurple1", "olivedrab3", "pink", "#FFED6F", "mediumorchid3", "ivory2", "tan1", "aquamarine3", "#C0C0C0", "royalblue4", "mediumvioletred", "#999933", "#666699", "#CC9933", "#006666", "#3399FF", "#993300", "#CCCC99", "#666666", "#FFCC66", "#6699CC", "#663366", "#9999CC", "#CCCCCC", "#669999", "#CCCC66", "#CC6600", "#9999FF", "#0066CC", "#99CCCC", "#999999", "#FFCC00", "#009999", "#FF9900", "#999966", "#66CCCC", "#339966", "#CCCC33", "#EDEDED")
+
+# setup a new plot - not using cowplot, not using ggarrange!
+# location parameters are (x1,x2,y1,y2)
+# these can overlap
+par(fig=c(0,1,0,1), new=TRUE)
+
+# plot the dendrogram in the top left two thirds  
+par(fig=c(0,0.7,0.3,1), new=TRUE)
+plot(clust.d1, main=NULL, cex=0.8, xlab="")
+
+# plot the bargraph in the bottom left half
+par(fig=c(0,0.7,0,0.55), new=TRUE)
+barplot(d1.P[,clust.d1$order], space=0, col=colours, las=2, axisnames=F)
+
+# plot the legend in the right one-third
+par(fig=c(0.6,1,0,1), new=TRUE)
+
+legend(x="center", legend=tax.abund, col=colours, lwd=5, cex=0.8, border=NULL)
+```
+
+
+### Part 3: Principal Co-Ordinates plots
+
+Takes from the [Arumugam 2011 'Enterotypes' paper](https://www.nature.com/articles/nature09944), but uses Aitchison distance. See also the [Enterotypes tutorial](http://enterotype.embl.de/enterotypes.html) which is the sauce's sauce and has some _great_ background on the approach. Of note, these methods use
+
+  * sqrt(Jensen-Shannon Divergence) , a distance metric supplanted by Aitchison in this instance)
+  * Calinski-Harabasz (CH) Index to present clustering patterns (k value) based on ASV abundance profiles 
+  * Partitioning Around Medoids (PAM) to detect clusters
+  * Between Class Analysis
+
+
+``` {r 4_3__clust_PCoA, eval=TRUE}
+
+library(cluster)
+library(clusterSim)
+library(ade4)
+
+
+## CLustering: DynamicTreeCut - consider looking at this approach instead 
+
+## Clustering 
+  # determine the optimal number of clusters for the dataset using the mediod as a midpoint
+
+  # PAM <- partitionaing around medoids clustering method
+  # CH <- Calinski-Harabasz index for clustering (swap for Aitch?...)
+
+nclusters= (0)
+for (i in 2:11) {       # cluster of 1 returns NaN
+    data.cluster_temp <- as.vector(pam(dist.d1.clr, i)$cluster)    # find mediod clusters and return a vector of clusters
+    nclusters[i] <- index.G1(t(d1.clr),data.cluster_temp,  d = dist.d1.clr,    # determine the fit to the cluster
+    centrotypes = "medoids")
+}
+
+# plot the results. More uneven, higher CH index values are 'best'
+plot(nclusters, type="h", xlab="k clusters", ylab="CH index")
+# the nclusters plot above is unclear about optimal k clusters - 2, 3, or 4? 
+
+k <- 2
+# make a vector of the optimal sample cluster-membership, with k taken from 'best' CH value	
+data.cluster <- as.vector(pam(dist.d1.clr, k)$cluster)
+
+
+## PCoA
+# pcoa analysis using the Aitchison distance calculated for the dendrogram (via ade4)
+obs.pcoa <- dudi.pco(dist.d1.clr, scannf=F, nf=3)
+# plot the pico
+s.class(obs.pcoa$li, fac=as.factor(data.cluster), grid=F)#, col=seq(1:k)) 
+# add text labels 
+text_col <- e.col[ (sample_data(PHYLO)$Condition)]
+text(obs.pcoa$li,labels=colnames(d1.clr),cex=0.8, col=text_col)
+
+```
+

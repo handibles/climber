@@ -1,0 +1,18 @@
+https://packaging.python.org/tutorials/installing-packages/#optionally-create-a-virtual-environment
+virtualenv ry_venv
+pip install numpy
+pip install scikit-bio
+
+## lets try ANCOM/SciKitBio using a virtual env: virtualenv --
+
+virtualenv -p /usr/bin/python3.6 ~/Bioinformatics/ancom/ancom_venv
+virtualenv ~/BioApps/py3_inst
+source py3_inst/bin/activate
+pip install python3.6 --upgrade   #aww christ..
+# not working on BL
+
+# try eri
+virtualenv -p /usr/bin/python3.6 ~/Bioinformatics/ancom/ancom_venv
+source ~/Bioinformatics/ancom/ancom_venv/bin/activate
+(ancom_venv) eri@eri:~/Bioinformatics/ancom$
+

@@ -1,0 +1,106 @@
+install.packages('BiocManager')
+library(BiocManager)
+install(0)
+install()
+library(phyloseq)
+library('phyloseq')
+library(BiocManager)   # biocLite deprecated
+deps <- c('devtools', 'agricolae', 'gamlss', 'gbm', 'nlme', 'gam', 'glmnet', 'inlinedocs',
+'logging', 'devtools','MASS', 'optparse', 'outliers','penalized', 'pscl', 'robustbase' ,
+'dada2','phyloseq','DESeq2','ggplot2','seqTools','parallel','zCompositions','ALDEx2','compositions',
+'knitr','igraph','phangorn','DECIPHER','ComplexHeatmap','cowplot','shiny','shinythemes','tibble',
+'networkD3','circlize','FSA')
+deps
+lapply(deps, function(x) install(x, update = FALSE))
+devs <- c( "zachcp/phyloseq-tools",
+"benjjneb/decontam",
+"kassambara/ggpubr",
+"liamrevell/phytools" )
+lapply(deps, function(x) devtools::install_github(x) )
+rnorm(100)
+rpois(100)
+rpois(100, lambda = 1)
+rpois(100, lambda = 20)
+?rpois
+par(mfrow=c(4,4))
+sapply(1:16, function(aa){ rpois(100, lambda = aa)})
+sapply(1:16, function(aa){ hist(rpois(100, lambda = aa))})
+sapply(11:26, function(aa){ hist(rpois(100, lambda = aa))})
+sapply(11:26, function(aa){ hist(rbinom(100, lambda = aa))})
+sapply(11:26, function(aa){ hist(rnbinom(100, mu = aa))})
+sapply(11:26, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa, mu = aa))})
+sapply(11:26, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(111:126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(1111:1126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+1111:1126
+sapply(11111:11126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(11111:11126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(11111:11126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(11111:11126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(11111:11126, function(aa){ hist(rnbinom(100, size = aa, prob = 1/aa ))})
+sapply(11111:11126, function(aa){ plot(sort((rnbinom(100, size = aa, prob = 1/aa ) ))})
+sapply(11111:11126, function(aa){ plot(sort((rnbinom(100, size = aa, prob = 1/aa )))})
+sapply(11111:11126, function(aa){
+plot(
+sort(
+rnbinom(100, size = aa, prob = 1/aa )
+)
+)
+} )
+sapply(11111:11126, function(aa){
+plot(
+sort(
+rbinom(100, size = aa, prob = 1/aa )
+)
+)
+} )
+sapply(11111:11126, function(aa){
+plot(
+sort(
+rpois(100, mu = aa )
+)
+)
+} )
+sapply(11111:11126, function(aa){
+plot(
+sort(
+rpois(100, mu = aa )
+)
+)
+} )
+sapply(11111:11126, function(aa){
+plot(
+sort(
+rpois(100, lambda = aa )
+)
+)
+} )
+540/24
+4*539
+/24
+2156/24
+library(BiocManager)
+update()
+install()
+install()
+install()
+install()
+?install
+?install.packages
+.libPaths()
+install(pkg = c("boot", "class", "cluster", "codetools", "KernSmooth", "lattice", "MASS", "Matrix", "mgcv", "nlme", "nnet", "rpart", "spatial", "survival"),
+lib = "/home/handibles/R/x86_64-pc-linux-gnu-library/3.6"
+)
+install()
+.libPaths()
+install()
+update.packages()
+library(pheatmap)
+?pheatmap
+mat <- matrix( rnorm(100), nrow = 10)
+mat
+pheatmap(mat)
+x<- "stuff"
+class(x)
+type(x)
+bslib::bootswatch_themes()

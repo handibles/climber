@@ -1,0 +1,14 @@
+
+split_libraries.py -m aj_map.txt -f 0.start_out/aj.fasta -q 0.start_out/aj.qual -s 25 -b 10 -M 15 -w 50 -o 1.splib_out_aj
+split_sequence_file_on_sample_ids.py -i 1.splib_out_ea/seqs.fna --file_type fasta -o 2.q1_splib_out
+
+split_libraries.py -m dw_map.txt -f 0.start_out/dw.fasta -q 0.start_out/dw.qual -s 25 -b 10 -M 15 -w 50 -o 1.splib_out_dw
+split_sequence_file_on_sample_ids.py -i 1.splib_out_aj/seqs.fna --file_type fasta -o 2.q1_splib_out
+
+split_libraries.py -m ea_map.txt -f 0.start_out/ea.fasta -q 0.start_out/ea.qual -s 25 -b 10 -M 15 -w 50 -o 1.splib_out_ea
+split_sequence_file_on_sample_ids.py -i 1.splib_out_dw/seqs.fna --file_type fasta -o 2.q1_splib_out
+
+
+
+
+

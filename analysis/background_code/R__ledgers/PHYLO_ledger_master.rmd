@@ -1,0 +1,986 @@
+---
+title: "16S PHYLO Analysis Ledger - note keeping for the Eosinophilic-Oesophagitis Data"
+author: "jfg"
+date: "4 December 2018"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+----
+
+# JAMIE, IMPORT YOUR WORTHY STRUGGLES FROM ANALYSIS_REPORT, COMM_COMP, CODA, ETC.
+
+
+----
+
+
+# Outline of PHYLO study
+
+Include here some bracing info about the PHYLO study - minimally, include a link out to relevant material (website, wiki, paper)
+
+----
+
+# Deliverables
+
+  * Composition
+    * stacked barcharts
+    * z-scored abundance/heat plot
+    * network
+  * Ward-clustering
+  * Phylogenetic tree
+  * Alpha Diversity
+  * Beta Diversity:
+    * BC, UF, Aitch, PhILR
+    * PCoA, DB-RDA ...
+  * Ordination
+    * PCA
+    * DCA
+    * PCoA (i.e. per B-Div)
+    * DB-RDA
+    * CCA, RDA
+  * Differential testing & Machine Augments:
+    * PLS-Regression
+    * PLS-Path Modelling
+    * GLMM
+    * Random Forest
+    * ...
+    
+  
+---
+  
+### Problems outstanding
+
+  * w/flow for turning tre, phylo, map, tax into phylo with all variables
+  * add ```TAKES / GIVES``` point to beginning of each section for clarity
+  * Diversity/Richness Metrics
+
+  * copy-number correction
+  * remove kitome
+  * import properly all report work
+  * Graphics Pipeline
+  * Remake AC / RY graphics
+  * Style Graphics for SeqBiom
+  
+  * phylo fn that allows tax_sum at a given taxonomic rank
+  * ```seqtab.nochim```  - included in the ```tax_table``` (v7.3), but handy also as an RDS/txt?
+
+
+----
+
+
+```{r setup_1, include=FALSE, eval=TRUE, echo=FALSE}
+
+## at my signal, 
+library('phyloseq')
+library('ShortRead')
+library('dada2')
+library('phyloseq.tools')
+library('phyloseq.extended')
+library('reshape2')
+library('phangorn')
+library('DECIPHER')
+library('dplyr')
+library('stringr')
+library("Biostrings")
+library('seqTools')
+library('vegan')
+library('ggplot2')
+
+
+#knitr::opts_knit$set(root.dir = '..' )   #not actually helping, just assume that dir is the RMD's dir
+theme_set(theme_classic())   #prob not gona hold like that
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(results = 'hold')
+knitr::opts_chunk$set(eval= TRUE)
+
+# assumes much processing done already: raised as task above to reproduce here
+
+PHYLO <- readRDS('../../output/7_phyout/PHYLO_uc_pur_full_rephylo.RDS')
+PHYLO <- subset_samples(PHYLO, (sample_sums(PHYLO) >= 1) )
+sample_variables(PHYLO)
+
+
+
+```
+
+
+----
+
+# Import ```seqtab.nochim``` & ```taxa```
+
+These default outputs from DADA2 are a feature abundance table (```seqtab``) and a taxonomy matrix (```taxa```). 
+
+Compose a minimal sample ID matrix from the ```sample_names()``` and ```sample_sums()```, and ensure all variables are Capitalised (so easier to Ctrl+H later). Could consider adding A-Div components to ```sample_data()``` too.
+
+
+
+```{r basic_import}
+
+# goes in the master ledger
+# could also be a function, but for all the messing with basic sampe data
+
+library(phyloseq)
+
+# get in files (assume taxa are cols, DADA2 default)
+a <- otu_table(seqtab.nochim, taxa_are_rows=FALSE)
+t <- tax_table(taxa)
+summary( colnames(a) == rownames(t) )  # sanity, ASVs equal between objects
+
+## amend
+  # names of ASVs, retain sequence in tax_table, amend taxranks
+  colnames(t) <- c("Domain","Phylum","Class","Order","Family","Genus", "Species", "ASV")[1:ncol(t)]
+
+  # send seqs to tax_table
+  asv_seq <- row.names(t)
+  t <- cbind(t , asv_seq)
+  summary(rownames(t) == t[,7])  # sanity 2
+  
+  # rename ASVs 
+  id = paste0("ASV_", stringr::str_pad(1:dim(a)[2], nchar(dim(a)[2]), pad=0))  # from write_FNA
+  colnames(a) <- id
+  rownames(t) <- id
+
+  
+## basic sample data  
+  s <- rownames(a)
+  # Factor = sapply(s, function(x) strsplit(x, '-')[[1]][1])   # split name to data
+  s<- data.frame(ID = s, 
+                   month = sapply(s, function(x) strsplit(x, '-')[[1]][1]),    # from aggRDS
+                   part = sapply(s, function(x) strsplit(x, '-')[[1]][3]),
+                   year = sapply(s, function(x) strsplit(x, '-')[[1]][2]),
+                   row.names = s,
+                   stringsAsFactors = FALSE)
+
+  # ensure variable correctly ordered
+  s$month <- factor(s$month, levels = c('FEB' , 'APR' , 'JULY', 'NOV', 'JAN'))
+
+## make phylo
+  a <- otu_table(t(a))
+  t <- tax_table(t)
+  s <- sample_data(s)
+  PHYLO <- merge_phyloseq(a, s, t)
+
+```
+
+
+## Ordination
+
+#### RY version of BC-PCoA
+
+A lot of time lost trying to make phylo play nice (visually) with plotting of metrics: _for now_ do it the RY way.
+
+``` {r ry_way, eval=FALSE, echo=FALSE}
+      # 
+      # 1) Alpha and Beta diversity metrics
+      # 
+      # 	count_table = 
+      # 	taxa =  
+      # 	mapping =
+      # 
+      # 	cnts_filt10 = cnts[apply(cnts>0,1,sum)>=round(ncol(cnts)*0.05),]
+      # 	cnts_filt10_prop = prop.table(as.matrix(cnts_filt10),2)
+      # 	cnts_filt10_prop = cnts_filt10_prop * 100
+      # 
+      # 	OTU_raw = otu_table(cnts,taxa_are_rows = TRUE)
+      # 	physeq_raw = phyloseq(OTU_raw)
+      # 	alpha_div = estimate_richness(physeq_raw)
+      # 
+      # #######################################
+      # 
+      # 	require(dplyr)
+      # 	alpha_div = tbl_df(alpha_div)
+      # 	alpha_div = alpha_div%>%
+      # 	  mutate(family = ACE/Chao1)
+      # 	summary(alpha_div$family)
+      # 
+      # 	alpha_div = as.data.frame(alpha_div)
+      # 	#this adds a column to c_alpha_div to check the ratio of Chao1 to ACE to see if read depth has affected family presence.
+      # 
+      # 
+      # 
+      # ## PCoA
+      # 
+      # 	OTU = otu_table(cnts_filt10_prop,taxa_are_rows = TRUE)    
+      # 	physeq = phyloseq(OTU)
+      # 
+      # 	braycurtis_dist10 = phyloseq::distance(physeq,method="bray")   ##method can be changed to preferred distance metric
+      # 	braycurtis_pc10_prop = pcoa(braycurtis_dist10)
+      # 
+      # 
+      # 	biplot(braycurtis_pc10_prop)
+      # 
+      # 
+      # 	BC_data.df = data.frame(mapping,alpha_div,
+      # 		                "PC1" = braycurtis_pc10_prop$vectors[,1]*-1,
+      # 		                "PC2" = braycurtis_pc10_prop$vectors[,2]*-1,
+      # 		                "PC3" = braycurtis_pc10_prop$vectors[,3])
+      # 	saveRDS(BC_data.df,file="BC_data.df.RDS")
+      # 
+      # 
+      # ################################################################
+      # 
+      # 
+      # 	#alpha diversity visualistation
+      # 	ggplot(BC_data.df,aes(x=Description,y=BC_data.df$Shannon,fill=Condition))+geom_violin()+
+      # 	  scale_fill_manual("Description",values=c("#1e8bc3","#C30000","#ffb90f"))+
+      # 	  theme_classic()+geom_dotplot(binaxis="y",stackdir = "center",dotsize=1,binwidth = 0.03,aes(fill="black"))
+      # 	#violin plot with samples grouped by column of choice from mapping file
+      # 
+      # 
+      # 	#beta diversity visualistation
+      # 	ggplot(BC_data.df,aes(x = PC1, y = PC2,color=Condition))+geom_point()+
+      # 	stat_ellipse(aes(x = PC1,y =PC2, fill=mapping$Condition),geom="polygon",level=0.7,alpha=0.3)+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+      # 	panel.background = element_blank(), axis.line = element_line(colour = "black"))
+      # 
+      # 	##Basic pcoa with points coloured by a column from the mapping file, and an ellipse also based on column of choice from mapping file.
+
+```
+
+
+### Ordination - Bray-Curtis
+
+From checking sequencing depth, most interested in looking for clustering of points by depth, i.e. _how distorted are the low-coverage samples?_  Of at least equivalent interest is UNIFRAC distance between samples, especially as strain-level ID comes to the fore. Where is the Phylo-CoDa?...
+
+#### Phyloseq Version
+
+```{r ord_bc, results='hold'}
+
+# NMDS
+plot_ordination(PHYLO, ordinate(PHYLO, method='CAP'), color='phylum', shape='Description', type = 'biplot') +
+  theme_classic()
+
+```
+
+### Ordination - UniFrac
+
+```{r ord_uf, results='hold'}
+
+ord_uf <- ordinate(PHYLO, 'PCoA', 'unifrac', weighted=TRUE)
+plot_ordination(PHYLO, ord_uf, color='SeqDepth', shape='Description', type = 'samples') +
+  theme_classic() + 
+  geom_point(size=3)
+
+```
+  
+### Ordination - Aitchison
+  
+ 
+ 
+
+----
+
+## Problems Solved
+
+
+  
+### Sample Listing 
+
+Needs nothing, but _assumes all on the same run_.
+
+```{bash eval=FALSE}
+# ## MAKE SAMPLE LIST
+   echo -e 'sample\trun' > ~/Materials/sample_run_list.txt # -e enables you to escape slashers
+   for i in $(ls /data/jamie/PHYLO/Materials/0_raw_reads/*.R1.fastq | xargs -n1 basename |  cut -f 1 -d ".") ;  #sample accession
+     do echo -e $i'\t1' >> ~/Materials/sample_run_list.txt ;   # dumb run count: '1'
+   done
+```
+
+
+
+### Quality vis & management
+
+#### - Vis in ```bash```
+
+In ```bash```, generate fastqc profiles for each _raw_ pair of samples (via a for loop) 
+```{bash eval=FALSE}
+    # change dir to get pathless-output from ls  
+    # some uncertainty here, try also "ls -1 ..." 
+    cd /data/jamie/PHYLO/Materials/0_raw_reads/
+    for i in $(ls *1.fastq | cut -f 1 -d ".") ; 
+      do mkdir /data/jamie/PHYLO/Materials/1_fastqc_out/$i ;
+      fastqc --threads 18 /data/jamie/PHYLO/Materials/0_raw_reads/$i.R1.fastq /data/jamie/PHYLO/Materials/0_raw_reads/$i.R2.fastq -o /data/jamie/PHYLO/Materials/1_fastqc_out/ ;
+      mv /data/jamie/PHYLO/Materials/1_fastqc_out/$i.*.html /data/jamie/PHYLO/Materials/1_fastqc_out/$i.*.zip /data/jamie/PHYLO/Materials/1_fastqc_out/$i ;
+    done
+   
+   ## send to base
+   # scp -r /data/jamie/PHYLO/Materials/1_fastqc_out jfg@143.239.154.14:/home/jfg/Dropbox/SeqBiom__PHYLO/output/
+```
+
+And then for the _trimmed_ pairs 
+
+```{bash eval=FALSE}
+
+    # change dir to get pathless-output from ls  -  some uncertainty here, try also "ls -1 ..." 
+    cd /data/jamie/PHYLO/Materials/2_trimmed/
+    for i in $(ls *1.fastq | cut -f 1 -d ".") ; 
+      do mkdir /data/jamie/PHYLO/Materials/1_fastqc_out/$i ;
+      fastqc --threads 18 /data/jamie/PHYLO/Materials/2_trimmed/$i.R1.fastq /data/jamie/PHYLO/Materials/2_trimmed/$i.R2.fastq -o /data/jamie/PHYLO/Materials/1_fastqc_out/ ;
+      mv /data/jamie/PHYLO/Materials/1_fastqc_out/$i.*.html /data/jamie/PHYLO/Materials/1_fastqc_out/$i.*.zip /data/jamie/PHYLO/Materials/1_fastqc_out/$i ;
+    done
+   
+   ## send to base
+   # scp -r /data/jamie/PHYLO/Materials/1_fastqc_out jfg@143.239.154.14:/home/jfg/Dropbox/SeqBiom__PHYLO/output/
+
+```
+
+
+### Quality vis and management
+
+#### - Vis in ```R```
+However, seeing as we like ```R``` and all, provide a similar graphic for thusly. Beware though: it takes a long time, and plots are inflexible. Hone?
+
+```{r eval=FALSE}
+pdf('../6_PHYLO_Seqtab/dada2_qualplots.pdf')
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE)
+plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE)
+
+dev.off()
+
+```
+
+
+
+### Provenance
+
+One of the outstanding __deliverables__. A reliable method of compiling:
+
+  * input file sizes & read counts
+  * trimmed file size & read counts
+  * filtered file sizes & read counts
+  * paired read counts
+  * collapsed ASV sizes and reads (i.e. uniqueseq lengths, abundance)
+
+Quicker reference to plot these things:
+
+  * plot nchar inputs of fastq/sample
+  * plot nchar output of RDS/sample
+
+``` __duped in  XXXX_PROVENANCE.R  :: set up for jamie@bio__ ```  
+
+```{bash eval=FALSE}
+## file, total reads, read length*count  ::  see https://www.biostars.org/p/72433/ for awk trick
+cd /data/jamie/PHYLO/Materials/0_raw_reads/
+for i in $(ls /data/jamie/PHYLO/Materials/0_raw_reads/*.fastq | cut -f 7 -d "/");    # consider -Sr for smallest first
+do echo $i ;                       # name
+   cat $i | grep -c '^+$' ;        # read count ::   ^ , $ = BOL/EOL
+   cat $i | awk '{if(NR%4==2) print length($1)}' | sort -n | uniq -c ; # unique read lengths, per 4-line piece
+done > ~/Materials/0_read_profile.txt
+
+#scp ~/Materials/0_read_profile.txt jfg@143.239.154.14:/home/jfg/Dropbox/SeqBiom__PHYLO/ouput
+
+```
+
+That ```bash``` output is rich, but it's not very useful.
+
+Try in ```R```.
+
+Note __part.1__ is work on the the ```BIOLINUX``` server, i.e. all ```FASTQ``` etc remote,  in ```/data/jamie/PHYLO/Materials```. __Part.2__ below is local (i.e. on ```asp-ii```).
+
+```{r r_track_provenance_PART.1, eval=FALSE}
+
+## Make track df to track reads 
+getwd()
+getN      <- function(x) sum(getUniques(x))                   # sum(UniqSeq$Abundance) , from shortReads
+getFastqN <- function(x)  length( sread(readFastq(x)) )       # sread is ~ a string list
+
+rawFs <- list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern = 'R1.fastq', full.names = TRUE) ; length(sread(readFastq(rawFs[1])))
+rawRs <- list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern = 'R2.fastq', full.names = TRUE)
+
+trimmFs <- list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern = 'R1.fastq', full.names = TRUE)
+trimmRs <- list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern = 'R2.fastq', full.names = TRUE)
+
+filtFs <- list.files('/data/jamie/PHYLO/Materials/3_d2', pattern = 'R1.fastq', full.names = TRUE)
+filtRs <- list.files('/data/jamie/PHYLO/Materials/3_d2', pattern = 'R2.fastq', full.names = TRUE)
+
+denoised <- list.files('/data/jamie/PHYLO/Materials/5_final', pattern = '.RDS', full.names = TRUE)
+denoised <- lapply(denoised , readRDS)
+denoised <- makeSequenceTable(denoised)
+
+seqtab.nochim <- readRDS('/data/jamie/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_run1_seqtab.RDS')
+
+## PROBLEM:
+# WE WONT ALWAYS KNOW WHAT SAMPLES GET LOST -  needs a better fix - see "WARNING: in cbind(...) number of rows of results is not a multiple of vector length (arg1)"
+
+
+track <- cbind( unname(sapply(rawFs, getFastqN)),  # replace 'out' matrix made through getN() on filterAndTrim() objects
+                unname(sapply(rawRs, getFastqN)),
+                unname(sapply(trimmFs, getFastqN)),
+                unname(sapply(trimmFs, getFastqN)),
+                unname(sapply(filtFs, getFastqN)),
+                unname(sapply(filtRs, getFastqN)),
+                rowSums(denoised),   # this has to be adapted everytime readcounts change
+                rowSums(seqtab.nochim) ) # as above -  c(rowSums(seqtab.nochim)[1:16],0,rowSums(seqtab.nochim)[-1:-16]) )
+track_bup <- track   #track <- track_bup
+
+track <- as.data.frame(track)  #motherfucker
+colnames(track) <- c("rawF", "rawR", "trimmedF", "trimmedR", "filtF", "filtR", "denoised", "ASV")
+#rownames(track) <- c(rownames(seqtab.nochim)[1:16], '18PRE-S143', rownames(seqtab.nochim)[-1:-16])  # hack, unnecc as above row-replacement obviated
+track$sample <- rownames(track)
+rownames(track) <- gsub('-S\\d*' , '' , rownames(track))
+# head(track) ; write.table(track,'PHYLO_read_provenance.txt', sep='\t') ; saveRDS(track, '/data/jamie/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_trackoutput.RDS')
+# scp -r /data/jamie/PHYLO/Materials/6_PHYLO_Seqtab jfg@143.239.154.14:/home/jfg/Dropbox/SeqBiom__PHYLO/output/
+# readRDS(/data/jamie/PHYLO/Materials/6_PHYLO_Seqtab/output/PHYLO_trackoutput.RDS')
+```
+
+  
+Local work on ```asp.ii```, assuming you just rsank it down. WD should be ```~/Dropbox/SeqBiom__PHYLO/```.  
+
+``` {r track_provenance_PART.2, results='hold'}
+## Plot the track df -  in case not doing this all on the same rig:
+getwd()
+track <- read.table('../../output/PHYLO_mk.ii_trackoutput.txt', sep='\t')
+# have already sample/state mapping:
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1)  # the QIIME mapfile from sequencing - 72 samples
+# rownames(PHYLO_map_full) <- gsub('\\.' , '_', rownames(PHYLO_map_full))   # match names
+
+track$Desc <- (PHYLO_map_full[rownames(track),'Description'])
+track$ID <- rownames(track)
+
+z.rm <- melt(track)   # saveRDS(z.rm , '../6_PHYLO_Seqtab/tracK_z.rm.RDS') # z.rm <- readRDS()
+# View(z.rm) getwd()
+# establish max read counts for plotting:
+highest_count <- round( max(track[,1:8]), digits = -4)
+
+
+ggplot(z.rm, aes(y=value, x=variable,  fill=as.factor(Desc) ,  colour=as.factor(Desc) )) +
+  geom_boxplot(outlier.shape=19 , colour='black') + 
+#  geom_point(width=0.2, shape=21,  size=2.5,  aes(colour='black' , fill=as.factor(Desc), alpha=0.6 )) + #note factoring-by-source requires use of the aes arg
+  scale_fill_manual( "Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +         
+  scale_color_manual("Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +
+  scale_y_continuous(limits = c(0, highest_count)) +
+  labs(title='Read-counts through pipeline' ) + 
+  xlab('DADA2 Step') + 
+  ylab('number of reads') + 
+  theme_classic()
+
+```
+
+
+### How long are my reads?
+
+Know your primers - check your mapfile etc., and search for the sequences online [e.g.](https://duckduckgo.com/?q=GTGYCAGCMGCCGCGGTAA+GGACTACNVGGGTWTCTAAT&t=vivaldi&atb=v109-2&ia=web). For instance, these reads are not V3-V4 (as feared) but rather 515F-806R (V4-V5). Keep trimming steps in mind when counting.
+
+  * with a huge overlap, could allow more mismatches? 0 mismatch in 20 versus 0 in ~200. Still needs to catch lower overlap reads though (if happening).
+  * consider the ```nmatch``` field in the example below: note the frequency of mismatch in ~200 bp: low, but often one or two.
+  
+  * Larger mismatches occurr, but at lower abundances.
+  
+  * __TRIMM WAY MORE!__
+
+
+```{r short_ASVs, eval=FALSE}
+hist(as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )),main='histogram of all ASV lengths')
+
+# from DADA2's output: length of sequence, merging overlap (nmatch), mismatches, etc/:
+readRDS(list.files('/data/jamie/PHYLO/Materials/5_final' , pattern = 'RDS', full.names = TRUE)[45])
+
+
+```
+
+  
+## Making the Phyloseq Object
+
+```{r}
+
+# semi-processed contaminated (incl. NegCtrls & co) version
+PHYLO_full_contam <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq_uc.RDS')
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1) 
+PHYLO_tree_contam <- read_tree('../../output/6_PHYLO_Seqtab/PHYLO_run1_uc_rooted.phylo.tre')
+PHYLO_full_contam <- merge_phyloseq(PHYLO_full_contam, PHYLO_map_full, PHYLO_tree_contam)
+
+```
+  
+### Missing samples
+
+Two samples are missing from the original study: one has appears to be lost in sequencing. Another disappears during processing (see 18PRE in the next section): 
+``` {r missing, collapse = TRUE, eval=FALSE}
+getwd()
+
+PHYLO <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_o_t_s_phylo.RDS')
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1)  # the QIIME mapfile from sequencing - 72 samples
+dim(PHYLO_map_full)
+
+# which samples not in the list
+PHYLO_pp <- sample_data(subset_samples(PHYLO, Description == 'PRE' | Description == 'POST') )
+map_pp <-PHYLO_map_full[which(PHYLO_map_full$Description == 'PRE' | PHYLO_map_full$Description == 'POST' ) , ]
+
+map_pp[!(rownames(map_pp) %in% rownames(PHYLO_pp)) , 1:6]
+
+```
+
+
+### Isolate problematic samples
+
+starting point for troubleshooting, using the tools developed here and elsewhere.
+
+```{r bad_sample_sums , eval=TRUE, results='hold', fig.show='hold'}
+getwd()
+#PHYLO <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_o_t_s_phylo.RDS')  # make sure load from right dir   # right file?
+PHYLO <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS')  # make sure load from right dir (use absolute?)
+
+print('sample_sums, small -> large')
+sort(sample_sums(PHYLO)) ; sample_data(PHYLO) <- data.frame('SeqDepth' = sample_sums(PHYLO) )
+bad <- subset_samples(PHYLO , sample_sums(PHYLO) < 5000)
+
+plot( sort(sample_sums(bad)), ylab = 'Total Reads per Sample', xlab = 'Sample' , ylim = c(0,8000), type = 'n' , main = 'Sequencing depth with speculative cutoffs' )
+abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' )
+axis(4, at=c(1000,2000,3000), col= 'skyblue3', las=0)
+points(sort(sample_sums(bad)), cex = 1.5, col = "skyblue3", pch = 1, lwd = 2)
+text(sort(sample_sums(bad)), labels = names(sort(sample_sums(bad))), pos=1, offset = -3, cex=0.9 , srt=90 )
+
+bad_names <- sample_data(bad)$OrigID
+write.table(bad_names, '../../output/PHYLO_bad_names.txt', sep='\t')
+
+```
+
+These names are due for re-processing. Idea is first:
+
+  * check the overal lengths and abundances of these, compared with their names: these are __not__ naturally sparse due to experimental conditions (e.g. control samples)
+  * if naturally sparse/low - use as is, but excl. (?) from statistical analyses  (e.g. negative controls)
+  * if being filtered out   - re-trim samples informed by the managable-but-poor samples.   
+
+
+Comparing FASTQC below of these _'bad samples'_ shows that there is _very_ little (virtually no) difference with that of the overall read profiles, despite the relatively tiny number of reads in ```bad_samples``` (i.e. low-quality reads would be more apparent if more common) - as such, __appears ```bad_samples``` amplified poorly, not badly__.  
+
+__Beware:__ this is all over / between ```bio``` & ```asp```, so watch your ```dirs```! 
+```{bash eval=FALSE}
+
+mkdir /data/jamie/PHYLO/Materials/1_fastqc_out/1.3_badnames_fastqc
+for i in $(cat /data/jamie/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_bad_names.txt | sed 's/^\".*\"\s//' | sed 's/\"//g' ) ;
+  do
+      if [ -e /data/jamie/PHYLO/Materials/0_raw_reads/$i.R1.fastq ] ; 
+        then cat /data/jamie/PHYLO/Materials/0_raw_reads/$i.R1.fastq >> /data/jamie/PHYLO/Materials/0_raw_reads/bad_names.R1.fastq ;
+             cat /data/jamie/PHYLO/Materials/0_raw_reads/$i.R2.fastq >> /data/jamie/PHYLO/Materials/0_raw_reads/bad_names.R2.fastq ;
+      fi ;
+  done
+fastqc --threads 20 /data/jamie/PHYLO/Materials/0_raw_reads/bad_names.R1.fastq /data/jamie/PHYLO/Materials/0_raw_reads/bad_names.R2.fastq -o /data/jamie/PHYLO/Materials/1_fastqc_out/1.3_badnames_fastqc ;
+
+## off to the shops!
+# scp -r /data/jamie/PHYLO/Materials/1_fastqc_out/1.3_badnames_fastqc jfg@143.239.154.14:/home/jfg/Dropbox/SeqBiom__PHYLO/output
+```
+  
+Remedy: 
+
+  * Are there samples below/at our arbitrary thresholds that could be re-processed & brought up?
+  * analysis must be performed _with and without_ problem samples in order to be presented.  
+
+
+
+
+### ```DECIPHER``` Taxonomy assignment
+
+Incroporated into Pipe Step 7. Below, the ```dada_to_decipher``` fn has been re-written (multiple times) to fix the following error:
+
+      ``` Error in IdTaxa(dna, ref, strand = strand, processors = processors, verbsoe = verbose) : 
+          promise already under evaluation: recursive default argument reference or earlier problems?```
+
+Result of ```objects```, ```defaults``` and ```arguments``` having the same name (e.g.: an ```object, parameter default, fn-arg & decipher-arg``` all called 'cpu', or similar). Avoid and fix this by:
+
+  * avoiding overlap between argument names, i.e. give unique intelligible names
+  * possibly allowing ```...``` to catch further options
+  * use ```match.arg()``` to pass sensible default (rather than depend on having been created previously). 
+  
+ Can set external args (e.g. via ```docopts```) and pass them in, but best to write functions that can _stand alone_ and are other-human readable. Note ```progress``` is not set properly, as can only be a binary/logical choice
+
+```{r decipher, eval=FALSE}
+
+# input: sample data from GlobEnv (__not__ external files) and ref.tax
+# output: a tax_table'ble matrix
+# verbosity left at default (TRUE) as cant set through docopts
+
+## see also the method below:
+# taken from the BigBoi's F1000 paper v.2 : https://f1000research.com/articles/5-1492/v2
+
+dada_to_decipher <- function(data=RDSDATA,
+                              ref=TAXREF,
+                              taxout=NULL,
+                              cpu=NULL,
+                              ref_strand=c('top','bottom','both')) {
+
+  # data in
+  seqtab <- makeSequenceTable(data)          # seqtab of readRDS files
+  ref_strand <- match.arg(ref_strand)        # set arg as given, or pick first candidate
+
+  # speculate taxonomies
+  dna <- DNAStringSet(getSequences(seqtab)) # DNAStringSet from ASVs
+  ids <- IdTaxa(dna, ref, strand=ref_strand, processors=cpu)
+  ranks <- def_ranks # ranks of interest, set above docopts options
+  
+  ## make tax_table and add uniqueseqs
+  taxid <- t(sapply(ids, function(x) {
+    m <- match(ranks, x$rank)
+    taxa <- x$taxon[m]
+    taxa[startsWith(taxa, "unclassified_")] <- NA
+    taxa
+  }))
+  taxid <- cbind(taxid,as.matrix(getSequences(seqtab)))    # add ASV seqs
+  colnames(taxid) <- c(ranks, "ASV")
+  rownames(taxid) <- paste0("Seq_", str_pad(seq(nrow(taxid)), 7, pad = 0))
+  if(missing(taxout)){ 
+      taxout <- 'dada_to_decipher_taxonomy.txt' }
+  write.table(taxid, taxout, sep='\t')
+  return(taxid)
+  
+}
+
+
+decip_tax <- dada_to_decipher(data = RDSdata,
+                              ref = taxref,
+                              taxout='/data/jamie/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_idtaxa_output.txt'  
+                              )
+
+```
+
+
+
+### Phylogenetics
+
+Most lilely needs to be incroporated into Pipe Step 7: requires use of a SeqTab, but can load that. 
+
+``` {r phylo-DECIPHER-phangorn, eval=FALSE }
+
+# taken from the BigBoi's F1000 paper v.2 : https://f1000research.com/articles/5-1492/v2
+library('phangorn')
+library('DECIPHER')
+
+
+## DECIPHER
+seqtab <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_run1_seqtab.RDS')
+seqs <- getSequences(seqtab)
+names(seqs) <- seqs # This propagates to the tip labels of the tree
+alignment <- AlignSeqs(DNAStringSet(seqs), anchor=NA, processors = 27)
+
+## Phangorn  -  hey jamie, wtf are these functions doing?
+print('Phangorn:', 'Using Max-Likelihood, JC69 and then GTR substitution models, Neighbour-Joining, GTR .. read up!')
+phang.align <- phyDat(as(alignment, "matrix"), type="DNA")
+dm <- dist.ml(phang.align)
+treeNJ <- NJ(dm) # Note, tip order != sequence order
+fit = pml(treeNJ, data=phang.align)
+fitGTR <- update(fit, k=4, inv=0.2)
+fitGTR <- optim.pml(fitGTR,                             ##     < ! >  >40min!
+                    model="GTR",
+                    optInv=TRUE,
+                    optGamma=TRUE,
+                    rearrangement = "stochastic",
+                    control = pml.control(trace = 0)
+                    )
+
+saveRDS(fitGTR, '../../output/6_PHYLO_Seqtab/PHYLO_run1_phango.RDS')
+saveRDS(fitGTR$tree, '../../output/6_PHYLO_Seqtab/PHYLO_run1_phango_tree.RDS')
+detach("package:phangorn", unload=TRUE)
+
+```
+
+
+### Diversity Metrics
+
+Many functions offer rarefaction of a-div, but less so b-div. fine unless b-div 'depends' on all counts? And how does compositionality affect this?
+
+
+#### Rarefaction Curves
+
+Great visual aid for determining coverage. __Needs__: Alpha diversity measures, as per phyloseq-tools version (check what they do? Or just get theirs to work?)
+
+```{r rarefaction, eval=TRUE}
+
+## TROUBLESHOOT!
+
+# from # https://github.com/joey711/phyloseq/issues/143#issuecomment-329028119 - richness.R copied to local version
+source('~/Dropbox/SilentGeno/R/ggrare.R')
+
+p <- ggrare(PHYLO, step = 100, color = "SeqDepth", label = 'ID', se = TRUE, plot = FALSE, parallel = TRUE)
+p + facet_grid(~'Description') + theme_classic()
+
+
+```
+
+
+### Richness Plots 
+
+With the diversity measures provided through phyloseq (vegan?): ```c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")```. Note in Shannon and Simpson two ```POST``` samples stand out as having anomalously low diversity. Likely low read, could consider removing as diversity visibly distorted? __Can this be tested?__
+
+```{r plot_richness, echo=FALSE, results='hide', warning=FALSE}
+
+PHYLO_rich <- estimate_richness(PHYLO)
+#write.table(PHYLO_rich, '../../output/7_physeq_out/PHYLO_richness_est.txt', sep = '\t')
+
+
+#Try facet these
+
+meas <- c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")
+
+# MEAS MOR AMACH GO DTI AN LAPPLY MASSSSSSSSSSIVVE
+p.list <-lapply(meas, function(x) {
+  save <- FALSE   # switch here if required
+  p <- plot_richness(PHYLO, measures = x, color='Description', title = x) +
+    scale_color_manual(values =  e.col) +
+    facet_grid(facets = ~Condition, scales = 'free') +
+    theme(panel.background = element_rect(fill = NA),
+      panel.grid.major = element_line(colour = "grey80", size = 0.2),
+      panel.ontop = FALSE ) +
+    ylab(x)
+  return(p)
+  if(save){ ggsave(filename = paste0(x,'_adiv_plot.png'), device='png', plot=p)}
+  } )
+
+ggarrange(p.list[[1]], p.list[[2]], p.list[[3]], p.list[[4]], p.list[[5]], p.list[[6]] , 
+          ncol = 3, nrow = 2,  align = "hv",
+          widths = c(1, 1, 1), heights = c(1, 1, 1),
+          common.legend = TRUE,
+          legend='bottom')  #labels = 'Alpha Diversity Measures') , 
+
+
+```
+
+---
+
+
+## Abundances - barcharts
+
+Take home message is forcing the order of plotting (phylum, then e.g. family) by setting order of factor levels using ```data$data <- factor(data$data, level=ordered_obj)```, and the force colouration through (consistent) use of named colour vectors.
+  * kill z.rm4 early to save power, time etc...
+  * then glom to plot_taxa level
+
+
+```{r}
+PHYLO_ra <- transform_sample_counts(PHYLO, function(x) ( x/sum(x) ) *100 )   
+# 
+# prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=20), A=0.05*nsamples(PHYLO))
+# PHYLO_10 = prune_taxa(prunA, PHYLO_ra) # this pruned phylo-object has all the taxa MATCHING that fitler step
+# PHYLO_un10 = prune_taxa(!prunA, PHYLO_ra)
+
+PHYLO_5_ra <- prune_taxa( (taxa_names(PHYLO) %in% taxa_names(PHYLO_5)), PHYLO_ra)
+PHYLO_un5_ra <- prune_taxa( !(taxa_names(PHYLO) %in% taxa_names(PHYLO_5)), PHYLO_ra)
+PHYLO_un5_ra <- tax_glom(PHYLO_un5_ra, taxrank = 'domain') # flatten for computation
+
+# note z.rm3/4 will overlap on meaningless species/ASV columns, but must unify names
+tax_table(PHYLO_un5_ra)[,1:7] <- 'misc'   
+z.rm3 <- psmelt(PHYLO_5_ra)
+z.rm4 <- psmelt(PHYLO_un5_ra)
+names(z.rm4) <- names(z.rm3)  # dangerous name transfer
+
+
+    # # ordered list of abundant classes
+    # 
+    # # rank_order <- NULL
+    # # rank_order <- unique(tax_table(PHYLO_5_ra)[ names(sort(taxa_sums(tax_glom(PHYLO_5_ra, taxrank = 'class')) , decreasing=TRUE)) , 'class'])
+    # # rank_order <- c(rev(rank_order),'misc')    # add to factor lost or will get NA'd later
+    # # #rank_order <- rbind(rank_order[-(which(rank_order[,] == 'unk.')) , ] , rank_order[(which(rank_order[,] == 'unk.')) , ])   # move unk. to the end
+    # 
+    # # # order classes
+    # # z.rm3 <- within(z.rm3 , class <- factor(class , levels = rank_order ))    #  < ! > T H I S
+    # 
+    # 
+    # ## pool all ASVs in z.rm4 (<10) into a single dummy taxon, and join to bottom of (>10) dataframe.
+    #   # this nukes all the taxa of PHYLO_un5_ra into one taxa level, so only one taxa level needs ever be plotted/coloured
+    #   z.rm4$domain <- c('misc')
+    #   z.rm4$phylum <- c('misc')
+    #   z.rm4$class <- c('misc')
+    #   z.rm4$order <- c('misc')
+    #   z.rm4$family <- c('misc')
+    #   z.rm4$genus <- c('misc')
+
+# fix the position of 'misc' by calling it as a factor
+z.rm4 <- within(z.rm4 , class <- factor(class , levels = ('misc') ) )    # same sorting trick as above
+
+## order and fix phyla, BUT skip the complexities!
+  # - already done in colour-fixing! set on taxa
+  z.rm3[ , plot_rank] <- factor( names(e.col2), levels = names(e.col2))      #  < ! > T H I S
+  # join the grouped and ungrouped together
+  z.rm5 <- rbind(z.rm4 , z.rm3)    
+
+  unique(z.rm5$class)
+#plot
+  ggplot(z.rm5, aes(x=ID,y=Abundance, fill = class)) +
+    facet_grid(.~Condition,scales='free',space='free') +                                  # scale/size control
+    geom_bar(aes(fill = class , color = class ), stat ="identity", position="stack" ) +      #, color='black'
+    theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+    theme(strip.text.x = element_text(size = 12), strip.text.y = element_text(size = 9)) +    # bigger
+    theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  # rotate
+    scale_fill_manual(values = e.col2, na.value='grey')  +         # the shape-filling colours 
+    scale_color_manual(values = e.col2, na.value='grey')  +        # are same as the outline colours
+    theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +                    # horiz lines, not vis here
+    guides(fill=guide_legend(reverse=TRUE), color=guide_legend(reverse=TRUE)) +
+    ggtitle("PHYLO ASVs")#+ theme(legend.position = 'none')
+  
+#View(z.rm3[1:10,])
+
+```
+
+
+
+------------------------------------------------------------------------------------------------------------
+
+How do we know how close we are to the edge of bad data?
+
+------------------------------------------------------------------------------------------------------------
+
+
+<!-- # PHYLO  -  Quality Report Materials -->
+
+
+<!-- ```{r setup, include=FALSE} -->
+<!-- #library('pander') -->
+<!-- library('phyloseq') -->
+<!-- library('dada2') -->
+<!-- library('reshape2') -->
+<!-- library('ggplot2') -->
+<!-- library('knitr') -->
+
+<!-- ``` -->
+
+
+<!-- ## Preamble -->
+
+
+<!-- Steps in the pipeline proceed as below - this document deals with preprocessing and quality (1&2). Samples with low read abundance are considered, and some abundance cutoffs are recommended. -->
+
+<!--   1. Samples are quality trimmed -->
+<!--   2. low quality reads are filtered out -->
+<!--   3. sequence errors are modelled -->
+<!--   4. sequences are denoised -->
+<!--   5. read-pairs are merged -->
+<!--   6. chimeric sequences are removed -->
+<!--   7. taxonomy is assigned -->
+
+<!-- Output samples with low abundance generally began with low abundance. Although some sample abundances have been 'improved' through cleaning & merging, further processing is a good idea - in particular, use of paired-end reads (2x300bp: 600bp) for the V4-V5 region (515-806bp: ~291bp) could allow very aggressive quality trimming which should further reduce loss of reads (e.g. re-trim Reverse reads) - this is Monday's first job. -->
+
+<!-- ---- -->
+
+<!-- ## Quality visualisation and management (R) -->
+
+<!-- Quality plots display the relationship between read length and sequence quality, often illustrating the length at which read quality rapidly degrades, necessitating read trimming. Judicious use of trimming allows problematic sequences to be removed before they error prediction profiles, theoretically providing more sensitive error correction models. -->
+
+<!-- Extensive trimming however causes loss of information, and depending on amplicon, can seriously hamper pair-merging. The PDF of quality plots (attached in email, __```dada2_qualplots.pdf```__) shows the median quality-score (green) and quality-score interquartile ranges (orange lines), while black/white shading (heatmap) plots the number of reads at a given position. Images are given for raw, trimmed, and filtered FASTQ reads, for F (R1) and R (R2) reads respectively  - apologies for the lack of graph titles. -->
+
+<!-- The ideal outcome is to maintain length and abundance of reads while excising low-quality base-positions - note how the outputs improve. -->
+
+<!-- ```{r eval=FALSE, include=TRUE} -->
+<!-- pdf('../6_PHYLO_Seqtab/dada2_qualplots.pdf') -->
+
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE) -->
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/0_raw_reads', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE) -->
+
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE) -->
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/2_trimmed', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE) -->
+
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R1.fastq', full.names = TRUE), aggregate=TRUE) -->
+<!-- plotQualityProfile(list.files('/data/jamie/PHYLO/Materials/3_d2', pattern='R2.fastq', full.names = TRUE), aggregate=TRUE) -->
+
+<!-- dev.off() -->
+
+<!-- ``` -->
+
+
+<!-- ---- -->
+
+<!-- ## Read Loss Through Processing -->
+
+<!-- After quality trimming, tracking the volume of reads through the pipeline can provide insight into where large volumes of reads are being lost (if any). This boxplot shows the mean and 25-75% interquartile ranges for the number of reads, in each category, at each step of the pipeline. The accompanying table of data catalogues abundances at each step, showing where read loss was greatest. -->
+
+<!-- ```{r r_provenance, eval=TRUE, echo=FALSE, results='hold'} -->
+
+<!-- track <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_trackoutput.RDS') -->
+
+<!-- # have already sample/state mapping: -->
+<!-- PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1) -->
+
+<!-- track$Desc <- (PHYLO_map_full[rownames(track),'Description']) -->
+<!-- track$ID <- rownames(track) -->
+
+<!-- # reorder track by smallest **read input**, not ASV output -->
+<!-- track <- track[with(track, order(rawF)), ] -->
+
+<!-- z.rm <- melt(track) -->
+<!-- # max(track[,1:8])  # establish max read counts for plotting: -->
+
+<!-- ggplot(z.rm, aes(y=value, x=variable,  fill=as.factor(Desc) ,  colour=as.factor(Desc) )) + -->
+<!--   geom_boxplot(outlier.shape=NA , colour='black') + -->
+<!--   geom_point(width=0.2, shape=21,  size=2.5,  aes(colour='black' , fill=as.factor(Desc), alpha=0.6 )) + #note factoring-by-source requires use of the aes arg -->
+<!--   scale_fill_manual( "Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) + -->
+<!--   scale_color_manual("Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) + -->
+<!--   scale_y_continuous(limits = c(0, 50000)) + -->
+<!--   labs(title='Read-counts through pipeline' ) + -->
+<!--   xlab('DADA2 Step') + -->
+<!--   ylab('number of reads') + -->
+<!--   theme_classic() -->
+
+<!-- kable(track[,1:8], caption = 'Samples ordered by smallest starting ```.FASTQ``` file')  # or pander() -->
+
+
+<!-- # -->
+<!-- ``` -->
+
+
+
+<!-- ---- -->
+
+<!-- ## Isolating problematic samples -->
+
+<!-- Several samples have problematically low read abundances. How do they compare? We evaluate samples with a total abundance below 5000 reads (arbitrary threshold). -->
+
+<!-- ```{r bad_sample_sums , eval=TRUE, results='hold', fig.show='hold', echo=FALSE} -->
+
+<!-- PHYLO <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS')  # make sure load from right dir -->
+
+<!-- print('sample_sums, small -> large') -->
+<!-- sort(sample_sums(PHYLO)) ; sample_data(PHYLO) <- data.frame('SeqDepth' = sample_sums(PHYLO) ) -->
+<!-- bad <- subset_samples(PHYLO , sample_sums(PHYLO) < 5000) -->
+
+<!-- # plot all   #consider joining plots to axis with line -->
+<!-- plot( sort(sample_sums(PHYLO)), ylab = 'Total Reads per Sample', xlab = ' ' , ylim = c(0,50000), type = 'n' , main = 'Sample Sequencing Depths', xaxt='n' ) -->
+<!-- abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' ) -->
+<!-- points(sort(sample_sums(PHYLO)), cex = 1, col = "maroon", pch = 20, lwd = 1.5) -->
+<!-- axis(1, at=1:length(sample_sums(PHYLO)), labels = names(sort(sample_sums(PHYLO))) , cex.axis=0.6 , srt=90, las=2 ) -->
+
+<!-- # plot the useless ones -->
+<!-- plot( sort(sample_sums(bad)), ylab = 'Total Reads per Sample', xlab = 'Sample' , ylim = c(0,8000), type = 'n' , main = 'Sequencing depth with speculative cutoffs' ) -->
+<!-- abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' ) -->
+<!-- axis(4, at=c(1000,2000,3000), col= 'skyblue3', las=0) -->
+<!-- points(sort(sample_sums(bad)), cex = 1.5, col = "skyblue3", pch = 1, lwd = 2) -->
+<!-- text(sort(sample_sums(bad)), labels = names(sort(sample_sums(bad))), pos=1, offset = -3, cex=0.9 , srt=90 ) -->
+
+<!-- bad_names <- sample_data(bad)$OrigID -->
+<!-- write.table(bad_names, '../../output/PHYLO_bad_names.txt', sep='\t') -->
+
+<!-- ``` -->
+
+<!-- These samples require extra consideration. Of note: -->
+
+<!--   * Note the step effect, with sample sums grouping at distinct levels (e.g. 1-9, 10-16, 17-20; likely due to effects of processing). This can provide a clean point for setting thresholds -->
+<!--   * These appear to _not_ be naturally sparse due to experimental conditions (e.g. not due to being control samples) -->
+<!--   * Likely excluded from statistical analyses - unrepresentative samples -->
+<!--   * Further attention to improve read output (but still will be insufficient in more extreme cases) -->
+
+
+<!-- Comparing FASTQC Quality Plots of these _'bad samples'_ shows that there is _very_ little (virtually no) difference with that of the overall read profiles, despite the relatively tiny number of reads in ```bad_samples``` (i.e. low-quality reads would be more apparent if more common) - as such, appears __bad_samples amplified poorly__ (low abundance), __not badly__ (low quality). -->
+
+<!-- This has a bearing on how we treat these low-abundance samples: As noted above, their structure is likely to reflect the most abundant members of the community, causing an 'unfair' weighting in Beta diversity analyses adn statistical testing - they are however still somewhat informative in terms of overall composition. -->
+
+<!-- One suggestion could be application of two thresholds: one for inclusion in the study (e.g. 1000 reads), and one for statistical testing (e.g. 3000 reads). This would mitigate total loss of paired samples, while ensuring that hypothesis testing was not unduly influenced by poor coverage. -->
+
+<!-- ---- -->
+
+<!-- ## Amplicon Sequence Variant Lengths -->
+
+<!-- ASV length is of interest when reviewing processing output - do lengths approximate expectations, are there any unusual sequences? Previous, mammalian-related sequences have been excluded (due to aggressive quality trimming to ~200bp), and most sequences still cluster at ~270bp, as expected from the 515-806 primers used. There is however also now a small cohort of ~200bp ASV sequences - who knows. -->
+
+<!-- ```{r short_ASVs, eval=TRUE, echo=FALSE} -->
+<!-- PHYLO <- readRDS('../../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS') -->
+<!-- hist(as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )),main='histogram of all ASV lengths', xlab='ASV length',breaks=200) -->
+
+<!-- # # from DADA2's output: length of sequence, merging overlap (nmatch), mismatches, etc/: -->
+<!-- # readRDS(list.files('/data/jamie/PHYLO/Materials/5_final' , pattern = 'RDS', full.names = TRUE)[45]) -->
+
+<!-- ``` -->
+
+

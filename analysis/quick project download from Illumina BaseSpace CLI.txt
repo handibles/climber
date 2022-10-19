@@ -1,0 +1,12 @@
+#Most info at: https://developer.basespace.illumina.com/docs/content/documentation/cli/cli-overview
+#Local install, -O = software location
+wget "https://api.bintray.com/content/basespace/BaseSpaceCLI-EarlyAccess-BIN/latest/%5C$latest/amd64-linux/bs?bt_package=latest%22 -O /data/Food/analysis/R6564_NGS/amy_fitzpatrick/BaseSpace
+#Enable software
+chmod u+x /data/Food/analysis/R6564_NGS/amy_fitzpatrick/BaseSpace
+#Validate account
+/data/Food/analysis/R6564_NGS/amy_fitzpatrick/BaseSpace auth
+#List account, find project ID for download
+/data/Food/analysis/R6564_NGS/amy_fitzpatrick/BaseSpace list project
+#Download data, -i = project ID, -o = output directory
+# project id is in url
+/data/Food/analysis/R6564_NGS/amy_fitzpatrick/BaseSpace download project -i 277776500 -o LP4/

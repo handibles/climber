@@ -1,0 +1,713 @@
+---
+pdf_document: default
+author: "jfg"
+date: "10 Yanuary 2019"
+output:
+  html_document:
+    toc: TRUE
+  pdf_document:
+    toc: TRUE
+title: 'PHYLO :: Heatmaps & Clustering'
+---
+  
+---
+
+#### REMEMBER
+
+  * THINK about the problem you're working on -
+    - what are you looking for?
+    
+  * what is required to _solve_, not erradicate, that problem?
+  * what approaches are worth trying?
+  * what solutions are for another day?
+  
+----
+
+> For correlation methods, as used in the feature-wise clustering, see ```ledger_DATesting``` 
+
+> Don't be intimidated - actually pretty cool, with intelligible concepts (in our digging thus far) 
+
+> Dear God, make sure you're scaling samplewise : illustrate recurring abundance patterns WITHIN samples OF taxa
+
+> # grob_heat = grid.grabExpr(draw(Heatmap(...))) 
+
+
+
+---
+
+Processed pre-fabricated data.
+
+```{r just_load_data, results='hold', message=FALSE, warning=FALSE}
+library('phyloseq')
+library('ComplexHeatmap')
+library('circlize')
+library('WGCNA')
+library('dynamicTreeCut')
+library('vegan')
+library('WGCNA')
+library('RColorBrewer')
+library('scales')
+library('ape')
+library('DECIPHER')
+library('viridis')
+library('ggplot2')
+
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(comment = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(results = 'hold')
+
+PHYLO_full <- readRDS('../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS')
+PHYLO <- subset_samples(PHYLO_full, sample_sums(PHYLO_full) >= 400)  # PHYLO_bup <- PHYLO
+PHYLO <- prune_taxa(taxa_sums(PHYLO) > 0 , PHYLO)
+
+
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' , 'N_CONTROL' = 'lavenderblush3' )
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","Neg_Co", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+
+```
+
+# Clustering & Heatmaps
+
+ Not scary. As per instructions, choices made for us:
+
+  * Bray-curtis dissimilarity measure of samples
+  * clustered using ```hclust``` and ```ward.D``` / ```ward.D2``` method of clustering/agglomeration
+  * Clusters defined from ```hclust``` output using ```dynamicHybrid``` from ```dynamicTreeCut``` - experiment with settings (e.g. ```deepSplit``` etc)
+  * ```ComplexHeatmap``` plot of Z-Scores
+  * ```ggarrange``` or similar to plot together (prob use an alternative)
+
+Presented in Ryan et al., ```Ward-linkage``` in combination with ```DynamicTreeCut``` improves group definition, with strong separation of clades. How? ```DTC``` selects groupings based on topology (cluster shape) rather than branch lenght (e.g. the usual branch cut whihc translates into clusters). Ward (_'s minimum variance_) finds "```compact spherical clusters```", which may not be what we're after. 
+
+---
+
+> What is the best clustering method for samples/ composition / how distinct are the ideas & distances of clustering? 
+
+Much like PCoA, clustering is carried out on a distance metric (e.g. B-C w./ Ward-linkage), and Aitchison will therefore have it's own cluster pattern and heatmap information. further, clustering can be carried out in any combo of Rows x Cols, so commonly samples _and_ taxa will be sorted. 
+
+
+[Advice at this page](https://stats.stackexchange.com/questions/3713/choosing-a-clustering-method) suggests:
+
+  __a.__ BC is good for differentiating between variables while taking magnitude into account and 
+
+  __b.__ distance metric is more important than clustering method.  
+
+
+
+## [```dynamicTreeCut```](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/BranchCutting/)
+
+I have little/no idea how to even ...begin with this. 
+
+[From reading DTC supp:](https://horvath.genetics.ucla.edu/html/CoexpressionNetwork/BranchCutting/Supplement-published.pdf)
+
+  HC clusers most likely into new objects (clusters) then next closest, then next etc. Main diff between methods is manner of calcualting dissimilarity: DTC focus on average linking (AL) in HC, i.e. the average of pairwise __dissims__ between object pair combinations ```a``` and ```b```. Dissim at which objects merged to cluster equates to their ``branch height```, and always increase, that is _objects of lowest dissmilarity cluster first_. 
+  DTC clusters these objects based on branch shape, not length. Two methods. 
+  ```Dynamic Tree```, a top-down method using just dendrogram, DT iteratively clusters/reclusters until numbers stabilise. Computes dist between dendrogram (clustered dissim) and a reference length ```l```, which can be adapted in three steps to find new clusters: average mean(Height) =l ; -> 0.5(l + max(Height)) ; -> 0.5(l + min(Height)). 
+     L starts _very_ high (in 0-1 dissim, start at 0.99 ) to generate v. dissim clusters, then works downward, using adaptive step described above, until no further sub-clusters produced.  
+  
+  ```Dynamic Hybrid```, a bottom-up method using dendrogram and between-objec dissim, which improves outlier detection. ```DH``` creates initial (bottom) clusters based on dissim. merging criteria (below); outliers then joined if sufficiently similar, but can adapt the __order__ (proximity in dendrogram) of clusters to find closer objects. This is __Partitioning Around Medoids__ or _k-medoid partitioning_ (ergo hybrid between HC and _k-medoid partitioning_).
+  Criteria for ```DH``` clustering are:
+  1. minimum members : ```selected to allow similar 'core' size for large and small clusters - N~o~```  
+  2. distal objets excluded, even if in same branch : ```set distal length - h~max~```
+  3. 'separated' from surroundings by 'gap' : ```diff( cluster_branch_height and scatter) - g~min~``` 
+  4. core (end-branch tips) should be highly connected (clusters merged v. early / lowest dissim.) : ```scatter```, ```mean(dissim) per cluster - n~c~```
+  These values are user defined. Crucially, does not assign orphan objects above two validated clusters to either (as no additional denrogram info present), as oppsoed to ```DC``` which does (assigns based on dendro-order). Can also 'release outliers' with highest dissim (as bottom-up) to avoid erroneous labelling - not recommended in general. 
+  Step 2: _Assign unlabeled objects_: can furthermore get mean dissim of outliers, and assign to appropriate groups, based on either size of nearest cluster (```radius```) or within a user-provided distance.  
+  
+  : __Choosing Parameters__: no built-in. ```DC``` has fewer parameters:  less sensitive, less flexible. ```DH``` more parameters: more flexible, more demanding. ```deepSplit()``` can allow a hands-off approach, with values 0 -> 3 increasing in __```sensitivity```__ over __```specificity```__, and requiring increasingly small minCluster sizes. For __specificity__, avoid step 2 ( _assign unlabeled_ , above). For __sensitivty__, enable it!  
+  <!>  Default is for __sensitivity__  <!>  
+  ```__deepSplit:__``` balances sensitivity/specificity. ```DT::deepSplit``` = ```T/F``` values, ```T``` = reprocess data unitl no further clusters detected, giving more sub-clusters. ```DH::deepSplit``` = ```0:3``` - value is used too calc ```min gap``` and ```max core scatter```, with higher values giving larger & smaller values respecitvely. 
+
+##### In Any Case
+
+```DTC``` manual recommends fine-tuning based on observed sensibility of clusters, as meaning of clusters will be dependent on info exterior to dendrogram, and therefore not accessible to algorythm. 
+
+
+---
+
+### ```DTC``` Example 1: 
+
+Basic/informative example, [from this page](http://r.789695.n4.nabble.com/Cutting-hierarchical-cluster-tree-at-specific-height-fails-tp4693737p4694051.html):
+  
+    Hi Johannes, 
+    you mentioned dynamicTreeCut - the dynamic hybrid method works fine on 
+    your data. Just supply the dissimilarity matrix as well: I use the 
+    function plotDendroAndColors from WGCNA to show the results; if you 
+    don't want to use WGCNA, just leave out the last call. 
+    
+    As you see, the algorithm found 3 clusters that seem right based on the dendrogram. 
+    
+    Please look carefully at the help file for cutreeDynamic since the 
+    defaults may not be what you want. 
+    
+    If you absolutely want to cut at a given height, it can be done as 
+    well, but the arguments will need some massaging. 
+    Best, 
+    Peter
+
+```{r DTC_eg_2, results='hide', message=FALSE, warning=FALSE}
+library(WGCNA) 
+
+# arrangement
+set.seed(42) 
+x <- c(rnorm(100,50,10),rnorm(100,200,25),rnorm(100,80,15)) 
+y <- c(rnorm(100,50,10),rnorm(100,200,25),rnorm(100,150,25)) 
+df <- data.frame(x,y)
+
+# distance, clsutering
+hc <- hclust(dist(df,method = "euclidean"), method="centroid") 
+dm = as.matrix(dist(df,method = "euclidean")) 
+
+# basic dendro plot
+plot(hc) 
+
+## DTC cluster definition
+labels = cutreeDynamic(hc, distM = dm, deepSplit = 2) 
+
+## WGCNA plotting
+plotDendroAndColors(hc, labels) 
+
+
+```
+
+
+
+---
+
+### ```DTC``` Example 2: 
+
+The following example relies enormously on the sourced file, ```NetworkFunctions-TreeCut-Simulation.R``` . The tutorial uses a dist and cluster function, then applies ```hclustplotn``` to do the real work. 
+
+
+```{r dtc_toy_example, eval=FALSE}
+# toy example of dynamicTreeCut
+source("../examples/DTC_Example_toy/NetworkFunctions-TreeCut-Simulation.R");
+library(dynamicTreeCut);
+library(moduleColor);
+
+# fake data
+data = c(1,2,3,4,5, 7,9,10,11,12,  19,24,28,32,38, 54);
+dim(data) = c(1, length(data));
+
+# make dendro
+dissim = dist(t(data));
+dendro = hclust(dissim, method = "average");
+
+# make plot graphics
+DetectedColors = NULL;
+DetectedColors = cbind(DetectedColors,
+labels2colors(cutreeDynamic(dendro = dendro,
+           cutHeight = NULL, minClusterSize = 3,
+           method = "tree", deepSplit = TRUE)));
+DetectedColors = cbind(DetectedColors,
+labels2colors(cutreeDynamic(dendro, cutHeight = NULL,
+           minClusterSize = 3,
+           method = "hybrid", deepSplit = 3,
+           pamStage = TRUE,  distM = as.matrix(dissim), maxPamDist = 0,
+           verbose = 0)));
+
+Methods = c("Dynamic Tree", "Dynamic Hybrid");
+
+StandardCex = 1.7;
+width = 9;
+#SizeWindow(width, 4);
+layout(matrix(c(1,2), nrow = 2, ncol = 1), widths = 1, heights = c(0.8, 0.2));
+par(cex = 1.4);
+par(mar=c(0, 6.5, 2, 0.2));
+plot(dendro, labels = data,
+main = "Toy example: clustering dendrogram and module colors", ylab = "Difference");
+par(mar=c(0.2, 6.5, 0, 0.2));
+
+# #
+# ## actual work and function via hclustplotn
+hclustplotn(dendro,                    # custom fn
+DetectedColors,
+RowLabels = Methods,
+main="toy tutorial example 1");
+# ##
+# #
+
+```
+
+that should give a nice output, but no :(
+
+---
+
+### ```DTC``` on PHYLO data
+
+Be prepared to get things _wrong_. 
+
+> is clustering improved by using full ASV table? 
+
+  * not noticeably. Full table (in RA) should include more information, but way more noise. How to separate noise from signal?
+  * can also condsider glomming?
+
+```{r dtc_PHYLO, results='hold', eval=TRUE}
+##    - vegdist :: samples are ROWS
+##    - scale :: samples are COLUMNS
+##    - BC needs RA DATA
+
+
+## filter taxa
+prunA <- genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.05*nsamples(PHYLO))      ## is clustering improved by full tax_table?
+PHYLO_f <- prune_taxa(prunA, PHYLO)
+# PHYLO_f <- tax_glom(PHYLO_f, taxrank = 'genus')  # rank_names(PHYLO)      ## glomming: a good idea?
+
+# name taxa by phylum for colouring
+tax_df <- t(data.frame(tax_table(PHYLO_f), stringsAsFactors = FALSE)) # transp to rename COLUMNS
+colnames(tax_df) <- tax_table(PHYLO_f)[,2]    # make phylum the colnames
+
+# BC uses RA values
+PHYLO_f <- transform_sample_counts(PHYLO_f , function(x) x/sum(x))
+e_df <- data.frame(otu_table(PHYLO_f), stringsAsFactors = FALSE)    # rownames(e_df)[1:4]   # samples are ROWS
+e_df <- e_df[ , colSums(e_df) > 0]
+
+# Bray-Curtis distance, instead of euclidan above. Jari recommends Jaccard instead...
+e_bc <- vegdist( e_df, method='bray')    # vegdist - samples are ROWS
+
+# clustering
+e_clust <- hclust( e_bc, method="ward.D")   # dist.mat is symmetrical, no row/col bias
+
+e_bc_mat <- as.matrix(e_bc)
+## DTC cluster definition
+labels = cutreeDynamic(e_clust,               # dendro
+                       distM = e_bc_mat,      # distM, required for DynamicHybrid
+                       method='hybrid', 
+                       maxCoreScatter = NULL,
+                       minGap = NULL,
+                       minClusterSize = 6,   # def = 20
+                       # pamStage = TRUE,
+                       # pamRespectsDendro = FALSE,
+                       # useMedoids = TRUE,
+                       
+                       deepSplit = 3)
+## WGCNA plotting
+plotDendroAndColors(e_clust, labels, main = 'BC/Ward-L on Samples') 
+
+
+# ==============
+
+# ## heretical BC, Ward linked taxa matrix
+# e_taxbc <- vegdist(t(e_df), method='jaccard')    # Bray-Curtis distance on taxa
+# e_taxclust <- hclust(e_taxbc, method="ward.D")
+# e_taxbc_mat <- as.matrix(e_taxbc)
+
+## spearman correlation of taxa
+sp_cor1 <- cor(e_df, method='spearman')    # relate abundances by correlation 
+e_taxspcor1 <- as.dist(1 - sp_cor1)        # correlation is a similarity, you want a distance
+e_taxspcor_mat1 <- as.matrix(e_taxspcor1)
+e_taxclust1 <- hclust(e_taxspcor1, method ="ward.D")
+
+## DTC cluster definition
+labels_tax = cutreeDynamic(e_taxclust1,               # dendro
+                       distM = e_taxspcor_mat1,       # distM, required for DynamicHybrid
+                       method='hybrid',
+                       maxCoreScatter = NULL,
+                       minGap = NULL,
+                       minClusterSize = 20,   # def
+                       pamStage = TRUE,
+                       pamRespectsDendro = FALSE,
+                       useMedoids = TRUE,
+                       deepSplit = 3)
+
+## WGCNA plotting
+plotDendroAndColors(e_taxclust, labels_tax, main = 'Jacc/Ward-L on taxa (ie \'species-space\')')
+
+
+## ============================
+
+# Phylotree clustering?
+
+## DECIPHER?
+
+```
+
+
+---
+
+### [ComplexHeatmap](https://bioconductor.org/packages/release/bioc/vignettes/ComplexHeatmap/inst/doc/s2.single_heatmap.html) 
+
+Try link that DTC'd BC-WL clustering with z-scored abundance tables.
+
+```{r eval=TRUE}
+
+library('ComplexHeatmap')
+library('circlize')
+library('ape')
+library('DECIPHER')
+library('viridis')
+
+
+prunA <- genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.05*nsamples(PHYLO))
+PHYLO_5hm <- prune_taxa(prunA, PHYLO)
+  # PHYLO_5hm <- tax_glom(PHYLO_5hm, taxrank = 'genus')  # rank_names(PHYLO)
+  # taxa_names(PHYLO_5hm) <- tax_table(PHYLO_5hm)[,6]
+e_df2 <- data.frame(otu_table(PHYLO_5hm), stringsAsFactors = FALSE)
+e_df2 <- e_df2[ , colSums(e_df2) > 0]
+colnames(e_df2) <- tax_table(PHYLO_5hm)[,6]    # genera as row names
+
+## Z-SCORE
+# rownames(e_df2)
+e_z <- scale(t(e_df2))  # z-score; COLUMNwise scaling of samples (illustrate recurring abundnace patterns WITHIN samples OF taxa)
+
+dim(e_z)
+
+## col annotate
+  # colours  # display.brewer.all()
+  clust_cols <- brewer.pal(length(unique(labels)), 'Set1')[1:length(unique(labels))]    # catch cases where palette bigger than cluster
+  names(clust_cols) <- as.character(c(1:(length(unique(labels)))))
+  # make annotations
+  annot <- HeatmapAnnotation( cluster = labels, 
+                              condition = sample_data(PHYLO_f)$Condition,
+                              description = sample_data(PHYLO_f)$Description,
+                              col=list( cluster = clust_cols, condition = e.col, description = e.desc) ,
+                              annotation_height = 0.1 
+                              )
+ 
+
+## row annotate  
+  # taxjacc_clust_cols <-  hue_pal( l = 56, c = 150 )(length(get_taxa_unique(PHYLO_5hm , taxonomic.rank = 'phylum')))                                      
+  # taxjacc_clust_cols <-  hue_pal(c=130, l=55)(length(unique(labels_tax)))
+  taxjacc_clust_cols <-  brewer.pal(length(unique(labels_tax)), name = 'Dark2')    # 8 cluster limit
+  names(taxjacc_clust_cols) <- as.character( 1:length(taxjacc_clust_cols) )
+  taxon_cols <- hue_pal( l = 65, c = 250 )(length(get_taxa_unique(PHYLO_5hm , taxonomic.rank = 'phylum')))   # colnames(e_df2)
+  # show_col(taxon_cols)
+  names(taxon_cols) <- as.vector( abbreviate( get_taxa_unique(PHYLO_5hm , taxonomic.rank = 'phylum'), minlength=10, strict=TRUE) )  
+  #  as.character(1:length(get_taxa_unique(PHYLO_5hm , taxonomic.rank = 'phylum'))) #  
+
+  # taxon <- colnames(e_df2)   # set as genera above
+  # taxon <- as.vector(sapply( tax_table(PHYLO_5hm)[,'phylum'] , function(x) match(x,  get_taxa_unique(PHYLO_5hm , taxonomic.rank = 'phylum')) ))
+  taxon <- as.vector( abbreviate(tax_table(PHYLO_5hm)[,'phylum'] , minlength=10, strict=TRUE) )
+
+  b_annot <- HeatmapAnnotation( 
+                            ASV_cluster = labels_tax, 
+                            Phylum = taxon,
+                            col=list( ASV_cluster = taxjacc_clust_cols, Phylum = taxon_cols), 
+                            which='row')# ,
+                            # annotation_width = unit(10, "mm") ,
+                            # annotation_height = unit(10, "mm") )
+
+col = viridis(10, option = 'B')
+col_this = colorRamp2(-4:5, col)
+
+## heatmap
+Heatmap(e_z,
+        col = col_this,
+        name = 'Jac / BC WL Heatmap',
+        cluster_rows = e_taxclust,
+        cluster_columns = e_clust,
+        top_annotation = annot,
+        left_annotation = b_annot,
+        show_row_names = TRUE,
+        row_names_gp = gpar(fontsize = 6),
+        column_names_gp = gpar(fontsize = 7)
+        ) 
+  # possibly better without this bit
+
+## need cooours for phyla, remove taxa names
+### need annotations for rwos, possibly wrong version (see asp)
+
+## could you weight clustering by abundance/significance/phylogenetic information?...
+# detach(name='package:philr', unload = TRUE)
+
+```
+
+
+---
+
+### Heatmaps and Aitchison
+
+The above example can cluster ASVs/genera by different methods: phylogeny or Bray-Curtis (the latter probably quite incorrect). An alternative is to convert to Aitchison and use euclidean distances. An alternative within that alternative is to use the ```aDist``` function (rather than ```data -> CLR -> Euclidean distance```) which will apparently compute the Aitchison distance between a set of compositions. _However_ the two methods of distance differ and it's unclear why (not clear why CLR-GBM doesn't work, not clear what method aDist uses to create dist.mat).
+
+
+````{r aitch_heat, eval=TRUE}
+
+library('ALDEx2')
+library(ade4)
+library(robCompositions)
+library(zCompositions)
+
+## see CoDa RMD for more explanations
+## choice of 0-wrangling here important ::  no transpose!
+
+PHYLO <- prune_taxa(taxa_sums(PHYLO) > 0 , PHYLO)
+d.1 <- data.frame(otu_table(PHYLO))
+
+d.gbm <- cmultRepl(d.1, method='BL')   # gbmr
+d.clr <- t(apply(d.gbm, 1, function(x){log(x) - log(gmean(x))})) # want SAMP = ROWS
+# d.clr[1:20,1:20]
+PHYLO_a <- PHYLO
+otu_table(PHYLO_a) <- otu_table(d.clr, taxa_are_rows = FALSE)
+
+prunA = genefilter_sample(PHYLO, filterfun_sample(function(x) x >=50), A=0.05*nsamples(PHYLO))
+PHYLO_5a = prune_taxa(prunA, PHYLO_a)
+
+## cluster & co
+
+## filter taxa
+  e_adf <- data.frame(otu_table(PHYLO_5a), stringsAsFactors = FALSE)
+  colnames(e_adf) <- tax_table(PHYLO_5a)[,6]
+  
+
+
+## sample clustering
+  # # robCompositions method
+  # a.dist <- aDist(data.frame(otu_table(PHYLO_5a), stringsAsFactors = FALSE))  # aDist(d.clr)  #robCompositions
+  # e_aclust2 <- hclust(a.dist, method="ward.D") 
+  # e_ait_mat2 <- as.matrix(a.dist)
+
+  e_ait <- vegdist( e_adf, method='euclidean')    # euclidean*Ait = Aitchison...
+  e_aclust <- hclust( e_ait, method="ward.D") 
+  e_ait_mat <- as.matrix(e_ait)
+  ## DTC cluster definition
+
+  # # compare distance matrices   -   not the same. 
+  # library(ggpubr)
+  # ggarrange( biplot(pcoa(e_ait)), biplot(pcoa(a.dist)), nrow = 1, ncol = 2)
+  
+  labels = cutreeDynamic(e_aclust,               # dendro
+                         distM = e_ait_mat,      # distM, required for DynamicHybrid
+                         method='hybrid', 
+                         maxCoreScatter = NULL,
+                         minGap = NULL,
+                         minClusterSize = 6,   # def = 20
+                         # pamStage = TRUE,
+                         pamRespectsDendro = TRUE,
+                         # useMedoids = TRUE,
+                         deepSplit = 3)
+  # ## WGCNA plotting
+  # plotDendroAndColors(e_aclust, labels, main = 'BC/Ward-L on Samples') 
+
+  
+## heretical BC, Ward linked taxa matrix
+  e_ataxbc <- vegdist(t(e_adf), method='euclidean')    # Bray-Curtis distance on taxa
+  e_ataxclust <- hclust(e_ataxbc, method="ward.D")
+  e_ataxbc_mat <- as.matrix(e_ataxbc)
+  ## DTC cluster definition
+  labels_tax = cutreeDynamic(e_ataxclust,               # dendro
+                         distM = e_ataxbc_mat,      # distM, required for DynamicHybrid
+                         method='hybrid',
+                         maxCoreScatter = NULL,
+                         minGap = NULL,
+                         minClusterSize = 10,   # def
+                         pamStage = TRUE,
+                         pamRespectsDendro = FALSE,
+                         useMedoids = TRUE,
+                         deepSplit = 3)
+  # ## WGCNA plotting
+  # plotDendroAndColors(e_ataxclust, labels_tax, main = 'BC/Ward-L on taxa (meaningless?)')
+
+
+# =========
+
+# subset for z-score
+  e_adf2 <- data.frame(otu_table(PHYLO_5a), stringsAsFactors = FALSE)
+  colnames(e_adf2) <- tax_table(PHYLO_5a)[,6]    # genera as row names
+
+## Z-SCORE
+  # rownames(e_df2)
+  e_az <- scale(t(e_adf2))  # z-score; COLUMNwise scaling of samples-as-columns (illustrate recurring abundnace patterns WITHIN samples OF taxa)
+  dim(e_az)
+
+## col annotate
+  clust_cols <- brewer.pal(length(unique(labels)), 'Set1')[1:length(unique(labels))]    # catch cases where palette bigger than cluster
+  clust_cols <- c('grey50' , clust_cols)
+  names(clust_cols) <- as.character(c(0:(length(unique(labels)))))
+  annot <- HeatmapAnnotation( cluster = labels, 
+                              condition = sample_data(PHYLO_5a)$Condition,
+                              description = sample_data(PHYLO_5a)$Description,
+                              col=list( cluster = clust_cols, condition = e.col, description = e.desc) ,
+                              annotation_height = 0.1 )
+
+## row annotate  
+  taxjacc_clust_cols <-  brewer.pal(length(unique(labels_tax)), name = 'Dark2')
+  taxjacc_clust_cols <- c('grey50' , taxjacc_clust_cols)
+  names(taxjacc_clust_cols) <- as.character( 0:(length(taxjacc_clust_cols) - 1) )
+
+  taxon <- as.vector( abbreviate(tax_table(PHYLO_5a)[,'phylum'] , minlength=10, strict=TRUE) )
+  taxon_cols <- hue_pal( l = 56, c = 150 )(length(get_taxa_unique(PHYLO_5a , taxonomic.rank = 'phylum')))   # colnames(e_df2)     
+  names(taxon_cols) <- as.vector( abbreviate( get_taxa_unique(PHYLO_5a , taxonomic.rank = 'phylum'), minlength=10, strict=TRUE) )  
+  
+  b_annot <- HeatmapAnnotation( taxjacc_cluster = labels_tax,
+                            taxon = taxon,
+                            col=list( taxjacc_cluster = taxjacc_clust_cols, taxon = taxon_cols),
+                            which='row')
+
+  
+col = viridis(10, option = 'B')
+col_this = colorRamp2(-4:5, col)
+    
+## heatmap
+# grob_heat <- Heatmap(t(e_adf2),
+Heatmap(t(e_adf2),
+        col = col_this,
+        name = 'Ait/WL Heatmap',
+        cluster_rows = e_ataxclust,
+        cluster_columns = e_aclust,
+        top_annotation = annot,
+        left_annotation = b_annot,
+        show_row_names = TRUE,
+        row_names_gp = gpar(fontsize = 6),
+        column_names_gp = gpar(fontsize = 7)
+        ) 
+
+## identical pattern, slightly different colour range!
+# Heatmap(e_az,
+#         col = viridis(20, option = 'A'),
+#         name = 'z-score Ait-WL Heatmap',
+#         cluster_rows = e_ataxclust,
+#         cluster_columns = e_aclust,
+#         top_annotation = annot,
+#         left_annotation = b_annot,
+#         show_row_names = TRUE,
+#         row_names_gp = gpar(fontsize = 6),
+#         column_names_gp = gpar(fontsize = 7)
+#         ) 
+
+````
+
+
+---
+
+## Arranging plots together
+
+```{r arrange_hmap}
+
+# Relative Abundance from elsewhere
+relab <- ggplot(z.rm5, aes(x=hclust,y=Abundance, fill = class)) +
+          geom_bar(aes(fill = class, color = NULL ), stat ="identity", position="stack"  ) +      #, color='black'
+          theme(strip.text.x = element_text(size = 10, angle = 90), strip.text.y = element_text(size = 9)) +    # bigger
+          theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  # rotate
+          scale_fill_manual(values = e.col2, na.value='grey')  +         # the shape-filling colours
+          scale_color_manual(values = e.col2, na.value='grey')  +        # are same as the outline colours
+          theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +
+          guides(fill=guide_legend(title='Class, coloured by Phylum', reverse=FALSE), color=guide_legend(title='Class¸ coloured by Phylum', reverse=FALSE)) +
+          ggtitle("Community Structure (taxa <5 reads grouped to 'misc')") +
+          theme_transparent() +  # this bit interferes with the legend pos +
+          theme(legend.position = 'none')    #, legend.box = "horizontal", aspect.ratio = 2:1) 
+
+# grob_heat = grid.grabExpr(draw(Heatmap(...))) 
+
+grob_rel <- ggplotGrob(relab)
+grid.arrange(grob_heat , grob_rel , nrow=2, ncol=1) #, xmin = -0.41, xmax = 0.46, ymin = 0.24, ymax = 0.34) 
+
+## ggplot combination
+# gg.pcoa + annotation_custom(grob = xbp_grob, 
+#                                       xmin = -0.41, xmax = 0.46, 
+#                                       ymin = 0.24, ymax = 0.34) 
+
+## ggarrange
+# ggarrange(grob_heat , grob_rel, nrow = 2, ncol = 1, heights = c(10, 2))
+
+## hacky: make space using ggarrange::NULL, then space using ggplot annotation method
+ggarrange(grob_heat, NULL, nrow = 2, ncol = 1, heights = c(3, 1)) + 
+    theme(plot.margin=unit(c(0,0,0,0),"cm")) +    # try spacing using the ggarrange NULL above
+    annotation_custom(grob = grob_rel, 
+                      xmin = 0.07,
+                      xmax = 0.595,
+                      ymin = 0.05,
+                      ymax = 0.395)
+
+  
+
+
+
+# library(gridExtra)
+# library(grid)
+# library(ggplot2)
+# library(lattice)
+# p <- qplot(1,1)
+# p2 <- xyplot(1~1)
+# r <- rectGrob(gp=gpar(fill="grey90"))
+# t <- textGrob("text")
+# grid.arrange(t, p, p2, r, ncol=2)
+# 
+
+```
+
+---
+
+### !
+
+> Combine pvclust() and heatmap()
+
+As per the ComplexHeatmap Tut's: "```pvclust()``` package provides a robust way to test the stability of the clustering by random sampling from original data. Here you can organize the heatmap by the clustering returned from pvclust()"
+
+----
+
+## pheatmap
+
+```{r, eval=FALSE}
+set.seed(1)
+require(pheatmap)
+require(RColorBrewer)
+require(grid)
+
+### Data to plot
+data_mat <- matrix(sample(1:10000, 300), nrow = 50, ncol = 6)
+rownames(data_mat) <- paste0("Gene", 1:50)
+colnames(data_mat) <- c(paste0("A", 1:3), paste0("B", 1:3))
+
+### Set how many genes to annotate
+  ### TRUE - make enough labels that some overlap
+  ### FALSE - no overlap
+tooMany <- T
+
+### Select a few genes to annotate
+if (tooMany) {
+  sigGenes_v <- paste0("Gene", c(5,20,26,42,47,16,28))
+  newMain_v <- "Too Many Labels"
+} else {
+  sigGenes_v <- paste0("Gene", c(5,20,26,42))
+  newMain_v <- "OK Labels"
+}
+
+### Make color list
+colors_v <- brewer.pal(8, "Dark2")
+colors_v <- colors_v[c(1:length(sigGenes_v), 8)]
+names(colors_v) <- c(sigGenes_v, "No")
+annColors_lsv <- list("Sig" = colors_v)
+
+### Column Metadata
+colMeta_df <- data.frame(Treatment = c(rep("A", 3), rep("B", 3)),
+                      Replicate = c(rep(1:3, 2)),
+                      stringsAsFactors = F, 
+                      row.names = colnames(data_mat))
+
+### Row metadata
+rowMeta_df <- data.frame(Sig = rep("No", 50), 
+                      stringsAsFactors = F,
+                      row.names = rownames(data_mat))
+for (gene_v in sigGenes_v) rowMeta_df[rownames(rowMeta_df) == gene_v, "Sig"] <- gene_v
+
+### Heatmap
+heat <- pheatmap(data_mat,
+                 annotation_row = rowMeta_df,
+                 annotation_col = colMeta_df,
+                 annotation_colors = annColors_lsv,
+                 cellwidth = 10,
+                 main = "Original Heat")
+
+### Get order of genes after clustering
+genesInHeatOrder_v <- heat$tree_row$labels[heat$tree_row$order]
+whichSigInHeatOrder_v <- which(genesInHeatOrder_v %in% sigGenes_v)
+whichSigInHeatOrderLabels_v <- genesInHeatOrder_v[whichSigInHeatOrder_v]
+
+sigY <- 1 - (0.02 * whichSigInHeatOrder_v)
+
+### Change title
+whichMainGrob_v <- which(heat$gtable$layout$name == "main")
+heat$gtable$grobs[[whichMainGrob_v]] <- textGrob(label = newMain_v, 
+                                                 gp = gpar(fontsize = 16))
+
+### Remove rows
+whichRowGrob_v <- which(heat$gtable$layout$name == "row_names")
+heat$gtable$grobs[[whichRowGrob_v]] <- textGrob(label = whichSigInHeatOrderLabels_v,
+                                                y = sigY,
+                                                vjust = 1)
+grid.newpage()
+grid.draw(heat)
+
+```

@@ -1,0 +1,607 @@
+---
+title: "sb__EoE__picrust2_EC"
+author: "jfg"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+---
+
+
+## Feel the tyranical yoke of truancy
+
+### Install picrust2
+
+```
+cd ~/BioApps
+# figure out arguments
+conda create -n picrust2 -c bioconda -c conda-forge picrust2 
+conda activate picrust2
+
+```
+
+
+## R
+
+```{r prime, include = FALSE, message=FALSE}
+
+library('phyloseq')
+library(ggplot2)
+library(ggvegan)
+library(reshape2)
+library(ggpubr)
+library(scales)
+library(RColorBrewer)
+library(knitr)
+source('../analyses/background_code/R__fns_jfg/phylo_out.R')
+source('../analyses/background_code/R__fns_jfg/rank_ranks.R')
+source('../analyses/background_code/R__fns_jfg/crush_ranks.R')
+source('../analyses/background_code/R__fns_jfg/shade_ranks.R')
+
+knitr::opts_chunk$set(collapse=TRUE)
+knitr::opts_chunk$set(echo=TRUE)       # difference between echo and include?
+knitr::opts_chunk$set(error=FALSE)
+knitr::opts_chunk$set(eval=TRUE)
+knitr::opts_chunk$set(include=TRUE)
+knitr::opts_chunk$set(message=FALSE)
+knitr::opts_chunk$set(results='hold')
+knitr::opts_chunk$set(warning=FALSE)
+
+
+eoe <- readRDS('../output/7_phyout/eoe_run1_phyloseq_uc_purMANUAL.RDS')
+eoe <- subset_samples(eoe, sample_sums(eoe) > 750)
+
+```
+
+### test picrust2
+
+Pipeline, from  ```FASTA``` of ASVs, and a ASV abundance table or ```BIOM```.   
+
+```{r phy_out, message = FALSE, include=FALSE, }
+
+# get data out of R
+
+# delete a fnool  -  cautioned :: https://stackoverflow.com/a/14220018
+if (file.exists('../output/7_phyout/eoe_seq.fna')) 
+  file.remove('../output/7_phyout/eoe_seq.fna')
+# FUNCTION to phylo_out   
+sapply(taxa_names(eoe), function(x){
+  cat(paste0('>' , x), tax_table(eoe)[ x , 8],  file = '../output/7_phyout/eoe_seq.fna', sep = '\n',append = TRUE)
+})
+
+# # NO not this as banjaxes the ASV names if already named
+# phylo_out(eoe)
+
+# have to add first header and remove " char
+write.table(t(otu_table(eoe)), '../output/7_phyout/eoe_otu.txt', sep = '\t')
+
+```
+
+
+As per any pipe, if things go wrong look at the first command to fail. Need to work through commands in sequence. 
+
+```
+
+# note '&'s for passing command and then passing next command
+
+mkdir ~/Desktop/p2/ ; cd ~/Desktop/p2/
+
+# 0 picrust2 full pipeline ====
+# # this doesn't work but at least should fail quickly. Note that there are many args not used below
+# picrust2_pipeline.py -s ~/Dropbox/SeqBiome__EoE/output/7_phyout/eoe_seq.fna -i ~/Dropbox/SeqBiome__EoE/output/7_phyout/eoe_otu.txt -o ./picrust2_out_pipeline -p 10
+# # > Error running this command:
+# # > place_seqs.py
+
+
+# 1 sequence placement ======
+
+#  - 10 mins or so with 1000 seqs
+place_seqs.py -s ~/Dropbox/SeqBiome__EoE/output/7_phyout/eoe_seq.fna -o placed_seqs.tre -p 6 --intermediate placement_working --print_cmds
+
+
+# 2 hidden state predictions ======
+
+# - had to fix the Rcpp package _inside_ picrust conda install  - woohoo!
+hsp.py -i 16S -t placed_seqs.tre -o marker_nsti_predicted.tsv.gz -p 10 -n & 
+hsp.py -i EC -t placed_seqs.tre -o EC_predicted.tsv.gz -p 10 &
+hsp.py -i KO -t placed_seqs.tre -o KO_predicted.tsv.gz -p 10
+
+
+# 3 metagenome predictions EC / KO ======
+
+# - several filtering options here: NSTI, reads, samples, ID etc.
+metagenome_pipeline.py -i ~/Dropbox/SeqBiome__EoE/output/7_phyout/eoe_otu.txt \
+                       -m marker_nsti_predicted.tsv.gz \
+                       -f EC_predicted.tsv.gz \
+                       -o EC_metagenome_out  &  
+
+metagenome_pipeline.py -i ~/Dropbox/SeqBiome__EoE/output/7_phyout/eoe_otu.txt \
+                       -m marker_nsti_predicted.tsv.gz \
+                       -f KO_predicted.tsv.gz \
+                       -o KO_metagenome_out
+
+
+# 4 pathway preduction EC / KO =====
+
+# agian, many options for operation
+pathway_pipeline.py -i EC_metagenome_out/pred_metagenome_unstrat.tsv.gz \
+                    -o EC_pathways_out \
+                    --intermediate minpath_working \
+                    -p 10 #--per_sequence_contrib
+
+# KEGG not OS, so not implemented, but can be worked around if have access
+#pathway_pipeline.py -i KO_metagenome_out/pred_metagenome_unstrat.tsv.gz \
+#                    -o KO_pathways_out \
+#                    --intermediate minpath_working \
+#                    -p 10 #--per_sequence_contrib
+
+
+# 5 Descriptions  ======
+
+add_descriptions.py -i EC_metagenome_out/pred_metagenome_unstrat.tsv.gz -m EC \
+                    -o EC_metagenome_out/pred_metagenome_unstrat_descrip.tsv.gz & 
+
+add_descriptions.py -i KO_metagenome_out/pred_metagenome_unstrat.tsv.gz -m KO \
+                    -o KO_metagenome_out/pred_metagenome_unstrat_descrip.tsv.gz &
+
+add_descriptions.py -i pathways_out/path_abun_unstrat.tsv.gz -m METACYC \
+                    -o pathways_out/path_abun_unstrat_descrip.tsv.gz
+
+```
+
+
+
+```
+
+# 
+# add -k flag if need to keep files  -  from 4 to 36MB
+gzip -rd ./*/*.tsv.gz
+
+```
+
+Now that we have our putative tables, read back into R and inspect. 
+
+```{r}
+
+p2_outs <- '../output/EoE__picrust2/p2/' # 'C:/Users/Blip the Tall/Downloads/p2/'
+
+# EC first  -  sigh
+ec_nsti <- read.table(paste0( p2_outs , "EC/weighted_nsti.tsv"), sep='\t', header=TRUE, row.names = 1)
+# predicted content for each bug
+ec_pred <- read.table(paste0( p2_outs , "EC/EC_predicted.tsv"), sep='\t', header=TRUE, row.names = 1)
+ec_pred <- ec_pred[ , (apply(ec_pred,2,sum) > 0)]    # filter out absent friends
+# pathway-feature abundance table
+ec_path <- read.table(paste0( p2_outs ,  "EC/pred_metagenome_unstrat.tsv"), sep='\t', header=TRUE, row.names = 1)
+# imputed metagenomic abundance... (?)
+ec_metag <- read.table(paste0( p2_outs , "EC/seqtab_norm.tsv"), sep='\t', header=TRUE, row.names = 1)
+ 
+nsti_pred <- read.table(paste0( p2_outs , "marker_nsti_predicted.tsv"), sep='\t', header=TRUE, row.names = 1)
+
+
+
+# make  ===
+
+# EC_pred as tax-oid table
+x <- t(data.frame(strsplit(colnames(ec_pred), split='\\.')))
+rownames(x) <- colnames(ec_pred)
+colnames(x) <- c('EC' , 'Level1' , 'Level2' , 'Level3' , 'Level4' )
+# EC_pred as tax-oid table  (v2: unique names)
+y <- x
+for (i in 2:5){ y[,i] <- apply(x[,(1:i)], 1, function(z) paste(z,collapse = '.')) }
+
+# ec_path as otu-oid abundances
+colnames(ec_path) <- gsub('X' , '' , colnames(ec_path))
+rownames(ec_path) <- gsub(':' , '\\.' , rownames(ec_path))
+
+## ec phylo
+ec <- phyloseq(otu_table(ec_path, taxa_are_rows = TRUE) , tax_table(y), sample_data(eoe))
+
+```
+
+
+```{r abundances}
+
+kable(rank_ranks(p=ec , rank_above = 'Level2', mean_thresh = 0.01))
+
+ec_ra <- transform_sample_counts(ec, function(x) (x/sum(x))*100) 
+ec_c <- crush_ranks(phylo = ec_ra , moniker = 'misc.' , NA_sub = 'unk.', rank_to_be_crushed = 'Level2',thresh = 0.5)    # otu_table(ec_ra)[1:10,1:10]
+# unique(tax_table(ec_c)[,'Level2'])
+ec_cols <- shade_ranks(phylo = ec_c, colour_by = 'Level1', shade_by = 'Level2', moniker = 'misc.', NA_sub = 'unk.', colour_and_shade = 'shade')
+
+xx <- psmelt(ec_c)
+ggplot(xx, aes(x=Sample,y=Abundance)) +  #, fill = genus
+          facet_grid(Level1~Description, scales='free_x', space='free') +                                  # scale/size control
+          geom_bar(stat ="identity", position="stack", width=1, aes(fill = Level2, color = NULL ) )  +  #, color='black'
+          theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+          theme(strip.text.x = element_text(size = 10, angle = 90), strip.text.y = element_text(size = 9)) +    # bigger
+          theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  # rotate
+          scale_fill_manual(values = ec_cols, na.value='grey')  +         # the shape-filling colours
+          scale_color_manual(values = ec_cols, na.value='grey')  +        # are same as the outline colours
+          theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +   #, strip.text.x = element_text(size = 12, colour = "red", angle = 90)
+          guides(fill = guide_legend(ncol = round(length(ec_cols)/20))) +
+          theme(legend.position = 'right', legend.box = "vertical")
+
+
+## recap tax_glom func
+  # glom <- 'Level2'
+  # unq <- as.vector(unique(tax_table(ec_ra)[,glom]))
+  # new <- matrix(nrow = length(unq), ncol = ncol(otu_table(ec_ra)))
+  # for (u in unq){
+  #   new[ match(u, unq)] <- colSums(otu_table(ec_ra)[ tax_table(ec_ra)[,glom] == u , ])   # TAXA_ARE_ROWS
+  # }
+  # sapply(unq, function(u) rownames(tax_table(ec_ra)[ tax_table(ec_ra)[,glom] == u, ])[1] )   #  not wiht EC numbers as implemented - not unique!
+
+```
+
+
+
+## ordination
+
+might as well crack into this bit.
+
+### Detrended Correspondence Analysis
+
+Default method for ```phyloseq```, and suggests a promising avenue for eigen-based (?) indirect gradient analysis.
+
+```{r ec_ord}
+
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' , 'Neg_Co' = 'lavenderblush3' )
+e.treat <- brewer.pal(n = length(unique(sample_data(eoe)$Treatment)), name = 'Dark2')  
+names(e.treat) <- c("2FED" , "4FED" , "CONTROL" , "PPIs" , "STEROIDS")
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","Neg_Co", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+# ===
+
+  ord_DCA <- ordinate(ec, method='DCA', formula = (~Description ))   # summary(ord_DCA)  
+  ca.sp <- fortify(ord_DCA, display = "sites")
+  
+  ## the DCA by Description w. ID partialled
+    pl.a <- plot_scree(ord_DCA)
+    pl.b <- plot_ordination(ec, ord_DCA, shape='Description') +  #axes=c(5,1), 
+                stat_ellipse(aes(fill = Description), geom="polygon" , level=0.95 , alpha=0.15) +   #, linetype=month
+                geom_point(aes(fill=factor(Description)), size = 4) +  #, alpha = 0.65
+                scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+                scale_color_manual("Description", values = e.desc) +
+                scale_fill_manual("Description", values = e.desc) +
+                geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+                theme_bw()  + ggtitle('DCA of EC Data (DC1&2)') # + border(color = 'grey35')
+
+    
+  ## boxplots
+    dca_bp <- cbind(ord_DCA$rproj , sample_data(eoe)[,7:9] )
+    dca_bp <- melt(dca_bp)
+    pl.cabp <- ggboxplot(dca_bp, 'variable', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+        theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 ), legend.position =  'none')   
+    pl.a <- ggarrange(pl.b, pl.a, ncol = 2, nrow = 1, widths = c(1, 0.4), common.legend = TRUE)
+    ggarrange(pl.cabp, pl.a, ncol=1 , nrow=2, common.legend = FALSE) + ggtitle('DCA of EC Data (PC1&2)')
+
+```
+
+
+### PCA 
+
+
+```{r pca_pcoa, warning=FALSE}
+
+e.pcx <- (prcomp(t(otu_table(ec))))
+
+# visuals
+e.mvar <- sum(e.pcx$sdev^2)
+PC1 <- paste("PC1: ", round(sum(e.pcx$sdev[1]^2)/e.mvar, 3))
+PC2 <- paste("PC2: ", round(sum(e.pcx$sdev[2]^2)/e.mvar, 3))
+col.g <- c("black" , "red")  # port colour properly    # 
+size.g=c(0.5, 0.01)   # Relative scale, 1 is 100%
+
+# # theme for clusters
+# # clust_cols <- hue_pal()( length(unique(big$cluster)))
+# clust_cols1 <- darken(brewer.pal (n = max(big$cluster), name = 'Dark2'))
+# names(clust_cols1) <- c(paste0('cluster ' , 1:max(big$cluster)))
+# clust_cols2 <- clust_cols1[big$cluster]
+
+# ============
+
+x <- 'PC1'
+y <- 'PC2'
+# Feats <- g.id 
+ADiv <- c('Shannon' ) #, 'InvSimpson')
+
+# cluster colours defined above 
+
+## samples
+data_p2 <- data.frame(obsnames=row.names(e.pcx$x), e.pcx$x, Description=sample_data(ec)$Description, Condition=sample_data(ec)$Condition, ID=sample_data(ec)$ID) 
+
+# ## species (Feats)                                                                                
+# datapc <- data.frame(varnames = rownames(e.pcx$rotation) , e.pcx$rotation, stringsAsFactors = FALSE)   # force sAF=F so can apply names
+# # feat_cluster = c( big[ rownames(e.pcx$rotation)[1:208] , 'cluster' ] , NA, NA) ,     #  NO JAMIE NOT PROGRAMMATIC
+# 
+# # mutilation: change names to for those ID'd in Phi seciton as being associated, via obj __Feats__
+# Feats <- taxa_names(tax_glom(ec_c, taxrank = 'Level2'))
+# datapc[  , 'varnames'] <- gsub("(^[A-Za-z]{4}).+", "\\1", tax_table(wmi)[Feats,"Level2"], perl=TRUE)  # crimp names
+# datapc[ is.na(datapc$varnames) , 'varnames'] <- 'unk.'
+# 
+# mult <- min(                                                            #
+#   (max(data[,y]) - min(data[,y])/(max(datapc[,y])-min(datapc[,y]))),    # smaller ratio vlaue from x or y
+#   (max(data[,x]) - min(data[,x])/(max(datapc[,x])-min(datapc[,x])))     #  
+# )                                                                       # 
+# datapc <- transform(datapc,                                             #
+#                     v1 = 2 * mult * (get(x)),                          # haven't got a fucking clue why doing this  -  scaling but why/how?
+#                     v2 = 2 * mult * (get(y))                           # all going into v1 and v2
+# )
+# 
+# 
+# # samples <- sample_data(wmi)$ID
+# samples <- unlist(sample_data(wmi)$month)
+# samples <- sapply(samples, function(x) match(x, levels(samples)))
+# 
+# biplot(e.pcx, cex=size.g, col= col.g , var.axes=F, xlab=e.pcx1, ylab=e.pcx2, xlabs=samples, scale=0)   # samples = vector of state
+# 
+# # get the names of the clusters in big
+# lev <- factor(big$cluster)
+# 
+# # step through each cluster and plot the genus name                                         <  {¬-} !  >
+# # at the point in the biplot that the OTU would have been plotted
+# # OTU positions are in pcx$rotation
+# for(i in as.numeric(levels(lev))){
+#   nms <- rownames(big)[big$cluster==i]
+#   text(e.pcx$rotation[nms,][,1], e.pcx$rotation[nms,][,2],
+#      labels = gsub("(^[A-Za-z]{6}).+", "\\1", tax_table(wmi)[rownames(big)[big$cluster==i],"Genus"],
+#                    # perl=TRUE), col=colours[i], cex=0.7)
+#                    perl=TRUE), col= clust_cols1[i], cex=0.7)
+# }
+# 
+# abline(h=0, lty=2, col='grey70')
+# abline(v=0, lty=2, col='grey70')
+# 
+
+# ====
+
+ggplot(data_p2, aes_string(x=x, y=y, fill = "Description", shape="Description")) + # 
+    stat_ellipse(aes(x = PC1 , y = PC2, fill = Description), geom="polygon" , level=0.95 , alpha=0.15) +   #, linetype=month
+    geom_point(aes(fill=factor(data_p2$Description)), size = 4) +  #, alpha = 0.65
+    scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+    scale_color_manual("Description", values = e.desc) +
+    scale_fill_manual("Description", values = e.desc) +
+    geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+    theme_bw()  + ggtitle('PCA of EC Data (PC1&2)') # + border(color = 'grey35')
+
+    # geom_text(alpha=.6, size=3, aes(label=obsnames)) +   # remove labels to remove labels
+    # geom_segment(data=datapc[Feats , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.1, color="grey10") +
+    # geom_text(data=datapc[Feats , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color=clust_cols2 )  + 
+    # geom_segment(data=datapc[ADiv , ], aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.2,"cm")), alpha=0.4, color="black") +
+    # geom_text(data=datapc[ADiv , ], aes(x=v1, y=v2, label=varnames), size = 4, vjust=1, color='grey11') +
+    # geom_label(aes(fill = feat_cluster)) #aes(fill = factor(cyl)), colour = "white", fontface = "bold"    #  ARGH
+
+
+
+```
+
+### PCoA
+
+Bray-Curtis-based distance matrix decomposition.
+
+```{r pcoa}
+
+  ## PCoA
+	bc_dist_p2 <- vegdist(t(otu_table(ec_ra)),method="bray")  ## .....! BC on subset of data?   
+	bc_pcoa <-ape::pcoa(bc_dist_p2)
+
+	PCo1 <- paste0('PCoA1: ',round(bc_pcoa$values[[2]][1]*100, 0),'%')
+  PCo2 <- paste0('PCoA2: ',round(bc_pcoa$values[[2]][2]*100, 0),'%')
+  # ec_rich <- estimate_richness(ec, measures = meas) # _GMPR)
+  bc_df_p2 = data.frame( data.frame(sample_data(ec), stringsAsFactors = FALSE), 
+                     # ec_rich,
+  		                "PCoA1" = bc_pcoa$vectors[,1]*-1,
+  		                "PCoA2" = bc_pcoa$vectors[,2]*-1,
+  		                "PCoA3" = bc_pcoa$vectors[,3]*-1,
+  		                "PCoA4" = bc_pcoa$vectors[,4]*-1 )
+
+	bc_pcoa_boxp_p2 = cbind(data.frame(sample_data(ec)$Condition),  data.frame(sample_data(ec)$Description), bc_pcoa$vectors)
+	bc_pcoa_boxp_p2 <- melt(bc_pcoa_boxp_p2)
+	colnames(bc_pcoa_boxp_p2) <- c('Condition', 'Description' , 'PC','value')
+ 
+	# note low number of axes
+ggboxplot(bc_pcoa_boxp_p2[1:(0.4*nrow(bc_pcoa_boxp_p2)),], 'PC', "value", fill = 'Description', size=0.3, palette = e.desc, width = 0.5 ) +
+    theme(axis.text.x = element_text (angle=-90, hjust=0, vjust=0.5, size=11 )) +   #, legend.position =  c(.90, .95)
+    labs(title='PCoA eigenvalues')
+
+ggplot(bc_df_p2, aes(x=PCoA1, y=PCoA2, fill = Description, shape=Description)) + # 
+   stat_ellipse(aes(x = PCoA1 , y = PCoA2, fill = Description), geom="polygon" , level=0.95 , alpha=0.15) +   #, linetype=month
+    geom_point(aes(fill=factor(bc_df_p2$Description)), size = 4) +  #, alpha = 0.65
+    scale_shape_manual("Description",values=c(21,24, 22, 22, 22)) +
+    scale_color_manual("Description", values = e.desc) +
+    scale_fill_manual("Description", values = e.desc) +
+    geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+    theme_bw()  + ggtitle('PC0A of EC Data (PCoA 1&2 )') # + border(color = 'grey35')
+
+
+
+```
+
+#### Plots with labels
+
+Mainly for reference against abundance barcharts
+
+```{r labelled_plots}
+
+# ordination of p2
+ggplot(data_p2, aes(x = PC1, y = PC2, color=Description, shape=Condition)) +
+          stat_ellipse(aes(x = PC1 , y = PC2, fill = Description, color= NULL), geom="polygon" , level=0.8 , alpha=0.1) +
+          geom_label(data = data_p2, color = 'black', aes(x = PC1, y = PC2, label = obsnames, fill=Description), size=2) +
+          scale_fill_manual("Decription",values=e.desc) +
+          scale_color_manual("Decription",values=e.desc ) +
+          theme_bw() + border(color = 'grey35') + ggtitle('PCA of EC data - labelled')
+  
+
+ggplot(bc_df_p2, aes(x = PCoA1, y = PCoA2, color=Description, shape=Condition)) +
+          stat_ellipse(aes(x = PCoA1 , y = PCoA2, fill = Description, color= NULL), geom="polygon" , level=0.8 , alpha=0.1) + 
+          geom_line(aes(group = ID), alpha=0.25, size=0.3, colour='grey28') +
+          geom_label(data = bc_df_p2, color = 'black', aes(x = PCoA1, y = PCoA2, label = ID_Sample, fill=Description), size=2) +
+          scale_fill_manual("Decription",values=e.desc) +
+          scale_color_manual("Decription",values=e.desc ) +
+          theme_bw() + border(color = 'grey35') + ggtitle('PC*o*A of EC data - labelled')
+
+
+
+```
+
+## Diff Testing
+
+### ADONIS2
+
+```{r adonis}
+
+ec_dat <- data.frame(sample_data(ec), stringsAsFactors = FALSE)
+
+# Nested Design: Description in Condition
+# Random effect: ID as a relationship between samples
+  # pretty sure this is (1 | ID), not (1 + ID) as below?
+ ## NO STRATA?
+adonis(bc_dist_p2 ~ Condition/Description + (1 + ID), data=ec_dat, permutations = 2500)
+
+# null hypothesis: variances are the same
+## result depends on variables tested - smaller samples see greater (or any) violation 
+beta <- betadisper(bc_dist_p2, ec_dat$Condition)    # double check meaning of F values =/
+beta
+permutest(beta)                                     # could also use anova(beta)
+
+
+## strata and blocking checked from vegan/permute  -   _there is no strata/blocking_ at work here.
+  # below will tell you that Condition makes a difference
+  #     but really its ID. 
+  # taken from vegan:adonis2
+  perm <- how(nperm = 2500)
+  setBlocks(perm) <- with(ec_dat, Condition)
+  adonis2(bc_dist_p2 ~ Condition + (1 + ID), data=ec_dat, permutations = perm, parallel = TRUE)
+  adonis2(bc_dist_p2 ~ Description/Condition, data=ec_dat, permutations = perm, parallel = TRUE)
+
+```
+
+
+
+#### MB-ZINB [link](https://github.com/jchen1981/MicrobiomeDDA) 
+
+See [MB-ZINB](https://github.com/jchen1981/MicrobiomeDDA) or MicrobiomeDDA,  [Chen et al. 2016](https://academic.oup.com/bioinformatics/article/34/4/643/4470360), or see the DATesting ledger.
+
+  * include all three parameters of a count distribution (Abun, Prev, and __Dispersion__)
+  * address outliers    (winsorisation or Cook's D)
+  * address library size (GMPR)
+  * address sparseness  (ZI)
+  * address count data distribution (NB)
+  * Winsorisation: clipping of extreme values at certain percentiles. 
+  
+By allowing dispersion to vary, add another dimension with whihc to accoutn for the effects of different covariates. Gives example of DA between RheumArth groups where specific OTU is affected both by RA group and genotype: __Differential Distribution ANalysis__ as  accounts for all the factors informing count data.     
+
+      
+```{r mbzinb}
+library(knitr)
+library(mbzinb)
+library(GMPR)          # normalisation factors  -  oddly have to import GMPR
+
+# its a pairwise test >.<
+ec_test <- subset_samples(ec, Condition != 'CONTROL')   # Description == 'PRE' | Description == 'POST_FED' )
+
+# easier to get out of phylo then into mbzimb in two steps
+count  <- as.matrix(as.data.frame((otu_table(ec_test))))             # samples are COLUMNS, use as.d.f or else get X on colnames
+sample <- data.frame(sample_data(ec_test), stringsAsFactors = FALSE)  # samples are ROWS
+taxon  <- data.frame(tax_table(ec_test), stringsAsFactors = FALSE)    # taxa are COLUMNS
+
+# make mbzinb
+ec_z <- mbzinb.dataset(count, sample, taxon)
+
+## size factors - calc (RLE) then replace
+ec_z <- norm.factors(ec_z)
+# GMPR
+count.gmprfactors <- GMPR(t(count))
+# count2 <- ((count) / count.gmprfactors)                              # samples are COLUMNS
+ec_z$normFactors <- count.gmprfactors
+
+ec_z <- filter.dataset(ec_z,                    # errors here likely to be errors in construction
+                        min.prev = 0.05,
+                        min.reads = 200,
+                        niter= 1 )
+ec_zt <- mbzinb.test(ec_z,
+                     'Condition',
+                      filter.if.unfiltered = TRUE, LRT = "omnibus", outlier.option = "winsor",
+                      upper.p = 0.97, cooks.cutoff = 1, use.zeroinfl = FALSE) # use.zeroinfl: alt method
+
+kable(mbzinb.results(ec_zt)[1:10,])
+
+# ==================
+
+## have a lük? 
+z <- mbzinb.results(ec_zt, nreturn=360) # get all values
+z <- z[order(z$statistic, decreasing = TRUE) , ]
+
+par(mfrow=c(1,3)) # init 3 charts in 1 panel
+plot(z$statistic, ylab = 'Omnibus Stat' , xlab = 'ASV index', main= 'logFC : PRE v. POST')
+plot(log(z$PValue, base = 10), ylim = c(-3,0) , ylab = 'log10 raw p values    (i.e. -3 = 0.001)' , xlab = 'ASV index', main= 'log10 raw p values: PRE v. POST')
+plot(log(z$Padj, base = 10), ylim = c(-3,0) , ylab = 'log10 adj. p values    (i.e. -3 = 0.001)' , xlab = 'ASV index', main= 'log10 adjusted p values: PRE v. POST')
+
+plot_bar(prune_taxa(taxa_names(ec_ra) %in% rownames(mbzinb.results(ec_zt)) , subset_samples(ec_ra, Condition != 'CONTROL')), fill = 'Level3') + facet_grid(Level2~Description, scales = 'free') 
+
+
+
+
+```
+
+And now, a ```for-loop``` for each pairwise comparison. Need one too for each condensed level in the tax_table
+
+```{r mb_zinb_caldewise_loop, results='asis'}
+
+  for (Q in unique(sample_data(ec)$Condition)){
+    # Q <- 'POST'
+    
+    compare <- unique(as.vector(sample_data(ec)$Condition))
+    compare <- paste( compare[ compare != Q], collapse = ' v. ')
+
+    p <- tax_glom(ec, taxrank = 'Level2')    # taxrank = tx
+    count.gmprfactors <- GMPR(data.frame(t(otu_table(ec)), stringsAsFactors = FALSE))
+    p_test <- subset_samples(p, Condition != Q)   # Description == 'PRE' | Description == 'POST_FED' )
+    count  <- as.matrix(as.data.frame((otu_table(p_test))))             # samples are COLUMNS, use as.d.f or else get X on colnames
+    sample <- data.frame(sample_data(p_test), stringsAsFactors = FALSE)  # samples are ROWS
+    taxon  <- data.frame(tax_table(p_test), stringsAsFactors = FALSE)    # taxa are COLUMNS
+    p_z <- mbzinb.dataset(count, sample, taxon)
+  
+    # p_z <- norm.factors(p_z)
+    p_z$normFactors <- count.gmprfactors[sample_names(p_test)]
+    p_z <- filter.dataset(p_z,                    # errors here likely to be errors in construction
+                            min.prev = 0.05,
+                            min.reads = 500,    #  throwing error if not integers here (which is odd given GMPR approach)
+                            niter= 1 )
+    p_zt <- mbzinb.test(p_z,
+                          'Condition',
+                          filter.if.unfiltered = TRUE, LRT = "omnibus", outlier.option = "winsor",
+                          upper.p = 0.97, use.zeroinfl = FALSE) # alt methods :  use.zeroinfl , cooks.cutoff = 1,
+  
+  ## have a lük? ==================================================================#
+    z <- mbzinb.results(p_zt, nreturn=ntaxa(p)) # get all values
+    z <- z[order(z$statistic, decreasing = TRUE) , ]
+    kable(mbzinb.results(p_zt))
+    par(mfrow=c(1,3)) # init 3 charts in 1 panel
+    plot(z$statistic, ylab = 'Omnibus Stat' , xlab = 'ASV index', main=paste('logFC :', compare) )
+    plot(z$PValue, log='y', ylab = 'raw p values' , xlab = 'ASV index', main=paste('raw p values:',compare))
+    plot(z$Padj, log='y', ylab = 'adj. p values' , xlab = 'ASV index', main=paste('adjusted p values:' , compare))
+  
+  significant_grps <- mbzinb.results(p_zt)[ mbzinb.results(p_zt)$Padj < 0.075 , ]
+  if (!(0 %in% dim(significant_grps))){ 
+    # kable(tax_table(ec)[rownames(significant_grps) , 1:4]) 
+    print(kable(significant_grps)) 
+    
+    t <- prune_taxa(taxa_names(ec) %in% rownames(significant_grps) , subset_samples(ec_ra, Condition != Q))    # reproduce testing conditions
+    print(plot_bar(t, fill = 'Level3') + 
+            facet_grid(Level2~Condition,scales = 'free_x') + 
+            theme(legend.position = 'none') + 
+            theme(strip.text.y = element_text(angle =0), axis.text.x = element_text(angle = 270),legend.position = 'right') + 
+            guides(fill = guide_legend(ncol = 3)) +
+            ggtitle(paste('faceted at tested level (see RHY-axis)', compare)) ) } else {
+              
+    print(paste('no features found as significant, no table or barplots between' , compare)) }
+
+}
+
+```

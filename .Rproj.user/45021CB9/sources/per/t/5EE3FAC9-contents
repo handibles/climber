@@ -1,0 +1,65 @@
+shade_ranks2 <- function(
+  TAXA = taxo,    
+  COLOUR_BY =  colnames(taxo)[4],
+  SHADE_BY =  colnames(taxo)[6],
+  MONIKER = "various",
+  NA_TERM = "n/a",
+  MON_COL = "grey50",
+  NA_COL = "grey75",
+  PADDING = 2,
+  colour_and_shade = "both",     # or colour, or shade
+  P=NULL,  #phylo
+  #
+  lum = 45,
+  chrom = 175,
+  h.start = 0,
+  h = c(0, 360) + 15 ){
+  
+  ## deprec
+  # SHOW=TRUE,
+  
+  
+  ## neesd to allow just colouring by rank, wiht no shading (or equate)
+
+  # ====
+  if(!is.null(P) & class(P)=="phyloseq"){TAXA <- tax_table(P)}    ## pass a colour vector
+  require(scales)
+  
+  # # take care of raw NAs
+  # TAXA[ is.na(TAXA[, COLOUR_BY]), COLOUR_BY] <- "n/a"
+  # TAXA[ is.na(TAXA[, SHADE_BY]), SHADE_BY] <- "n/a"
+
+  unq <- unique(TAXA[ , COLOUR_BY])
+  unq <- unq[ !(unq %in% c(MONIKER, NA_TERM, NA)) ] 
+  unq <- c(unq,  MONIKER)    # add back in last to catch taxa orphaned by CRUSHing
+  tax_cols <- hue_pal( l = lum, c = chrom, h=h, h.start = h.start)(length(unq))
+  names(tax_cols) <- unq
+  
+  shades <- lapply(unq, function(u){   # u <- unq[17]
+    unq.shades <- unique(TAXA[ (TAXA[, COLOUR_BY] == u) , SHADE_BY])
+    unq.shades <- unlist(data.frame(unq.shades, stringsAsFactors = FALSE))
+    unq.shades <- unq.shades[ !(unq.shades %in% c(MONIKER, NA_TERM, NA)) ] 
+    shade.ramp <- colorRampPalette(c(tax_cols[u == names(tax_cols)], "white"))(length(unq.shades) + PADDING)[1:length(unq.shades)]
+    if(length(unq.shades) != 0 ){ names(shade.ramp) <- unq.shades }else{ names(shade.ramp) <- MONIKER }      # give named colour for MONIKER even if unq.shades nuked
+    shade.ramp <- unlist(shade.ramp)
+  })
+  shades <- unlist(shades)
+  
+  # only add misc terms once
+  tax_cols <- tax_cols[ !(names(tax_cols) %in% c(MONIKER, NA_TERM, NA)) ] 
+  shades <- shades[ !(names(shades) %in% c(MONIKER, NA_TERM, NA)) ] 
+  MONIKER_NA <- c(MON_COL, NA_COL)
+  names(MONIKER_NA) <- c(MONIKER, NA_TERM)
+  
+  if(colour_and_shade == "colour"){ 
+    tax_cols <- c(tax_cols, MONIKER_NA) 
+    # print("requested *JUST* \"colour\" - returning colours for ", COLOUR_BY, "level")
+  }else if(colour_and_shade == "shade"){
+    shades <- c(shades, MONIKER_NA)
+    # print("requested *JUST* \"shade\" - returning colours for ", SHADE_BY, "level")
+  }else {
+    tax_cols <- c(tax_cols, MONIKER_NA, shades) }
+    # print("\"both\" colour and shade requested - returning colours for ", COLOUR_BY, " and ", SHADE_BY, ".")
+  return(tax_cols)    # show_col(tax_cols)
+    
+}

@@ -1,0 +1,721 @@
+---
+title: 'PHYLO :: Purification & Provenance'
+author: "jfg"
+date: "updated :: Feb '19"
+output:
+  html_document:
+      toc: TRUE
+  pdf_document: 
+      toc: TRUE
+---
+
+
+```{r setup, include=FALSE}
+library('phyloseq')
+library('vegan')
+library('ggplot2')
+library('dada2')        # sequencetable 
+library('reshape2')     # melt 
+library('decontam')
+library('stringr')
+library('knitr')        # kable
+library('scales')        # hue_pal
+library('RColorBrewer') # brewer.pal
+library('ShortRead')    # sread
+library('ggpubr')       # ggarrange
+library('zCompositions')       # cMultRepl
+library('robCompositions')     # gmean_sum
+
+
+knitr::opts_chunk$set(eval = TRUE)
+#knitr::opts_knit$set(root.dir = '..' )  # supposedly the way to set wd in knitr: is the .RMD file dir - set same as RProj?
+
+```
+
+# Chimera-Removal Steps
+
+Althoug there is a step in the DADA2 pipeline for doing this, its worth pointing out that DADA2 is not a chimerasalying program. Instead, a UCHIME step is tacked on during ```PHYLO_1.2.1.sh``` to ID chim sequences - these are then removed as per ```8_UCHIME.stripChim.R``` (duplicated below). Work done in the ```SeqBiom__PHYLO``` dir.
+
+``` {r chim_removal_section}
+# from 8_UCHIME.stripChim.R v0.1
+
+# dir with the sequence pipeline output - in this case, on asp.ii
+phylRDS <- '../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq.RDS'
+uc_output <- '../output/6_PHYLO_Seqtab/PHYLO_uc_out_Y.uchime'
+outFNA <- '../output/6_PHYLO_Seqtab/PHYLO_run1_otus_uc.fna'
+
+
+## write_FNA fn, mod'd from zachcp  ===========================
+
+write_FNA <- function(x, outfile){
+  FIRST = TRUE
+  if (class(x) == 'phyloseq'){  # intent to be phylo with ASV in tax_table
+    seqs <- unlist(lapply(tax_table(phylobj)[,8] , as.character))                # this is just sooo fucking fast
+  } else {
+    seqs <- colnames(x) }      # intent is to be a seqtab
+
+    for (i in seq_along(seqs)) {
+    if (i == 2)  FIRST = FALSE
+    outdata = paste0(">Seq_", str_pad(i, 7, pad=0),"\n", seqs[[i]], "\n")
+    if (FIRST == TRUE) {
+      write(outdata,file = outfile, sep="", append = FALSE)
+    } else {
+      write(outdata,file = outfile, sep="", append = TRUE)
+    } 
+  }
+  print(paste0("All records are printed to fastafile ", outfile))
+}
+
+## ====================================================
+
+chims <- read.table(uc_output, header=FALSE, stringsAsFactors = FALSE,fill = TRUE)[,2]    #fill arg allows variable length fields
+
+# likely problems from the ASV names
+phylobj <- readRDS(phylRDS)
+# match sequence ASV_ID, written by 7.3.RDS_Agg
+phylobj <- prune_taxa(!(taxa_names(phylobj) %in% chims) , phylobj)
+
+# save out PHYLO
+saveRDS(phylobj , gsub('.RDS', '_uc.RDS', phylRDS) )
+print(paste0("Chimera-scrubbed phyloseq.RDS saved to ", gsub('.RDS', '_uc.RDS', phylRDS)))
+
+# save out FNA
+write_FNA(x = phylobj , outfile = outFNA )
+
+
+
+```
+
+---
+
+# Provenance
+
+Tracking reads through the pipeline, code from @benjjneb and ```jfg```'s ```XXXX_PROVENANCE.R```.
+
+```{r r_track_provenance_PART.1, eval=TRUE, message=FALSE}
+
+## Make track df to track reads 
+getwd()
+getN      <- function(x) sum(getUniques(x))                   # sum(UniqSeq$Abundance) , from shortReads
+getFastqN <- function(x)  length( sread(readFastq(x)) )       # sread is ~ a string list
+
+rawFs <- list.files('~/data/PHYLO/Materials/0_raw_reads', pattern = 'R1.fastq', full.names = TRUE) ; length(sread(readFastq(rawFs[1])))
+rawRs <- list.files('~/data/PHYLO/Materials/0_raw_reads', pattern = 'R2.fastq', full.names = TRUE)
+
+trimmFs <- list.files('~/data/PHYLO/Materials/2_trimmed', pattern = 'R1.fastq', full.names = TRUE)
+trimmRs <- list.files('~/data/PHYLO/Materials/2_trimmed', pattern = 'R2.fastq', full.names = TRUE)
+
+filtFs <- list.files('~/data/PHYLO/Materials/3_d2', pattern = 'R1.fastq', full.names = TRUE)
+filtRs <- list.files('~/data/PHYLO/Materials/3_d2', pattern = 'R2.fastq', full.names = TRUE)
+
+denoised <- list.files('~/data/PHYLO/Materials/5_final', pattern = '.RDS', full.names = TRUE)
+denoised <- lapply(denoised , readRDS)
+denoised <- makeSequenceTable(denoised)
+
+seqtab.nochim <- readRDS('~/data/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_run1_seqtab.RDS')
+phylo_UC <- readRDS('~/data/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_run1_phyloseq_uc.RDS')
+  
+## PROBLEM:
+# WE WONT ALWAYS KNOW WHAT SAMPLES GET LOST -  needs a better fix - see "WARNING: in cbind(...) number of rows of results is not a multiple of vector length (arg1)"
+
+# need to replace drop-out samples late in pipeline: index until missing count, replace with 0, continue counts
+
+track <- cbind( unname(sapply(rawFs, getFastqN)),  # replace 'out' matrix made through getN() on filterAndTrim() objects
+                unname(sapply(rawRs, getFastqN)),
+                unname(sapply(trimmFs, getFastqN)),
+                unname(sapply(trimmFs, getFastqN)),
+                unname(sapply(filtFs, getFastqN)),
+                unname(sapply(filtRs, getFastqN)),
+                c(rowSums(denoised)[1:16],0,rowSums(denoised)[-1:-16]),  # rowSums(denoised),  -  sample drops out halfway - has to be adapted everytime readcounts change
+                c(rowSums(seqtab.nochim)[1:16],0,rowSums(seqtab.nochim)[-1:-16]),  #rowSums(seqtab.nochim),  -  as above
+                c(sample_sums(phylo_UC)[1:16],0,sample_sums(phylo_UC)[-1:-16]) )   # cleaned seqs
+track_bup <- track   #track <- track_bup
+
+track <- as.data.frame(track)  #motherfucker
+colnames(track) <- c("rawF", "rawR", "trimmedF", "trimmedR", "filtF", "filtR", "denoised", "ASV", "ASV_UC")
+rownames(track)[17] <- '18PRE-S143'  
+track$sample <- rownames(track)
+rownames(track) <- gsub('-S\\d*' , '' , rownames(track))
+
+# out
+head(track) ; write.table(track,'~/data/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_read_provenance.txt', sep='\t') ; saveRDS(track, '~/data/PHYLO/Materials/6_PHYLO_Seqtab/PHYLO_trackoutput.RDS')
+# write.table(track , '../output/6_PHYLO_Seqtab/PHYLO_read_provenance.txt', sep = '\t')
+
+##
+##
+##   POSSIBLE BREAK HERE :: remote / local
+##    - as such, re-import the DF
+##
+
+track <- read.table('../output/6_PHYLO_Seqtab/PHYLO_read_provenance.txt', sep='\t')
+# have already sample/state mapping:
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1)  # the QIIME mapfile from sequencing - 72 samples
+# rownames(PHYLO_map_full) <- gsub('\\.' , '_', rownames(PHYLO_map_full))   # match names
+
+track$Desc <- (PHYLO_map_full[rownames(track),'Description'])
+track$ID <- rownames(track)
+
+z.rm <- melt(track)   # saveRDS(z.rm , '../6_PHYLO_Seqtab/tracK_z.rm.RDS') # z.rm <- readRDS()
+# View(z.rm) getwd()
+# establish max read counts for plotting:
+highest_count <- round( max(track[,1:8]), digits = -4)
+
+# outlier labels: https://stackoverflow.com/a/43659981
+
+ggplot(z.rm, aes(y=value, x=variable,  fill=as.factor(Desc) ,  colour=as.factor(Desc) )) +
+  geom_boxplot(outlier.shape=19 , colour='black') + 
+#  geom_point(width=0.2, shape=21,  size=2.5,  aes(colour='black' , fill=as.factor(Desc), alpha=0.6 )) + #note factoring-by-source requires use of the aes arg
+  scale_fill_manual( "Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +         
+  scale_color_manual("Desc",values=c("#1e8bc3",  "#C30000",  "#ffb90f", 'darkslategray') ) +
+  scale_y_continuous(limits = c(0, highest_count)) +
+  labs(title='Read-counts through pipeline (should label outliers)' ) + 
+  xlab('DADA2 Step') + 
+  ylab('number of reads') + 
+  theme_classic()
+
+kable(track[,1:10])
+```
+
+See ```kable``` table below for final ASV numbers.
+
+---
+
+### Prime Phylo Object
+
+Read in chimera-stripped object, bulk up sample data, and pick colours. 
+
+```{r get_PHYLO}
+# uc-stripped PHYLO from above
+PHYLO <- readRDS('../output/6_PHYLO_Seqtab/PHYLO_run1_phyloseq_uc.RDS')
+
+# save original names, because its easier than the far off possibility of having to come back and do this all again
+orig.names <- sample_names(PHYLO)
+sample_names(PHYLO) <- gsub('-S.*' , '' , sample_names(PHYLO))
+
+PHYLO_map_full <- read.table('../input/PHYLO_q1_mapfile.txt', header=TRUE, sep='\t', row.names = 1, stringsAsFactors = FALSE)
+sample_data(PHYLO) <- PHYLO_map_full[,-(1:3)]
+
+# ammend stuff
+colnames(sample_data(PHYLO)) <- c("ID" , "Patient" , "Gender" , "ID_Patient"  , "ID_Biopsy" ,  "ID_Sample" ,  "Treatment" , "Description")
+
+# add stuff
+sample_data(PHYLO)$Condition <- sample_data(PHYLO)$Description
+sample_data(PHYLO)$Description <- paste0(sample_data(PHYLO)$Condition , '_' , sample_data(PHYLO)$Treatment)
+sample_data(PHYLO)$Description <- gsub('\\dFED','FED',sample_data(PHYLO)$Description)
+sample_data(PHYLO)$Description[sample_data(PHYLO)$Description == 'CONTROL_CONTROL'] <- 'CTRL'
+sample_data(PHYLO)$Description <- factor(sample_data(PHYLO)$Description , levels = c("PRE",  "CONTROL", "POST_STEROIDS" , "POST_PPIs", "POST_FED"))
+sample_data(PHYLO)$Treatment[grep('Neg_Co' , sample_data(PHYLO)$Treatment)] <- 'Neg_Co' 
+sample_data(PHYLO)$SeqDepth <- sample_sums(PHYLO)
+sample_data(PHYLO)$OrigNames <- orig.names
+
+
+# ===
+
+e.col <- c('CONTROL' = 'bisque3' , 'PRE' = 'red3' , 'POST' = 'skyblue3' ,  'Neg_Co' = 'orange'  ) #'Neg_Co' = 'lavenderblush3' ,
+
+e.treat <- brewer.pal(n = length(unique(sample_data(PHYLO)$Treatment)), name = 'Dark2')  
+names(e.treat) <- c("2FED" , "4FED" , "CONTROL" , "PPIs" , "STEROIDS" , "Neg_Co")
+e.desc <- c(e.col, 'slateblue4' , 'seagreen3' , 'deepskyblue3') # dodgerblue4 cyan
+names(e.desc) <- c("CONTROL", "PRE","POST","Neg_Co", "POST_STEROIDS","POST_PPIs","POST_FED")
+
+
+##====== a colour for each phylum ======##
+unq <-  get_taxa_unique(PHYLO, taxonomic.rank = 'phylum') ; unq <- unq[!is.na(unq)]
+clr_phy2 <- hue_pal( l = 56, c = 150 )(length(unq))
+names(clr_phy2) <- unq
+clr_phy2 <- c(clr_phy2, 'misc' = 'grey50')
+##====== a shade for each rank in that phylum======================== 
+plot_rank <- 'class'   # set to level of interest
+padding <- 1            # lower = paler end of palette, higher = less intelligible breaks
+e.col2 <- NULL
+for (x in unq) {
+    col_grad <- colorRampPalette( color = c(clr_phy2[x], 'ivory'), space='rgb' )( length(get_taxa_unique( tax_table(subset_taxa(PHYLO, phylum == x)), taxonomic.rank = plot_rank)) + padding )
+    col_grad <- col_grad[1:(length(col_grad) - padding)]
+    names(col_grad) <- get_taxa_unique( tax_table(subset_taxa(PHYLO, phylum == x)), taxonomic.rank = plot_rank)
+   e.col2 <- c( e.col2 ,  col_grad)  
+               } 
+e.col2 <- c(e.col2, 'misc'='grey45', 'NA'='grey70')
+
+```
+
+
+---
+
+
+### How long are my reads?
+
+Know your primers - check your mapfile etc., and search for the sequences online [e.g.](https://duckduckgo.com/?q=GTGYCAGCMGCCGCGGTAA+GGACTACNVGGGTWTCTAAT&t=vivaldi&atb=v109-2&ia=web). For instance, these reads are not V3-V4 (as feared) but rather 515F-806R (V4-V5). Keep trimming steps in mind when counting.
+
+  * with a huge overlap, could allow more mismatches? 0 mismatch in 20 versus 0 in ~200. Still needs to catch lower overlap reads though (if happening).
+  * consider the ```nmatch``` field in the example below: note the frequency of mismatch in ~200 bp: low, but often one or two.
+  
+  * Larger mismatches occurr, but at lower abundances.
+  
+  * __TRIMM WAY MORE!__
+
+
+```{r short_ASVs, eval=TRUE}
+
+table(as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )))
+
+aberrants <- apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) ) < 253 | apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) ) >255
+
+# hist(as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )),main='histogram of all ASV lengths')
+asv_lengths <- data.frame(lengths = as.vector(apply( tax_table(PHYLO)[,8], 1, function(x) nchar(x) )) )
+ggplot(asv_lengths, aes(lengths)) +
+                  geom_histogram(binwidth = 1) + 
+                  ggtitle('histogram of all ASV lengths')
+
+
+plot_bar(subset_taxa(PHYLO, aberrants, prune_taxa=TRUE )) +
+    facet_grid(phylum~Condition,scales='free',space='free') +                              
+    geom_bar(aes(fill = class , color = class ), stat ="identity", position="stack" ) +   
+    theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+    theme(strip.text.x = element_text(size = 12), strip.text.y = element_text(size = 9)) +   
+    theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  
+    scale_fill_manual(values = e.col2, na.value='grey')  +        
+    scale_color_manual(values = e.col2, na.value='grey')  +        
+    theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +   
+    guides(fill=guide_legend(title='Class, grouped & coloured by Phylum', reverse=FALSE), color=guide_legend(title='Class, grouped & coloured by Phylum', reverse=FALSE)) +
+    ggtitle("Histogram of 9 ASVs outside of the range of 253-255") +
+    # labs(caption = "taxa not above 5 reads in 1% of samples grouped to 'misc'") + 
+    theme(legend.position = 'right', legend.box = "vertical") #, aspect.ratio = 2:1)
+
+# get rid of the aberrant lengths - not dependable, not significant
+PHYLO <- subset_taxa(PHYLO, !(aberrants), prune_taxa=TRUE )
+
+# # from DADA2's output: length of sequence, merging overlap (nmatch), mismatches, etc/:
+# readRDS(list.files('~/data/PHYLO/Materials/5_final' , pattern = 'RDS', full.names = TRUE)[45])
+
+```
+
+---
+
+
+
+### Rarefaction & Diversity
+
+From https://github.com/joey711/phyloseq/issues/143#issuecomment-329028119 - richness.R copied to local version
+
+```{r rarefaction, results='hide', collapse=TRUE, message=TRUE}
+
+# 
+source('~/Dropbox/SilentGeno/R/ggrare.R')
+
+#make sure all samples are >1
+ggrare(PHYLO, step = 1000, color = "SeqDepth", label = 'ID_Sample', se = TRUE, plot = FALSE) + facet_grid(~Condition) + theme_classic()
+
+```
+
+
+### Richness Plots 
+
+With the diversity measures provided through phyloseq (vegan?): ```c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")```. Note in Shannon and Simpson two ```POST``` samples stand out as having anomalously low diversity. Likely low read, could consider removing as diversity visibly distorted? __Can this be tested?__
+
+```{r plot_richness, echo=TRUE, results='hide', warning=FALSE}
+
+PHYLO_rich <- estimate_richness(PHYLO)
+
+#Try facet these
+meas <- c("Observed", "Chao1", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")
+
+# MEAS MOR AMACH GO DTI AN LAPPLY MASSSSSSSSSSIVVE
+p.list <-lapply(meas, function(x) {
+  save <- FALSE   # switch here if required
+  p <- plot_richness(PHYLO, measures = x, color='Condition', title = x) +
+    scale_color_manual(values =  e.desc) +
+    facet_grid(facets = ~Condition, scales = 'free') +
+    theme(panel.background = element_rect(fill = NA),
+      panel.grid.major = element_line(colour = "grey80", size = 0.2),
+      panel.ontop = FALSE ) +
+    ylab(x)
+  return(p)
+  if(save){ ggsave(filename = paste0(x,'_adiv_plot.png'), device='png', plot=p)}
+  } )
+
+ggarrange(p.list[[1]], p.list[[2]], p.list[[3]], p.list[[4]], p.list[[5]], p.list[[6]] , 
+          ncol = 3, nrow = 2,  align = "hv",
+          widths = c(1, 1, 1), heights = c(1, 1, 1),
+          common.legend = TRUE,
+          legend='bottom')  #labels = 'Alpha Diversity Measures') , 
+
+```
+
+---
+# Sample Filtering - defining low read-depth cutoffs
+
+Duplicated from Quality Report, overview of sample read depths.
+
+### Isolating problematic samples
+
+Several samples have problematically low read abundances. How do they compare? We evaluate samples with a total abundance below 5000 reads (arbitrary threshold).
+
+```{r bad_sample_sums , eval=TRUE, results='hold', fig.show='hold', echo=FALSE}
+
+print('sample_sums, small -> large')
+bad <- subset_samples(PHYLO , sample_sums(PHYLO) < 5000)
+
+# plot all   #consider joining plots to axis with line
+samp_col <- e.col[ unlist(sample_data(PHYLO)[names(sort(sample_sums(PHYLO))) , 'Condition']) ]
+# call this for points
+
+plot( sort(sample_sums(PHYLO)), ylab = 'Total Reads per Sample', xlab = ' ' , ylim = c(0,50000), type = 'n' , main = 'Sample Sequencing Depths', xaxt='n' )
+abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' )
+points(sort(sample_sums(PHYLO)), cex = 2, col = samp_col, pch = 20, lwd = 1.5)
+axis(1, at=1:length(sample_sums(PHYLO)), labels = names(sort(sample_sums(PHYLO))) , cex.axis=0.6 , srt=90, las=2 )
+legend(x=0, y=50000, fill=e.col, legend = names(e.col))
+
+# plot the useless ones
+plot( sort(sample_sums(bad)), ylab = 'Total Reads per Sample', xlab = 'Sample' , ylim = c(0,8000), type = 'n' , main = 'Sequencing depth with speculative cutoffs' )
+abline( h=c(1000) , lty=2, col='grey25' ) ; abline( h=c(2000) , lty=2, col='grey65' ) ; abline( h=c(3000) , lty=2, col='grey85' )
+axis(4, at=c(1000,2000,3000), col= 'skyblue3', las=0)
+points(sort(sample_sums(bad)), cex = 2, col = samp_col, pch = 20, lwd = 2)
+text(sort(sample_sums(bad)), labels = names(sort(sample_sums(bad))), pos=1, offset = -3, cex=0.9 , srt=90 )
+legend(x=0.8, y=8000, fill=e.col, legend = names(e.col))
+
+bad_names <- sample_data(bad)$OrigNames
+write.table(bad_names, '../output/PHYLO_bad_names.txt', sep='\t')
+
+# PHYLO <- subset_samples(PHYLO, SeqDepth >= 750)
+
+```
+
+
+Conversation with @Emilio decided to remove samples 23PRE/POST, 18POST and 10POST due to proximity to ```Neg_Co``` in PCoAs generated on ```PHYLO_mk.ii``` (i.e. pre RUN20). Possible that sample 12POST will have to go too. However, easier to keep those samples in for now, and filter out during workflow (EJL requesting counts).  
+
+---
+
+---
+
+# Removing contaminants :: package ```decontam```
+
+[From the genious behind ```DADA2``` no less](https://benjjneb.github.io/decontam/vignettes/decontam_intro.html). 
+
+Requires a feature table (of some description) and _either_ DNA concentrations, or negative controls. Lets look at the abundances of samples, and plot them by sample type. Note, with a little concern, that ```Neg_Ctrls``` have some of the highest reads in the set - but these _are_ biopsies, so. 
+
+__NOTE__ :  Leaving in all the samples __IS__ the difference between detecting contaminants and not.
+
+---
+
+```{r by_seqdepth}
+PHYLO_by_depth <- sample_data(PHYLO)[with(sample_data(PHYLO), order(SeqDepth)) , ]
+# order is 'wrong' as ID_Sample gets sorted by num_alphabetical
+ggplot(PHYLO_by_depth, aes(x=ID_Sample, y=SeqDepth, color=Condition)) + geom_point(size = 4) + scale_color_manual(values = e.desc)
+
+```
+
+If we want to play along, we will for clarity put our stuf in BC's format: a df of SeqDepth, and a column with Neg_Co as T/F. Nicer plots, easier pasta.
+
+``` {r PHYLO_follow_the_leader}
+
+df <- as.data.frame(sample_data(PHYLO))       # ggplot-friendly data.frame
+df <- df[order(df$SeqDepth),]               # order by SeqDepth, then call the mute 'Index' variable below
+df$Index <- seq(nrow(df))
+ggplot(data=df, aes(x=Index, y=SeqDepth, color=Condition)) + geom_point() + ggtitle('much nicer than yours jamie',subtitle = 'but whatever') + scale_color_manual(values = e.desc)
+
+```
+
+## Method A - Identification using DNA concentrations [not available]
+
+We don't have those! Send an email to @Emilio to ask, but benched for now.
+
+```{r no_part_a}
+# :( 
+```
+
+---
+
+## Method B - Identification using Negative Controls [not thorough?]
+
+These we do have. This allows us to make a df called contamdf.prev, which contains a nice T/F vector of contaminant taxa. We will then plot the ```taxa_sums``` for all taxa, identifying whether or not they are contaminants or not, with ```samples``` plotted against ```N_CTRLs```. We want ```contams``` to all group with N_CTRLs!
+
+__NB:__ BC demonstrates (and we use) the more aggressive ```f``` threshold of ```0.5``` - From the vignette:
+
+   " Note that as before, the default threshold for a contaminant is that it reaches a probability of 0.1 in the statistical test being performed. In the prevalence test there is a special value worth knowing,  threshold=0.5, that will identify as contaminants all sequences thare are more prevalent in negative controls than in positive samples. Let’s try using this more aggressive classification threshold rather than the default.  "
+
+```{r neg_ctrls, echo=TRUE, results='hold'}
+
+sample_data(PHYLO)$is.neg <- sample_data(PHYLO)$Condition == "Neg_Co"    # catch logical vector
+contamdf.prev <- isContaminant(PHYLO, method="prevalence", neg="is.neg")
+table(contamdf.prev$contaminant)
+head(which(contamdf.prev$contaminant))
+
+# more stringent: all ASVs more 'prevalent' in Neg_Co than samples
+contamdf.prev05 <- isContaminant(PHYLO, method="prevalence", neg="is.neg", threshold=0.5, detailed=TRUE)
+
+# get a physeq with/without contams
+contamASV <- as.vector(contamdf.prev05$contaminant)
+names(contamASV) <- taxa_names(PHYLO)
+
+if ( sum(contamASV, na.rm = TRUE) > 0){      # neat! As FALSE=0, TRUE=1, and NA=NA
+  PHYLO_cont <- prune_taxa(contamASV , PHYLO)
+} else { 
+    print('BEWARE - no ASVs were detected as contaminants, none were removed') }
+
+PHYLO_pur <- prune_taxa(!contamASV , PHYLO)
+```
+
+
+Some plotting to show what we've found. 
+
+```{r contam_plotting}
+## transform to PRESENCE-ABSENCE in negative controls and true samples
+PHYLO.pa <- transform_sample_counts(PHYLO, function(abund) 1*(abund>0))
+PHYLO.pa.neg <- prune_samples(sample_data(PHYLO.pa)$Condition == "Neg_Co", PHYLO.pa)
+PHYLO.pa.pos <- prune_samples(sample_data(PHYLO.pa)$Condition != "Neg_Co", PHYLO.pa)
+
+## for ASVs found in Neg_Co, get across all samples
+PHYLO_negcotaxa <- prune_taxa(taxa_sums(subset_samples(PHYLO, Condition == 'Neg_Co')) > 0 , PHYLO)
+## for ASVs found in real samples, get across all samples
+PHYLO_sampletaxa <- prune_taxa(taxa_sums(subset_samples(PHYLO, Condition != 'Neg_Co')) > 0 , PHYLO)
+
+# Make data.frame of prevalence in positive and negative samples
+df.pa <- data.frame(pa.pos=taxa_sums(PHYLO.pa.pos), pa.neg=taxa_sums(PHYLO.pa.neg),
+                      contaminant=contamdf.prev05$contaminant)   # account for size of population
+
+avg_ra <- apply(otu_table(PHYLO.pa.pos) , 2 , mean) # PHYLO
+
+ggplot(data=df.pa, aes(x=pa.neg, y=pa.pos, color=contaminant)) +
+  xlab("Prevalence (number of Negative Controls)") + ylab("Prevalence (number of True Samples)") +
+#  scale_size_continuous(name='% prevalence across samples') + # misleading - just a fn of x/y position
+  ggtitle("ASV prevalence across samples - are CONTAMs detected?") +
+  geom_point(alpha=0.6, aes(size=4)) 
+
+PHYLO_ra <- transform_sample_counts(PHYLO, function(x) x/sum(x))
+
+PHYLO_neg_tax <-prune_taxa(taxa_sums(subset_samples(PHYLO, Condition == 'Neg_Co')) > 0 , PHYLO_ra) 
+PHYLO_neg_tax
+
+kable(data.frame(tax_table(PHYLO_neg_tax)[,c(2,3,6)] , NegC_reads = taxa_sums(subset_samples(PHYLO, Condition=='Neg_Co'))[taxa_names(PHYLO_neg_tax)] , Samp_reads = taxa_sums(subset_samples(PHYLO, Condition!='Neg_Co'))[taxa_names(PHYLO_neg_tax)]), caption = 'ASVs in Neg_Co samples (not necess contams)')
+
+plot_bar(PHYLO_neg_tax) +
+              facet_grid(class~Condition,scales='free',space='free') +                              
+              geom_bar(aes(fill = ASV) , color = 'black' , stat ="identity", position="stack" ) +   # 
+              theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+              theme(strip.text.x = element_text(size = 12), strip.text.y = element_text(size = 9)) +   
+              theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  #
+              # scale_fill_manual(values = e.col2, na.value='grey')  +        
+              # scale_color_manual(values = e.col2, na.value='grey')  +        
+              theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +   
+              ggtitle("Neg Ctrl Abundances, colour by ASV") +
+              theme(legend.position = 'none') #, aspect.ratio = 2:1)
+
+
+plot_bar(prune_taxa(taxa_names(PHYLO) %in% taxa_names(PHYLO_cont), PHYLO_ra)) +
+              facet_grid(class~Condition,scales='free',space='free') +                              
+              geom_bar(aes(fill = ASV) , color = 'black' , stat ="identity", position="stack" ) +   # 
+              theme_classic() +   # put theme call first so doesn't overwrite other theme-calls
+              theme(strip.text.x = element_text(size = 12), strip.text.y = element_text(size = 9)) +   
+              theme(strip.text.y = element_text(angle = 0), axis.text.x = element_text(angle = 270)) +  #
+              # scale_fill_manual(values = e.col2, na.value='grey')  +        
+              # scale_color_manual(values = e.col2, na.value='grey')  +        
+              theme(panel.grid.major.y = element_line(colour='grey75', size = 0.2)) +   
+              ggtitle("Contaminant Abundances, colour by ASV") +
+              theme(legend.position = 'none') #, aspect.ratio = 2:1)
+
+# ggarrange(z.rm1, z.rm2, ncol = 2, nrow = 1)
+
+
+```
+
+~~Note that in the previous iteration the most __prevalent__ ASV in ```N_CTRL_1``` was not identified as a contaminant - now none are~~ This issue is modified by including all samples. 
+
+We still __do not__ get [what we want](https://www.bioconductor.org/packages/release/bioc/vignettes/decontam/inst/doc/decontam_intro.html#identify-contaminants---prevalence), as taxa prevalent in Neg_Co are also prevalent in 'real' samples. We do however get some indication that most ASVs can be separated out in a sensible way. A more stringent approach will be to check up on these taxa, and probably strip them out.  
+
+---
+
+# Removing contaminants :: fallback ```jfg``` methodology
+
+## Method C - supervised cleaning
+
+What sorts of abundance do the above 'contaminant' ASVs represent?
+
+How many reads are contaminants, and how many as a fraction of _real sample reads_ in the study? At least ```__20%__```, and that's _without the two most abundant ASVs_, which were not 'detected', but are highly abundant in N_CTRL 1. Consider a read-out of % per sample.
+
+``` {r autodestructidact}
+
+if ( sum(contamASV, na.rm = TRUE) > 0){      # neat! As FALSE=0, TRUE=1, and NA=NA
+      cont_pc <- as.numeric(100*(sample_sums(subset_samples(PHYLO_cont, Condition != 'XXXXXXXX')) / sample_sums(subset_samples(PHYLO, Condition != 'XXXXXXXX'))))
+      cont_pc <- data.frame(pc = cont_pc,
+                            ID_Sample = sample_names(subset_samples(PHYLO, Condition != 'XXXXXXXX')),
+                            Condition = sample_data(subset_samples(PHYLO, Condition != 'XXXXXXXX'))$Condition,
+                            row.names = sample_names(subset_samples(PHYLO, Condition != 'XXXXXXXX')),
+                            stringsAsFactors = FALSE)  
+    ggplot(data = cont_pc, aes(x=ID_Sample , y=pc, fill = Condition)) +
+      theme_classic() + 
+      facet_grid(.~Condition,scales='free',space='free') + 
+      geom_bar(stat="identity") +
+      scale_y_continuous(limits = c(0, 100)) + 
+      scale_fill_manual(values = e.desc) +
+      theme(axis.text.x = element_text(angle = 90), ) +
+      labs(y = '% of sample comprised of contaminant ASV reads', title = 'Samples by % Contaminant', xlab = 'Sample')
+  } else { 
+      print('BEWARE - no ASVs were detected as contaminants') }
+
+
+
+```
+
+<!-- # Kinda shit really -->
+<!-- # STRIP all N_CTRL ASVs from dataset. -->
+<!-- PHYLO.cont <- subset_taxa( PHYLO_ra , (taxa_sums(PHYLO.pa.neg) > 0)) -->
+<!-- PHYLO.cont <- prune_samples(sample_data(PHYLO.cont)$Condition == "Neg_Co", PHYLO.cont) -->
+<!-- a <- plot_bar(PHYLO.cont, y = 'Abundance', fill='phylum') + facet_grid(~Condition,scales='free',space='free_x') + theme(legend.position = 'none') -->
+
+<!-- PHYLO.pur <- subset_taxa( PHYLO_ra , !(taxa_sums(PHYLO.pa.neg) > 0)) -->
+<!-- PHYLO.pur <- prune_samples(sample_data(PHYLO.pur)$Condition != "Neg_Co", PHYLO.pur) -->
+<!-- b <- plot_bar(PHYLO.pur, y = 'Abundance', fill='phylum') + facet_grid(.~Condition,scales='free',space='free_x') -->
+
+<!-- c <- plot_bar(PHYLO_ra, y = 'Abundance', fill='phylum') + facet_grid(~Condition,scales='free',space='free_x') -->
+
+<!-- ggarrange(a , b , c, -->
+<!--           ncol = 3, nrow = 1,  align = "hv", -->
+<!--           widths = c(0.6, 3, 3), heights = c(1), -->
+<!--           common.legend = FALSE, -->
+<!--           legend='none', ) -->
+
+<!-- saveRDS(PHYLO.pur, file='../output/7_phyout/PHYLO_run1_phyloseq_uc_pur.RDS') -->
+
+
+---
+
+
+## Decisions
+
+BC points out that he covers two methods (frequency via DNA concentrations and presence in negative controls), but that there are several ways ofg _pairing these two approaches_ for greater sensitivities. Remains a moot point without DNA concentrations.
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Ultimately, remove the strongest ASVs from other samples. Not feasible to remove all _Bacilli_ and not desirable as levels so out of kilter. Need those concentration values. 
+__ Writes out ```phylo-obj` with cherry picked conatminants removed __ (i.e. _keeps_ those denoted ```keep_asvs``` below)
+
+
+```{r manual_decontam}
+# three Bacilli - need to keep them, huge in PHYLO, tiny in PHYLO_contam
+keep_asvs <- c('Seq_0000001','Seq_0000006','Seq_0000012')
+# kable(otu_table(PHYLO)[,keep_asvs])
+
+z.rm1 <- data.frame(otu_table(PHYLO)[,keep_asvs], cond = sample_data(PHYLO)$Condition, stringsAsFactors = FALSE)
+z.rm2 <- data.frame(t(sapply(unique(z.rm1$cond), function(x) colMeans(z.rm1[z.rm1$cond == x, 1:3]) )), row.names = unique(z.rm1$cond))
+
+kable(z.rm2, caption = 'Mean abundance/Condition for retained Bacilli ASVs') # x='PRE'
+
+
+
+
+# just cut out ASVs not listed above
+all_keep_asvs <- taxa_names(PHYLO_cont)[!(taxa_names(PHYLO_cont) %in% keep_asvs)]
+PHYLO_unprobular <- prune_taxa(!(taxa_names(PHYLO) %in% all_keep_asvs) , PHYLO)
+PHYLO_unprobular <- subset_samples(PHYLO_unprobular, Condition != 'Neg_Co')
+
+# and the ASVs with abundance == 0
+PHYLO_unprobular <- prune_taxa( !(taxa_sums(PHYLO_unprobular) == 0) , PHYLO_unprobular )
+
+saveRDS(PHYLO_unprobular , '../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS') 
+print("Chimera-scrubbed, (manually) contam-stripped phyloseq.RDS saved to ../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS") 
+
+
+```
+
+
+---
+
+###  final ASV counts
+
+```{r asv_counts}
+## table of sequences, including the output
+track2 <- track[ , 1:9] ; track2 <- track2[ , -(grep('R' , colnames(track)))]
+
+colnames(track2)[1:3] <- c('raw_pair' , 'trimmed_pair' , 'filt_pair')
+# get decontamm'd counts WITHOUT loading pur phylo obj
+counts_purified <- sample_sums(readRDS('../output/7_phyout/PHYLO_run1_phyloseq_uc_purMANUAL.RDS'))
+track2$ASV_pur <- 0
+track2[names(counts_purified) , 'ASV_pur'] <- counts_purified
+
+# counts including the new col
+kable(track2)
+
+```
+
+
+---
+
+
+
+# Detecting Contaminants  -  ```jfg``` Methodology UNRESOLVED  
+
+
+
+> THE IDEA   ::   contam.ASVs should increase proportionally in low SeqDepth samples
+
+
+### Detecting contaminants
+
+Based on "PCR theory"" (and probably heading towards BC's approach below), with negative controls available, could we plot relative abundance of 'contaminants' against SeqDepth for that sample? Hoping that a linear regression
+
+```{r ra_v_seqdepth, eval=FALSE, echo=TRUE}
+#par(mfrow=c(4,10))
+
+# make a sample-length vector of colours to colour sample points by
+samp_col <- rep('black' , nsamples(PHYLO_neg_tax))
+samp_col[ sample_data(PHYLO_neg_tax)$Condition == 'Neg_Co' ] <- 'red'
+
+apply(otu_table(PHYLO_neg_tax)[,keep_asvs] , 2, function(x) {  
+  plot(sample_data(PHYLO_neg_tax)$SeqDepth, x, ylim=c(0,1), col=samp_col, pch =19, main='RelAb v. SeqDepth ; red = Neg_Co') 
+  abline(lm(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col="red")
+  lines(lowess(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col='blue') 
+  }) 
+
+```
+
+
+Feel there's something to learn from CoDa in this: it's about the proportional importance of these contaminants? 
+
+The concentration of contaminant PCR product in negative control should differ from that in samples - should comprise a greater proportion of reads in neg_ctrls. If amplifcation is an exponential (log2?) process, comparing log quantities between samples/neg_ctrls should allow comparison?... 
+
+Should the abundance of a contaminant be negatively correlated with SeqDepth, and/or with alpha diversity? Assume the contaminant pool is smaller than the community pool in samples: increasing reads should increase diversity for longer.. But is that what we see in alpha div / rarefaction?
+
+Could we partition contams and ASVs through composition sensitive negative-association with SeqDepth? Or a spearman with CLR values?
+
+
+#### Bacilli sequences (present as contams but at much lower proportions)
+
+```{r CoDa_and_contam_bacilli, echo=TRUE }
+# try CLR approach
+asv <- t(otu_table(PHYLO)) # transpose for samples as COLUMNS
+asv.GBM <- cmultRepl(asv, method='CZM')
+asv.CLR <- t(apply(asv.GBM, 1, function(x){log(x) - log(gmean(x, margin=1))}))    # samp as ROWS, but then transposed!
+dim(asv.CLR)
+
+contam_asv.CLR <- asv.CLR[taxa_names(PHYLO_negcotaxa) , ]
+
+# apply(contam_asv.CLR , 1, function(x) {                     # all contam ASVs
+apply(contam_asv.CLR[keep_asvs , ] , 1, function(x) {         # just prob ASVs
+  plot(sample_data(PHYLO_neg_tax)$SeqDepth, x,col=samp_col, pch =19, main='CLR v. SeqDepth ; orange = Neg_Co, green = lm , blue = lowess' ) # , ylim=c(-6,6)
+  abline(lm(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col="green")
+  lines(lowess(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col='blue') 
+  }) 
+
+```
+
+
+#### Pseudomonas sequences (present as contams in huge proportions) __UNRESOLVED__
+
+Compare these three with the above three. __UNRESOLVED, what three of interest?__
+
+```{r CoDa_contam_psuedo, eval=FALSE, echo=TRUE }
+contam_asvs <- c(XXXX , XXXXX , XXXX)
+kable(otu_table(PHYLO)[ , contam_asvs])
+
+# apply(contam_asv.CLR , 1, function(x) {                     # all contam ASVs
+apply(contam_asv.CLR[keep_asvs , ] , 1, function(x) {             # just prob ASVs
+  plot(sample_data(PHYLO_neg_tax)$SeqDepth, x,col=samp_col, pch =19, main='CLR v. SeqDepth ; orange = Neg_Co, green = lm , blue = lowess' ) # , ylim=c(-6,6)
+  abline(lm(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col="green")
+  lines(lowess(x ~ sample_data(PHYLO_neg_tax)$SeqDepth), col='blue') 
+  }) 
+
+
+
+```
+
+

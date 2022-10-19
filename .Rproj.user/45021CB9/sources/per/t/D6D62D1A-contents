@@ -1,0 +1,132 @@
+
+## get this fn (https://gist.github.com/Jfortin1/72ef064469d1703c6b30)
+darken <- function(color, factor=1.4){
+col <- col2rgb(color)
+col <- col/factor
+col <- rgb(t(col), maxColorValue=255)
+col
+}
+
+
+## k over A
+
+k_A <- function(k,        # raw counts
+                A,        # abundance
+                counts    # count table, taxa are ROWS
+){
+  # switch
+  # switch for raw v. %, compare with variable - or one that changes A to %!
+  if(!is.null(A)){
+    filt <- counts[ apply(counts, 1, function(x) sum(x>k)/ncol(counts) > A ), ]
+  }else{
+    filt <- counts[ apply(j, 1, function(x) sum(x>k) > 1 ), ]
+  }
+  return(filt)
+}
+
+
+## crush
+# if RANK ABUND < k_A :  crush RANK TAXON
+
+crush_ranks2 <- function(O=feats,
+                         T=tax,
+                         RANK=colnames(T)[3],
+                         k=0.001,
+                         A=0.1,
+                         MONIKER="etc.",
+                         P=NULL){
+
+  if(!is.null(P) & class(P)=="phyloseq"){O <- otu_table(P) ; T <- tax_table(P)}       
+  O <- data.frame(O, stringsAsFactors = FALSE)
+  T <- data.frame(T, stringsAsFactors = FALSE)
+  
+  # SUBSET o at RANK (keep feat names)
+  unq <- unique(T[, RANK])
+  
+  # collect subset
+  T_crushed <- (lapply(unq, function(u){ 
+    O_u <- O[ T[,RANK]==u , ]
+    T_u <- T[ rownames(O_u) , ]
+    if( (sum(colSums(O_u) > k) / ncol(O_u)) < A){ T_u[ rownames(O_u), RANK ] <- c(MONIKER) }
+    T_u
+  } )) 
+  T_crushed <- do.call(rbind.data.frame, T_crushed)
+  T_crushed <- T_crushed[rownames(T) , ]   # return same order
+  return(T_crushed)
+}
+
+
+## colour/shade
+
+shade_ranks2 <- function(
+  TAXA = taxo,    
+  COLOUR_BY =  colnames(taxo)[4],
+  SHADE_BY =  colnames(taxo)[6],
+  MONIKER = "etc.",
+  NA_TERM = "n/a",
+  MON_COL = "grey50",
+  NA_COL = "grey75",
+  PADDING = 2,
+  SHOW=TRUE,
+  colour_and_shade = c("both", "colour", "shade"),     # this bit still whack
+  P=NULL,  #phylo
+  #
+  lum = 45,
+  chrom = 175,
+  h.start = 0,
+  h = c(0, 360) + 15 ){
+
+  # ====
+  if(!is.null(P) & class(P)=="phyloseq"){TAXA <- tax_table(P)}    ## pass a colour vector
+  require(scales)
+  
+  unq <- unique(TAXA[ , COLOUR_BY])
+  unq <- unq[ !(unq %in% c(MONIKER, NA_TERM, NA)) ] 
+  unq <- c(unq,  MONIKER)    # add back in last to catch taxa orphaned by CRUSHing
+  tax_cols <- hue_pal( l = lum, c = chrom, h=h, h.start = h.start)(length(unq))
+  names(tax_cols) <- unq
+
+  shades <- lapply(unq, function(u){
+    unq.shades <- unique(TAXA[ (TAXA[, COLOUR_BY] == u) , SHADE_BY])
+    unq.shades <- unq.shades[ !(unq.shades %in% c(MONIKER, NA_TERM, NA)) ] 
+    shade.ramp <- colorRampPalette(c(tax_cols[u == names(tax_cols)], "white"))(length(unq.shades) + PADDING)[1:length(unq.shades)]
+    names(shade.ramp) <- unq.shades
+    shade.ramp <- unlist(shade.ramp)
+  })
+  shades <- unlist(shades)
+
+  # only add misc terms once
+  tax_cols <- tax_cols[ !(names(tax_cols) %in% c(MONIKER, NA_TERM, NA)) ] 
+  shades <- shades[ !(shades %in% c(MONIKER, NA_TERM, NA)) ] 
+  MONIKER_NA <- c(MON_COL, NA_COL)
+  names(MONIKER_NA) <- c(MONIKER, NA_TERM)
+  
+  print("colour and shade is still broken")
+  if(colour_and_shade == "colour"){ 
+    tax_cols <- c(tax_cols, MONIKER_NA) 
+  }else if(colour_and_shade=="shade"){shades <- c(shades, MONIKER_NA)
+  }else {tax_cols <- c(tax_cols, MONIKER_NA, shades) }
+  
+  return(tax_cols)    # show_col(tax_cols)
+}
+
+
+## glom ranks. ...
+
+
+# ## F U N C T I O N A B L E  ======
+# 
+#     # melt FEAT+TAXA ; take VARIABLE: repeat each value ntaxa times to append to df
+#       #
+#     # note 2x fixing sort-by-order  w. jdh$order
+#       jjj <- melt(cbind(j_crush, j[, jdh$order]), variable_name = "Sample")    
+#       jjj <- cbind(jjj,  
+#                  unlist( lapply( metadata[jdh$order, "sample"], function(m) 
+#                      rep(m, nrow(taxo) )
+#                          )
+#                        )
+#                      )
+#       # head(jjj)
+#       colnames(jjj)[ncol(jjj)] <- "Sample"
+
+# ## ================================    
