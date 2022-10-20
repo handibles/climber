@@ -1,0 +1,174 @@
+
+
+## problem - need to add local redch branch to the remote (master, origin) branch on GH.com
+## that way, gh works as envisioned - projects are forks of the sb_4.11 master
+## alos, avoids having to add extra repos to gh
+
+# add redch unde rthe 4.11 master
+# HOWEVER, as we clone using SSH, need to ADD SSH also
+git remote add redch git@github.com:handibles/sb_4.11
+
+# check
+git remote -v
+# > redch	git@github.com:handibles/sb_4.11 (fetch)
+# > redch	git@github.com:handibles/sb_4.11 (push)
+
+# add your new redch repo to the sb.4.11 repo
+# (as master is saved as your remote master, as above) 
+git push redch master 
+
+
+# > To github.com:handibles/sb_4.11
+# > ! [rejected]        master -> master (fetch first)
+# > error: failed to push some refs to 'git@github.com:handibles/sb_4.11'
+# > hint: Updates were rejected because the remote contains work that you do
+# > hint: not have locally. This is usually caused by another repository pushing
+# > hint: to the same ref. You may want to first integrate the remote changes
+# > hint: (e.g., 'git pull ...') before pushing again.
+# > hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+# so, as per note in git pull -help, need to pull from master, unify at local, then push back.
+
+
+## however:
+
+git pull
+# > There is no tracking information for the current branch.
+# > Please specify which branch you want to merge with.
+# > See git-pull(1) for details.
+# >     git pull <remote> <branch>
+# > If you wish to set tracking information for this branch you can do so with:
+# >     git branch --set-upstream-to=redch/<branch> redch
+
+
+## neither work:
+git pull sb_4.11 master
+git pull git@github.com/handibles/sb_4.11 master
+# > fatal: 'git@github.com/handibles/sb_4.11' does not appear to be a git repository
+# > fatal: Could not read from remote repository.
+# >
+# > Please make sure you have the correct access rights
+# > and the repository exists.
+
+
+## and then: 
+git branch --set-upstream-to=sb_4.11/master redch
+git branch --set-upstream-to=git@github.com/handibles/sb_4.11/master redch
+# > error: the requested upstream branch 'sb_4.11/master' does not exist
+# > hint: 
+# > hint: If you are planning on basing your work on an upstream
+# > hint: branch that already exists at the remote, you may need to
+# > hint: run "git fetch" to retrieve it.
+# > hint: 
+# > hint: If you are planning to push out a new local branch that
+# > hint: will track its remote counterpart, you may want to use
+# > hint: "git push -u" to set the upstream config as you push.
+
+git fetch git@github.com/handibles/sb_4.11
+# > no joy
+
+
+## start again =============================
+
+
+# make a new remote (GH) repo, delete all the local git stuff, then start fresh
+
+git init
+# > Initialized empty Git repository in /home/handibles/Dropbox/Ferment/fhi__redch/.git/
+
+git add .
+git commit -m 'start commit for climber'
+git remote add origin ssh://git@github.com/handibles/climber
+git push origin master
+# > Counting objects: 208, done.
+# > Delta compression using up to 8 threads.
+# > Compressing objects: 100% (188/188), done.
+# > Writing objects: 100% (208/208), 1.66 MiB | 29.00 KiB/s, done.
+# > Total 208 (delta 22), reused 0 (delta 0)
+# > 
+# > remote: Resolving deltas: 100% (22/22), done.
+# > remote: 
+# > remote: Create a pull request for 'master' on GitHub by visiting:
+# > remote:      https://github.com/handibles/climber/pull/new/master
+# > remote: 
+# > To ssh://github.com/handibles/climber
+# >  * [new branch]      master -> master
+
+
+## make sensible names =============================
+	 
+## cant get head around terminology - make branch "teach", and remove master
+## resist urge to make branch "write" or "develop" etc., as will (should) be "live"
+##	-	might need one if usiung GHpages?...
+## ref : https://stackoverflow.com/questions/1526794/rename-master-branch-for-both-local-and-remote-git-repositories?answertab=votes#tab-top
+
+git branch -m master teach	# -move locally, master to teach
+
+git push origin teach		# push new teach branch to GH
+# > The authenticity of host 'github.com (___.__.___.__)' can't be established.
+# > ED25519 key fingerprint is SHA256:________________________________________.
+# > This key is not known by any other names
+# > Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+# > Warning: Permanently added 'github.com' (ED25519) to the list of known hosts.
+# > Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+# > remote: 
+# > remote: Create a pull request for 'teach' on GitHub by visiting:
+# > remote:      https://github.com/handibles/climber/pull/new/teach
+# > remote: 
+# > To ssh://github.com/handibles/climber
+# >  * [new branch]      teach -> teach
+
+
+## delete the spurious "master" branch made whilst dicking around
+## note "origin" replaces "remote" here in most cases... <?>
+git push origin :master 	# delete "master"
+# > To ssh://github.com/handibles/climber
+# >  - [deleted]         master
+
+
+## attempt delete the original GH comit branch, "main"
+git push origin :main 		# delete "main"
+# > To ssh://github.com/handibles/climber
+# >  ! [remote rejected] main (refusing to delete the current branch: refs/heads/main)
+# > error: failed to push some refs to 'ssh://github.com/handibles/climber'
+
+## need to change the "current" branch on GH? (hilariously, I could jsut have renamed it on GH...)
+## can do this on the site: change default to teach. is there a programmatic way? Maybe. Is there infinite time? No.
+## try delete main again:
+git push origin :main 		# delete "main"
+# > To ssh://github.com/handibles/climber
+# >  - [deleted]         main	# success!
+
+
+## host as a site =============================
+
+## go > repo (teach)
+## go > settings > pages
+## set teach to source for pages; save
+## set jekyll theme:
+
+## set a gitignore (+ other rm messing), and push back to remote (origin), setting remote (origin) as "upstream"
+git push --set-upstream origin teach
+# > Enumerating objects: 4, done.
+# > Counting objects: 100% (4/4), done.
+# > Delta compression using up to 12 threads
+# > Compressing objects: 100% (3/3), done.
+# > Writing objects: 100% (3/3), 419 bytes | 419.00 KiB/s, done.
+# > Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+# > remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+# > To ssh://github.com/handibles/climber
+# >    b4b7882..a722754  teach -> teach
+# > Branch 'teach' set up to track remote branch 'teach' from 'origin'.  # <--- note! **
+
+## make a 'docs' folder for storing the site stuff, with text file inside (no empty folders thx)
+git add .
+git commit -m "add docs folder to GH"
+git push
+# > .... # all fine, docs appears on GH
+
+## linking pages: simply use a relative link
+# > <a href="analysis/fhi__redch__assembly.html">Its a real thing</a>
+## change the name of the output (better page names)
+
+
+

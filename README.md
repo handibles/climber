@@ -25,4 +25,4 @@ Site is rebuilt every time that the repo is pushed to, though there is some slig
 
 ### shotgun
 
-<a href="analysis/fhi__redch__assembly.html">Its a real thing</a>
+<a href="analysis/shotgun_assembly.html">Its a real thing</a>

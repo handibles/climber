@@ -4,9 +4,11 @@ author: 'IC / NPV / JFG'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
   html_document:
+    output_file: "shotgun_assembly.html"
     toc: TRUE
   pdf_document: 
     toc: TRUE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='shotgun_assembly.html') })
 ---
 
 ---
@@ -20,6 +22,7 @@ output:
  
  **NB** should unify materials and analysis dirs in setup
 ``` 
+
 
 ---
 
