@@ -13,3 +13,5 @@
 ## ignore for the most part, Rstudio chaff
 /.Rproj.user
 *.Rproj
+*.RData
+.Rhistory
