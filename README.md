@@ -1,28 +1,17 @@
 # CLIMBER - CLI, Microbial Ecology, and R
 
 
-Hosted page for doing a number of basic steps in microbial ecology, focusing on the processing of `NextGen` illumina data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets. 
+Some basic steps in microbial ecology, focusing on the processing of `NextGen` illumina data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets. 
 
-If this appeals to you (and why wouldn't it), please dampen your squibs slightly - it's not written yet, and certianly barely ready to be used. Realistically, we'll need to separate things out into `recipes`, and have them cross-linked. This perhaps could be followed up with a `justthecode` flow for those who are keen to get thigns very, very wrong.
+## guides so far:
 
-Enough of this; lets make like tracked changes and train.
+### Metagenomic Assembly
 
-```
-      preamble
-        ¬| see list of topics in analysis/*preamble*
+  * <a href="analysis/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data :chicken: :cheese: :DNA: </a>
 
-      shotgun assembly
-        ¬| assembly     : all the standard things to do
 
-      amplicon assembly
-        ¬| assembly     : all the standard things to do
 
-```
 
-### note:
 
-Site is rebuilt every time that the repo is pushed to, though there is some slight delay. 
 
-### shotgun
-
-<a href="analysis/shotgun_assembly.html">Its a real thing</a>
+  <a href="climber_todo.md">.</a>
