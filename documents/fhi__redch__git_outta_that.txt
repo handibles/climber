@@ -171,4 +171,46 @@ git push
 ## change the name of the output (better page names)
 
 
+## project management  =====================================================================
+
+    ## dont do this yet! unify teach first
+
+
+## for chickshot and redch, clone different branches, because the folder name doesn't matter!
+## create from a remote branch! https://phoenixnap.com/kb/git-create-new-branch#create-a-branch-from-a-remote-branch
+## push branch to remote origin: https://www.freecodecamp.org/news/git-push-to-remote-branch-how-to-push-a-local-branch-to-origin/
+
+git checkout -b fhi__redch
+# > Switched to a new branch 'fhi__redch'
+git push origin fhi__redch
+# > Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+# > remote: 
+# > remote: Create a pull request for 'fhi__redch' on GitHub by visiting:
+# > remote:      https://github.com/handibles/climber/pull/new/fhi__redch
+# > remote: 
+# > To ssh://github.com/handibles/climber
+# >  * [new branch]      fhi__redch -> fhi__redch
+
+git checkout -b fhi__chickshot
+# > Switched to a new branch 'fhi__chickshot'
+git push origin fhi__chickshot
+# > Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+# > remote: 
+# > remote: Create a pull request for 'fhi__chickshot' on GitHub by visiting:
+# > remote:      https://github.com/handibles/climber/pull/new/fhi__chickshot
+# > remote: 
+# > To ssh://github.com/handibles/climber
+# >  * [new branch]      fhi__chickshot -> fhi__chickshot
+
+
+## now for both, can clone branches to local and proceed in different directions, while pulling changes in reference material as we go...
+cd ~/Dropbox/Ferment/
+git clone --single-branch --branch fhi__redch ssh://git@github.com/handibles/climber   # note single-branch, note name will be repo name
+git clone --single-branch --branch fhi__chickshot ssh://git@github.com/handibles/climber
+
+
+## delete branches if done incorrectly
+git branch -d  fhi__redch fhi__chickshot
+
+
 
