@@ -8,7 +8,7 @@ output:
     toc: TRUE
   pdf_document: 
     toc: TRUE
-knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='shotgun_assembly.html') })
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/shotgun_assembly.html') })
 ---
 
 ---

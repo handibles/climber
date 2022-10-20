@@ -15,3 +15,7 @@
 *.Rproj
 *.RData
 .Rhistory
+
+## ignore older climber material for now, and pptx generally...
+/documents/zzz__exclude_original_climber
+*pptx
