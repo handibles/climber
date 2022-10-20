@@ -19,4 +19,10 @@ Enough of this; lets make like tracked changes and train.
 
 ```
 
-added
+### note:
+
+Site is rebuilt every time that the repo is pushed to, though there is some slight delay. 
+
+### shotgun
+
+<a href="analysis/fhi__redch__assembly.html">Its a real thing</a>
