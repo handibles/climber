@@ -1,0 +1,15 @@
+## .gitignore for climber redch
+
+## ignore, essentially, everything
+#/analysis
+#/documents
+#/input
+#/output
+#/vis
+#*.R
+#*.sh
+#*.py
+
+## ignore for the most part, Rstudio chaff
+/.Rproj.user
+*.Rproj
