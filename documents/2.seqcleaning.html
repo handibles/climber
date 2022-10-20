@@ -12,7 +12,7 @@
 <meta name="author" content="IC / NPV / JFG" />
 
 
-<title>Assembling Metagenomic Communities (unifinished version)</title>
+<title>shotgun metagenomics - sequencing QC - filtering and trimming</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -299,8 +299,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -308,16 +308,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -362,432 +355,26 @@ pre code {
 
 
 
-<h1 class="title toc-ignore">Assembling Metagenomic Communities
-(unifinished version)</h1>
+<h1 class="title toc-ignore">shotgun metagenomics - sequencing QC -
+filtering and trimming</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">20 Oct 2022, 12:37</h4>
+<h4 class="date">20 Oct 2022, 23:10</h4>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
-<li><a href="#setup-your-environment" id="toc-setup-your-environment">0
-- setup your environment</a></li>
-<li><a href="#get-the-sequence-data-check" id="toc-get-the-sequence-data-check">1 - get the sequence data (&amp;
-check)</a></li>
-<li><a href="#quality-control-check" id="toc-quality-control-check">2 -
-Quality Control (&amp; check)</a>
+<li><a href="#quality-control-check">2 - Quality Control (&amp;
+check)</a>
 <ul>
-<li><a href="#first-pass-with-trimmomatic" id="toc-first-pass-with-trimmomatic">First Pass with
+<li><a href="#first-pass-with-trimmomatic">First Pass with
 <code>Trimmomatic</code></a></li>
-<li><a href="#second-pass-etc." id="toc-second-pass-etc.">Second Pass
-etc.</a></li>
+<li><a href="#second-pass-etc.">Second Pass etc.</a></li>
 </ul></li>
-<li><a href="#this-document-isnt-finished" id="toc-this-document-isnt-finished">this document isn’t
-finished!</a></li>
-<li><a href="#reading-reference" id="toc-reading-reference">Reading /
-Reference</a></li>
+<li><a href="#reading-reference">Reading / Reference</a></li>
 </ul>
 </div>
 
-<hr />
-<pre><code># todo for jfg
- - currently, fails the *UTILITY* check, but closer to being complete 
- - intro document
- - reference material
- - bibliography
- 
- **NB** should unify materials and analysis dirs in setup</code></pre>
-<hr />
-<div id="introduction" class="section level1">
-<h1>Introduction</h1>
-<div id="what-this-is-and-who-it-is-for" class="section level4">
-<h4>What this <strong>is</strong>, and <strong>who</strong> it is
-for:</h4>
-<p><strong>This document is not finished</strong>, but covers
-<em><strong>How</strong></em> someone (anyone!) can do the
-following:</p>
-<ol start="0" style="list-style-type: decimal">
-<li>connect through <code>ssh</code> and set up a
-<code>bash</code>-based bioinformatics project</li>
-<li>collect and check a project’s illumina short-read dataset (QC -
-<code>FastQC+MultiQC</code>)</li>
-<li>improve the overall quality of their sequencing dataset (QC -
-<code>trimmomatic</code>)</li>
-<li>remove contaminant and/or host sequences from the dataset (QC -
-<code>kneaddata</code>)</li>
-<li>generate a simple but effective community profile of the microbial
-community in that dataset (Microbial ecology -
-<code>Kraken2+Bracken</code>)</li>
-</ol>
-<p>We provide <em>minimal</em> guidance on how to fit the different
-steps to the workflow (different parameters, different options or
-tools).</p>
-<p>This document was originally put together by Ines Calvete (IPLA/CSIC)
-and Jamie FitzGerald (Teagasc/UCC/UCD) as a roadmap for analysing cheese
-microbiomes from Asturias, Spain (Oct 2022). It uses material sourced
-from well-written reference manuals, online communities, and our own
-mistakes (see <em>References</em> section).</p>
-<p>We assume a beginner’s understanding of the HPC, <code>ssh</code>,
-<code>bash</code>, and scripting. See the <strong>Intro document which
-is not written yet</strong>.</p>
-</div>
-<div id="what-this-document-is-not" class="section level4">
-<h4>What this document is <strong>not</strong>:</h4>
-<p>This is not a guide to the <em><strong>Why</strong></em> of the
-methods used here. For that, check the <em>References</em> section at
-the bottom of the page, and the intro document (<strong>Oct 2022: not
-yet written</strong>).</p>
-</div>
-<div id="when-something-goes-wrong" class="section level4">
-<h4>When something goes <strong>wrong</strong>:</h4>
-<p>Mistakes, and trial-and-error, are part of learning any skill.
-Bioinformatics involves a particularly large and constant amount of
-trialing, as well as lots of errors (web search: <a href="https://www.baeldung.com/linux/bash-errors"><strong>how to read an
-error</strong></a>).</p>
-<p>Also, one of the best ways to learn quickly (and hopefully make
-different, exciting mistakes rather than the same ones) is to keep notes
-of what you do, just like in a lab:</p>
-<ul>
-<li>write out your objectives</li>
-<li>date your notes</li>
-<li>write out what you try to do</li>
-<li>note down the outcomes</li>
-<li>write down what goes wrong</li>
-<li>include the images if you can</li>
-</ul>
-</div>
-<div id="if-you-need-help" class="section level4">
-<h4>If you need <strong>help</strong>:</h4>
-<ul>
-<li>in <code>bash</code>: for some e.g. <code>program</code>, try
-entering <code>program --help</code>, <code>program -h</code>, or
-<code>man program</code>..</li>
-<li>in <code>R</code>: for a <code>function()</code>, enter
-<code>?function</code> to see that function’s help page, or try pressing
-<code>tab</code> after a comma to see other options that
-<code>function()</code> understands.</li>
-<li>in <code>R</code>: for some e.g. <code>object</code> (dataframe,
-matrix, list, etc.) you can try using the <code>str(object)</code>
-function to see its structure, use <code>head(object)</code> to see the
-top 6 lines or rows, <code>class(object)</code> to see what sort of
-thing it is, <code>dim(object)</code> to see it’s dimensions
-(<code>row x columns</code>; this will be null if it’s a list or vector
-etc., as these only have 1 row and 0 columns, and
-<code>1*0 = 0</code>)</li>
-<li>try searching for your <code>error message</code> online (web
-search, stackoverflow, biostars, bioconductor, github,
-huttenhower-biobakery, etc.) - the issue might be simple! If that
-doesn’t work, or you’re not sure:</li>
-<li><em><strong>Ask someone</strong></em>. This is not easy work, and we
-all know it. People are glad to help, and to show others what they have
-found out.</li>
-</ul>
-<hr />
-<blockquote>
-<p>Finally, please remember:</p>
-</blockquote>
-<blockquote>
-<ul>
-<li>when you login to the HPC, you must <strong>always</strong> change
-to a <code>node</code> before you do any work</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>you <strong>must</strong> be connected to the Teagasc network/VPN in
-order to access the HPC.</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>take notes, save your data, make backups, brush your teeth.</li>
-</ul>
-</blockquote>
-<hr />
-</div>
-</div>
-<div id="setup-your-environment" class="section level1">
-<h1>0 - setup your environment</h1>
-<p>It can be helpful to define any frequently used paths / values /
-variables at the start of your workflow, based on what you want to do.
-This keeps your workspace visible, easy to refer to, and allows you to
-reliably change the value throughout your work (e.g. a new project, a
-new database, etc.).</p>
-<div id="organising-your-workspace" class="section level4">
-<h4>organising your workspace</h4>
-<p>A good way to keep track of all your folders/files/values is to use
-<strong><code>$environmental_variables</code></strong> - these are
-temporary shortcuts added to <code>bash</code>’s working environment
-that tell the computer to replace the <code>$variable</code> with the
-file, folder, or value we have linked it to. For example, entering
-<code>PLAY=/home/user/Music/playlists</code> would create a new
-variable, <code>$PLAY</code>: when <code>$PLAY</code> is entered, the
-computer will spot the <code>$</code> character, understand that it’s a
-shortcut, and replace that variable (<code>$PLAY</code>) with the value
-assigned to it (<code>/home/user/Music/playlists</code>) wherever that
-variable is found.</p>
-<p>We will assign variables to the <em>folders</em> you will use
-regularly, and for a <em>sample</em> to use for testing things on. Feel
-free to change these to locations and/or names that make sense to you.
-Here <code>$CAPITALLETTERS</code> help keep these short words visible,
-but it’s not necessary if you don’t like shouting. Variables can use
-letters, numbers, and underscores (more <a href="https://ostechnix.com/bash-variables-shell-scripting/">info on
-variables</a>).</p>
-<p>We actually use these variables all time! Those created by the user
-(“user” variables) only last until you close the terminal window, or
-until a program or <code>for-loop</code> finishes (see <code>$i</code>
-in the for-loop section below!) - after this, they will be forgotten.
-Note that this means you have to enter these variables at each new
-session (there are clever ways of doing this too). A lot of other
-variables are created by the system (“system” variables) every time you
-open a new terminal window:</p>
-<pre class="bash"><code># $PATH tells the computer all the folders that have programs in them (multiple folder paths)
-echo $PATH
-
-# $HOME tells the computer where the user&#39;s home directory is (folder paths)
-echo $HOME
-
-# $TERM tells the computer what the default command-line interface is  (a value called by other programs)
-echo $TERM
-
-# $HISTSIZE tells the computer how many commands to remember (a value)
-echo $HISTSIZE
-
-# blah blah blah</code></pre>
-</div>
-<div id="where-does-my-data-go" class="section level4">
-<h4>Where does <strong>my</strong> data go?</h4>
-<p>Thank you for asking!<br />
-<strong>Remember, on the HPC:</strong></p>
-<ul>
-<li><strong>raw data</strong> goes into the <code>primary</code> data
-directory (under your project name on the <code>hpc</code>) - here we
-give it the shortcut variable <code>$RAW</code>. This is your ‘primary’
-data source, so do not edit it</li>
-<li><strong>output</strong> data goes in the <code>analysis</code>
-folder. We set this variable shortcuts as <code>$WRK</code>, and all our
-output goes inside this dir.</li>
-</ul>
-<pre class="bash"><code># databases for different tools
-DB=/data/data/databases
-HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2/
-K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
-
-# our overall data structure
-RAW=/data/Food/primary/R0936_redcheese/
-WRK=/data/Food/analysis/R0936_redcheese/
-
-# scripts, and slurms for queueing up jobs
-MAT=$WRK/Materials
-SLURM=$WRK/slurms
-
-# outputs etc
-QC=$WRK/1__qc
-FQC=$QC/fastqc
-FILT=$WRK/2__filt
-KDOUT=$WRK/3__knead
-KROUT=$WRK/4__krak2
-
-#!# set a filename to test things on
-TEST=SAMPLENAME
-</code></pre>
-<!-- ```{bash, eval = FALSE} -->
-<!-- # databases for different tools -->
-<!-- DB=/home/jfg/data/ref -->
-<!-- HGR38_BT=$DB/hg38 -->
-<!-- K2REFDIR=$DB/Kraken2_GTDB_r89_54k -->
-<!-- # our overall data structure -->
-<!-- RAW=/home/jfg/data/raw/ms__sile_raw -->
-<!-- WRK=/home/jfg/data/ferment/ms__sile -->
-<!-- # scripts, and slurms for queueing up jobs -->
-<!-- MAT=$WRK/Materials -->
-<!-- SLURM=$WRK/slurms -->
-<!-- # outputs etc -->
-<!-- QC=$WRK/1__qc -->
-<!-- FQC=$QC/fastqc -->
-<!-- FILT=$WRK/2__filt -->
-<!-- KDOUT=$WRK/3__knead -->
-<!-- KROUT=$WRK/4__krak2 -->
-<!-- #!# set a filename to test things on -->
-<!-- TEST=ARG-Sam6_S41 -->
-<!-- ``` -->
-</div>
-<div id="what-tools-do-we-need" class="section level4">
-<h4>What tools do we need?</h4>
-<p>We will need to have <a href="https://filezilla-project.org/download.php?type=client"><code>FileZilla</code></a>
-(or similar) installed, as well as our <code>ssh</code> client
-(<code>putty</code>).</p>
-<p>Next, we tell the HPC which programs we’ll need, which are parcelled
-into “modules”. If we don’t load the modules, our session won’t be able
-to “see” these programs in the <code>$PATH</code>. Some programs are
-always visible, others are loaded through e.g. <code>conda</code> and
-don’t need to be mentioned here.</p>
-<ul>
-<li><code>FastQC</code> and <code>MultiQC</code> for quality
-control</li>
-<li><code>Kraken2</code> for metagenomic community reconstruction</li>
-<li><code>Kaiju</code>, also for metagenomic community
-reconstruction</li>
-<li><code>GNU-parallel</code> for case where we can run many jobs in
-parallel.</li>
-</ul>
-<pre class="bash"><code>    module load parallel fastqc multiqc kraken2</code></pre>
-</div>
-<div id="are-we-ready" class="section level4">
-<h4>Are we ready?</h4>
-<p>Finally, we make sure that all the locations for the work we’re doing
-exist! When we start, they won’t exist yet (but note how the command
-looks up the full location for the directory): if <code>$QC</code> has
-not been defined, it will show you the contents of your current
-directory; if <code>$QC</code> <em>is</em> defined, but hasnt been
-<em>created</em> yet, it will tell you that the folder doesn’t exist
-(which should be true!).</p>
-<pre class="bash"><code>ls $QC</code></pre>
-<p>In our unified data (<code>$RAW</code>) and work folders
-(<code>$WRK</code>), we create different folders for each output, using
-the variables above. It’s not a problem if the folder already
-exists.</p>
-<pre class="bash"><code>    # make analysis dirs
-    mkdir $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
-
-    # make script dirs etc.
-    mkdir $MAT $SLURM
-
-  # make dirs for qc outputs
-    mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_trimm $FQC/multi_raw $FQC/multi_trimm</code></pre>
-</div>
-</div>
-<div id="get-the-sequence-data-check" class="section level1">
-<h1>1 - get the sequence data (&amp; check)</h1>
-<p>We copied the data from IPLA-CSIC (or elsewhere!) manually, into the
-<code>$RAW</code> dir, using <code>FileZilla</code>. Sometimes we will
-have to use <code>scp</code>, <code>sFTP</code>, or <code>rsync</code>
-instead - a web search should show how to do this.</p>
-<p>Next, for our own information, we look at just the
-<code>fastq.gz</code> files, count the number of files, and run
-<code>FastQC</code> and <code>MultiQC</code> on them.</p>
-<pre class="bash"><code># use ls arguments &quot;-lsh&quot; to output it as an informative list
-ls -lsh $RAW
-
-# How many files? - use &quot;|&quot; charater to pipe the ls output to wc (wordcount), and count the n of lines (-l or --lines)
-ls -lsh $RAW/*fastq.gz | wc -l
-
-# can also easily check a fastq file
-ls -lsh $RAW/$TEST*            # file details
-zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines
-less -S $RAW/$TEST*            # read through file, press q to quit</code></pre>
-<div id="fastqc-and-multiqc" class="section level5">
-<h5>FastQC and MultiQC</h5>
-<p><code>FastQC</code> is an amazingly useful tool, for profiling the
-quality, consistency, and content of your sequence data. It takes
-samples of each file it is shown (compressed or uncompressed), checks
-the sequences and returns a <code>HTML</code> &amp; <code>zip</code>
-file for each <code>FASTQ</code>: the <code>HTML</code> is a report, and
-the <code>zip</code> is all the data from that report. Next,
-<code>MultiQC</code> combines all the <code>FastQC</code> outputs into
-one report, summarising all that info in one place. Always check
-this!</p>
-<p><code>FastQC</code> will process all <code>fastq(.qz)</code> files
-that it is passed. <code>MultiQC</code> will process all the
-<code>FastQC</code> outputs it finds in a directory, combine them, and
-place output in the dir specified (<code>multiqc_report.html</code> in
-<code>-o</code>). Keep in mind that <code>FastQC</code> and
-<code>MultiQC</code> outputs also contain text files of all this data
-(see the <code>multiqc_data</code> dir), if you want to use them for
-other graphics/reports etc.</p>
-</div>
-<div id="check-sequence-quality-with-fastqc-on-one-sample" class="section level4">
-<h4>Check sequence quality, with <code>FastQC</code>, on one
-sample:</h4>
-<pre class="bash"><code># then run a fastqc for F and R files, output in the dirs we made above
-fastqc -t 4 $RAW/${TEST}* -o $FQC/fhi_redch_raw
-
-# make a report that includes both F and R reads for this sample
-multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw</code></pre>
-<p>Copy the output <code>multiqc</code> files to your local computer,
-and doubleclick to open in your browser. For help reading
-<code>FastQC/MultiQC</code>, there’s an <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0">introductory tutorial
-video</a> in the top of the <code>MultiQC</code> report.</p>
-</div>
-<div id="check-sequence-quality-with-fastqc-on-multiple-sample" class="section level4">
-<h4>Check sequence quality, with <code>FastQC</code>, on multiple
-sample:</h4>
-<p>We need to be responsible with our use of the HPC. Here we write a
-script in <code>slurm</code>(see the <a href="http://hcux400.teagasc.net/">HPC website</a> for more info on
-<code>slurm</code>!!) format to queue all these jobs politely into one
-<code>FastQC</code> task, and then summarise using <code>MultiQC</code>
-again.</p>
-<p>We also found out that some <code>fasstq</code> files are compressed
-as <code>.gz</code>, and some are compressed at <code>.bz2</code>. This
-means that we need to specify both type fo <code>fastq</code> if we want
-it to work. Best way is to change our command to match both! We show the
-computer the two different compression types using the curly brackets:
-<code>{gz,bz2}</code>. This allows the computer to accept
-<code>*fastq.gz</code> and <code>fastq.bz2</code>:</p>
-<pre class="bash"><code># write a slurm script first
-echo &#39;#!/bin/bash
-
-SBATCH –job-name=knead_fastq
-SBATCH –output=knead_fastq.txt
-
-SBATCH –ntasks=15
-SBATCH –time=15:00
-
-IN=$1
-OUT=$2
-
-# time just tells us how long this takes, so we know for next time
-# -t is the number of threads (tasks) to use
-# curly brackets {} allow us to match either gz or bz2 file extensions
-time fastqc -t 15 $IN/*fastq.{bz2,gz} -o $OUT
-&#39; &gt; $SLURM/slurm_fqc.sh
-
-# review:
-cat $SLURM/slurm_fqc.sh</code></pre>
-<p>This <code>slurm</code> script will give a name, output-log, runtime,
-and number of threads needed to the <code>slurm manager</code>, and use
-the input and output dirs we give to find <code>fastq.gz\bz2</code>
-files, start FastQC, and place outputs in the $OUT dir. We need to
-‘give’ this <code>slurm</code> to <code>sbatch</code>:</p>
-<p><strong>Note</strong>: we have noticed that the <code>{}</code>
-brackets do not solve the problem of missing the <code>bz2</code>
-samples. We simply resubmitted the samples as
-<code>fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw</code> - this is
-not the right thing to do!</p>
-<pre class="bash"><code># trust slurm
-sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
-
-# combine outputs
-time multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw
-
-# then copy to local computer (try FileZilla), and open in your browser! </code></pre>
-<p>Again, open the HTML report in your browser to see what the overall
-quality is like, and how much cleaning you will need to do.</p>
-</div>
-<div id="choosing-your-sample-trimming-parameters" class="section level4">
-<h4>Choosing your sample trimming parameters</h4>
-<p>With information on all the samples, it is possible (but not
-necessarily easy) to pick appropriate trimming and quality
-parameters.</p>
-<ul>
-<li>Trimming of the <code>5&#39;</code> end removes “artificial” bases at
-the start of <code>F+R</code> reads : check the FastQC or MultiQC
-outputs to see how long it takes for
-<code>Per-Base Sequence Content</code> to become
-homogeneous/balanced</li>
-<li>Trimming of the <code>3&#39;</code> end removes bases where the
-sequencing quality declines gradually (especially the <code>R</code>
-reads)</li>
-<li>removing adapters removes synthetic sequences that were used to
-construct the sequencing library, but are not biological</li>
-</ul>
-<p>Consider: How do the sequences look? Is quality uniform throughout,
-or does it vary? What other warnings (in red) do <code>FQC+MQC</code>
-detect?</p>
-</div>
-</div>
 <div id="quality-control-check" class="section level1">
 <h1>2 - Quality Control (&amp; check)</h1>
 <div id="first-pass-with-trimmomatic" class="section level2">
@@ -1124,7 +711,7 @@ for i in $(cat $MAT/samples);
 done
 </code></pre>
 </div>
-<div id="fastqc-and-multiqc-1" class="section level4">
+<div id="fastqc-and-multiqc" class="section level4">
 <h4>fastqc and multiqc</h4>
 <p>Again, we check the <code>Trimmomatic</code> output with
 <code>FastQC/MultiQC</code>, copying the multiqc_report to our computer,
@@ -1147,188 +734,32 @@ program, easier to organise, and easier to reproduce a metagenomics
 analysis when all sequence cleaning steps are carried out in one go.
 Again, <strong>keep notes of what you have done</strong> - this makes
 remembering what happened much easier.</p>
-<!-- # 3 decontaminate data (& check) -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ##   k n e a d d a t a 2   ======================= -->
-<!-- ## kneaddata - using /data/databases/hostremoval/Homo_sapiens/ -->
-<!-- # re-run trimmomatic disabled using --bypass-trim -->
-<!-- ## trial define -->
-<!-- # HGR38_BT -  for bt2 -->
-<!-- KIN=$FILT -->
-<!-- KOUT=$KDOUT -->
-<!-- KSAMPLE=SC145C1-NS_S86 #_L00* -->
-<!-- REFDIR=$HGR38_BT -->
-<!-- QCDIR=$FQC/fhi_redch_knead -->
-<!-- module load kneaddata trimmomatic   # needs trimmo, even if you don't -->
-<!-- mkdir $FQC/fhi_redch_knead -->
-<!-- # trial -->
-<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $KIN/${KSAMPLE}_R1.fastq.gz -i $KIN/${KSAMPLE}_R2.fastq.gz -o $KOUT/${KSAMPLE}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KOUT/knead_${KSAMPLE}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KOUT/$KSAMPLE/*fastq # 2>&1 -->
-<!-- echo '#!/bin/bash -->
-<!-- #SBATCH –-job-name=knead_fastq -->
-<!-- #SBATCH –-output=knead_fastq.txt -->
-<!-- #SBATCH –-ntasks=4 -->
-<!-- #SBATCH –-time=40:00 -->
-<!-- SAMPLE=$1 -->
-<!-- IN=$2 -->
-<!-- OUT=$3 -->
-<!-- REFDIR=$4 -->
-<!-- QCDIR=$5 -->
-<!-- ##   K N E A D D A T A -->
-<!-- # if youre going to change the output names, change for STOUT< GZIP, and FASTQC also -->
-<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1 -->
-<!-- gzip $OUT/$SAMPLE/*fastq -->
-<!-- ## mkdir -->
-<!-- ## mkbreakfast -->
-<!-- ## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz -->
-<!-- ' > $MAT/slurm_kd2.sh -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd2.sh {} $FILT $KDOUT $HGR38_BT $FQC/fhi_redch_knead -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz -->
-<!-- ``` -->
-<!-- ## kneaddata -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ``` -->
-<!-- ## fastqc and multiqc -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ``` -->
-<!-- # 4 microbial community profiling -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- usearch -fastq_join $KDOUT/$SAMPLE/${SAMPLE}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$SAMPLE/${SAMPLE}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${SAMPLE}_kneaddata_R1R2.fastq.gz -->
-<!-- # --------- -->
-<!-- # test -->
-<!-- K2SAMPLE=SC145C1-NS_S86 -->
-<!-- K2IN=$KDOUT -->
-<!-- K2OUT=$KROUT -->
-<!-- K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k -->
-<!-- # recall - first run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
-<!-- cat $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_Homo*.fastq.gz > $K2IN/${K2SAMPLE}/${K2SAMPLE}_contam.fastq.gz & -->
-<!-- cat $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_unmatched_[12].fastq.gz > $K2IN/${K2SAMPLE}/${K2SAMPLE}_orphan.fastq.gz & -->
-<!-- # THREE MINUTES! only 18% classified though.  | 0.5 conf: 2m, 2% class | 0.15 cutoff - 3m, 13% ID'd -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_1.fastq.gz $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_kraken_report# --unclassified-out $K2OUT/${K2SAMPLE}_test_kraken_unclass# --output $K2OUT/${K2SAMPLE}_test_kraken_output# -->
-<!-- # TWO-POINT-FIVE MINUTES! 27% identified  | conf 0.5: 1m30, 2% identifiedi | 3 MIN 30 - 15% classified -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_orphan.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_orphan_kraken_report --unclassified-out $K2OUT/${K2SAMPLE}_test_orphan_kraken_unclass --output $K2OUT/${K2SAMPLE}_test_orphan_kraken_output -->
-<!-- # THREE MIN FORTY! 12% sequences identified, highly worrying. -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_contam.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_contam_kraken_report --unclassified-out $K2OUT/${K2SAMPLE}_test_contam_kraken_unclass --output $K2OUT/${K2SAMPLE}_test_contam_kraken_output -->
-<!-- # need to specify id cutoff -->
-<!-- # for ROUND 1, paired-mode only is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
-<!-- # can remember why we included the zero counts...but we did, intentionally -->
-<!-- echo '#!/bin/bash -->
-<!-- #SBATCH –-job-name=knead_fastq -->
-<!-- #SBATCH –-output=knead_fastq.txt -->
-<!-- #SBATCH –-ntasks=5 -->
-<!-- #SBATCH –-time=40:00 -->
-<!-- SAMPLE=$1 -->
-<!-- IN=$2 -->
-<!-- OUT=$3 -->
-<!-- REFDIR=$4 -->
-<!-- time kraken2 --db $REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_1.fastq.gz $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --use-mpa-style --report $K2OUT/${K2SAMPLE}_kraken_report# --unclassified-out $K2OUT/${K2SAMPLE}_kraken_unclass# --output $K2OUT/${K2SAMPLE}_kraken_output# -->
-<!-- ## -->
-<!-- ## here, should cat and grab the orphan output -->
-<!-- ## -->
-<!-- scp $OUT/${SAMPLE}* jamie@143.239.204.169:/mnt/yabba/yoda_backup/home/ClaessonFTP/jamie/ -->
-<!-- ## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz -->
-<!-- ' > $MAT/slurm_krak2.sh -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 sbatch $MAT/slurms/slurm_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 $MAT/slurms/bash_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
-<!-- # lifeboat protocol -->
-<!-- # K2SAMPLE=SC145C1-NS_S86 -->
-<!-- K2IN=/claesson/jamie/fhi_redch -->
-<!-- K2OUT=/claesson/jamie/fhi_redch/krak2 -->
-<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
-<!-- # << < < < need to add step here to start with one sample, removing --mem-map, and updating dirs/ -->
-<!-- ## remove --mpa-style as interferes with Bracken -->
-<!-- ls /claesson/jamie/fhi_redch/*[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 time kraken2 --db $K2REFDIR  $K2IN/{}_R1_kneaddata_paired_1.fastq.gz $K2IN/{}_R1_kneaddata_paired_2.fastq.gz --memory-mapping --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $K2OUT/{}_kraken_report# --unclassified-out $K2OUT/{}_kraken_unclass# --output $K2OUT/{}_kraken_output# >> ~/para_krak_fhi_redch.stout 2>&1 -->
-<!-- # this'll put out all the seq too. if you only want the report, send your output/unclassified ..away -->
-<!-- # try catch output, or anything else - because where does it go? -->
-<!-- ## pre-run very possibly not necessary with --memorymapping opt -->
-<!-- ##   B R A C K E N   B E A T I N G       ## =================== -->
-<!-- brthreads=10 -->
-<!-- b=$DAN/3_b2  ; mkdir $b -->
-<!-- binst=~/BioApps -->
-<!-- # K2SAMPLE=SC145C1-NS_S86 -->
-<!-- WRK=/claesson/jamie/fhi_redch -->
-<!-- K2IN=/claesson/jamie/fhi_redch/knead -->
-<!-- K2OUT=/claesson/jamie/fhi_redch/krak2 -->
-<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
-<!-- BRK=$WRK/brack ; mkdir $BRK -->
-<!-- ## build data base first, using length 80bp 35kmers, takes an hour on 25 threads -->
-<!-- ## fast as immediate  -  run bracken on the kraken_report  -  note no threads arg! -->
-<!-- # -r = read lengths (taken as the starting read length, we're at about 125 by now...) -->
-<!-- # -l = Level, def=S ; (K, P, C, O, F, G, S ) -->
-<!-- # -t = threshold, def = 10 ; level below which a taxo-branch on the kraken tree will be dropped from further assignment of abundances -->
-<!-- ls $K2OUT/* | sed -r 's/.*\/(.*)_kraken.*/\1/g' | sort | uniq | \ -->
-<!-- parallel -j 3  \ -->
-<!-- python ~/BioApps/Bracken/src/est_abundance.py -i $K2OUT/*{}*report -k $K2REFDIR/database80mers.kmer_distrib -l S -t 10 -o $BRK/{}.bracken \ -->
-<!-- > $BRK/bracken_output_82.stout -->
-<!-- # bracken -d $DB/kraken2_stnd -i $KRK/*{}_*report -o $b/{}_bracken_report.txt -r 150 -l S -t 10 > $b/bracken.stout -->
-<!-- ## combine reports to one monolith.tsv -->
-<!-- python2 ~/BioApps/Bracken/analysis_scripts/combine_bracken_outputs.py --files $BRK/*bracken -o fhi_redch_krakenStnd_bracken_combo -->
-<!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
-<!-- parallel python2 ~/BioApps/Bracken/src/kreport2mpa.py -r {} -o $BRK/{.}.mpa ::: $K2OUT/*report* > $BRK/fhi_redch_bragglers -->
-<!-- # # catch done/undone -->
-<!-- #   find $KOUT/*gz | sed -r 's/.*[\/_]([0-9]{4}[AB]?)[\/_].*/\1/g' | sort | uniq > $DAN/Materials/temp2 -->
-<!-- #   find $KRK/*report | sed -r 's/.*[\/_]([0-9]{4}[AB]?)[\/_].*/\1/g' | sort | uniq > $DAN/Materials/temp3_k -->
-<!-- #   comm -23 $DAN/Materials/temp2 $DAN/Materials/temp3_k > $DAN/Materials/krk_offenders.txt -->
-<!-- #   # include switch for outputting zero-reads - for tabulation -->
-<!-- # -->
-<!-- ##   T A X O N O M Y   -   glom from mpa output!   ## ======================================== -->
-<!-- ## own funciton gettax_kraken : hacky, ++slow, and only gets species name. Avoid. -->
-<!-- ## get all the S level assignments; trim counts ; sort; uniq -->
-<!-- grep -h '|s_' $BRK/*mpa | cut -f 1 > $BRK/bracken_82_taxa.temp -->
-<!-- sort $BRK/bracken_82_taxa.temp | uniq > $BRK/bracken_82_taxa.temp2 -->
-<!-- sed 's/|/\t/g' $BRK/bracken_82_taxa.temp2 > $BRK/fhi_redch_krakenStnd_bracken_combo_taxa_82 -->
-<!-- ## send home -->
-<!-- scp ./bracken_545_*[combo,taxa] $DSK -->
-<!-- # consider total taxonomy, but prob doesn't tell us anything re: missing levels -->
-<!-- cat $b/bracken_reports_545/*mpa | cut -f 1 > $b/bracken_545_total_tax.temp -->
-<!-- sort  $b/bracken_545_total_tax.temp | uniq > $b/bracken_545_total_tax.temp2 -->
-<!-- ``` -->
-<!-- # Checking your output -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ``` -->
 <hr />
 </div>
-</div>
-<div id="this-document-isnt-finished" class="section level1">
-<h1>this document isn’t finished!</h1>
-<p>This document is still being written. It still needs the following
-steps:</p>
-<ul>
-<li>feed clean sequences to <code>Kraken2</code></li>
-<li>sanitise the <code>Kraken2</code> output using
-<code>Bracken</code></li>
-<li>start doing the microbial ecology in <code>R</code>! But that’s a
-story for another day…</li>
-</ul>
-<hr />
 </div>
 <div id="reading-reference" class="section level1">
 <h1>Reading / Reference</h1>
 <blockquote>
-<p><a href="https://ubuntu.com/tutorials/command-line-for-beginners">Linux
-command line for beginners</a> - quite quite good!</p>
+<p><a href="https://duckduckgo.com/?q=fastqc&amp;t=vivaldi&amp;atb=v314-1&amp;ia=web">FastQC
+site + support</a> - note that it’s also available as an <code>R</code>
+library…</p>
 </blockquote>
 <blockquote>
 <p><a href="https://multiqc.info">MultiQC site + support</a></p>
 </blockquote>
 <blockquote>
 <p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic
-site</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
-manual</a></p>
+site</a> and <a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
+manual</a>.</p>
 </blockquote>
 <blockquote>
 <p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s -
 first step in <code>bash</code> superpowers</a></p>
 </blockquote>
 <blockquote>
-<p><a href="https://www.baeldung.com/linux/bash-errors">How to read an
-error</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://ostechnix.com/bash-variables-shell-scripting/">info
-on variables</a></p>
+<p><a href="https://www.marcc.jhu.edu/getting-started/additional-resources/distributing-tasks-with-slurm-and-gnu-parallel/">slurm
+: examples of fancy job-queues for supercomputers like the
+<code>HPC</code></a></p>
 </blockquote>
 </div>
 

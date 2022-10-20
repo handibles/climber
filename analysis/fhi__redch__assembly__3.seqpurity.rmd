@@ -1,0 +1,99 @@
+---
+title: 'shotgun metagenomics - sequencing QC - purifying sequences'
+author: 'IC / NPV / JFG'
+date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
+output:
+  html_document:
+    toc: TRUE
+  pdf_document: 
+    toc: TRUE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/3.seqpurity.html') })
+---
+
+# 3 decontaminate data (& check)
+
+No waffle yet!
+
+```{bash, eval = FALSE}
+
+##   k n e a d d a t a 2   =======================
+
+## kneaddata - using /data/databases/hostremoval/Homo_sapiens/
+# re-run trimmomatic disabled using --bypass-trim
+
+## trial define
+# HGR38_BT -  for bt2
+KIN=$FILT
+KOUT=$KDOUT
+KSAMPLE=SC145C1-NS_S86 #_L00*
+REFDIR=$HGR38_BT
+QCDIR=$FQC/fhi_redch_knead
+
+module load kneaddata trimmomatic   # needs trimmo, even if you don't
+mkdir $FQC/fhi_redch_knead
+
+# trial
+time kneaddata -t 4 -p 4 --bypass-trim -i $KIN/${KSAMPLE}_R1.fastq.gz -i $KIN/${KSAMPLE}_R2.fastq.gz -o $KOUT/${KSAMPLE}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KOUT/knead_${KSAMPLE}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KOUT/$KSAMPLE/*fastq # 2>&1
+
+echo '#!/bin/bash
+
+#SBATCH –-job-name=knead_fastq
+#SBATCH –-output=knead_fastq.txt
+
+#SBATCH –-ntasks=4
+#SBATCH –-time=40:00
+SAMPLE=$1
+
+IN=$2
+OUT=$3
+REFDIR=$4
+QCDIR=$5
+
+##   K N E A D D A T A
+# if youre going to change the output names, change for STOUT< GZIP, and FASTQC also
+time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1
+gzip $OUT/$SAMPLE/*fastq
+
+## mkdir
+## mkbreakfast
+## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz
+
+
+' > $MAT/slurm_kd2.sh
+
+ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd2.sh {} $FILT $KDOUT $HGR38_BT $FQC/fhi_redch_knead
+
+ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz
+
+
+```
+
+## kneaddata
+```{bash, eval = FALSE}
+```
+
+## fastqc and multiqc
+```{bash, eval = FALSE}
+```
+
+
+---
+
+# this document isn't finished!
+
+This document is still being written. It still needs the following steps:
+
+  * not really explaining the kneaddata part properly
+  * feed clean sequences to `Kraken2`
+  * sanitise the `Kraken2` output using `Bracken`
+  * start doing the microbial ecology in `R`! But that's a story for another day...
+  
+---
+
+# Reading / Reference
+
+> kneaddata
+
+> decoy genome
+
+> bowtie2 probably...

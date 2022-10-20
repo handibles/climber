@@ -1,7 +1,0 @@
-added soleley to allow building. 
-
-hate that the name is so close ot an existing folder name, but perhaps we'll find a solution to that 
-
-- likely redch and climber are different affairs, with different structures
-
-however, much of ms__climber is unsuitable to be pushed to public, even if the idea of unifying the site and the development within a project (different branches) 
