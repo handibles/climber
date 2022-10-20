@@ -7,11 +7,11 @@ Some basic steps in microbial ecology, focusing on the processing of `NextGen` i
 
 ### Metagenomic Assembly
 
-  * <a href="analysis/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data :chicken: :cheese: :DNA: </a>
+  * <a href="analysis/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data</a>
+
+:wink:
 
 
 
 
-
-
-  <a href="climber_todo.md">.</a>
+  <a href="climber_todo.html">.</a>
