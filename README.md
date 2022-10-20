@@ -1,56 +1,22 @@
-# sb_4.11
-
-Rename: ```SeqBiome__STC``` 
-
-Or possibly ```SB__STC```
-
-Even more likely, fork this and make it open.
+# CLIMBER - CLI, Microbial Ecology, and R
 
 
-quickref:
-```
-# SSH clone 
-git clone git@github.com:handibles/sb_4.11
-# HTTPS clone
-git clone https://github.com/handibles/sb_4.11
+Hosted page for doing a number of basic steps in microbial ecology, focusing on the processing of `NextGen` illumina data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets. 
 
+If this appeals to you (and why wouldn't it), please dampen your squibs slightly - it's not written yet, and certianly barely ready to be used. Realistically, we'll need to separate things out into `recipes`, and have them cross-linked. This perhaps could be followed up with a `justthecode` flow for those who are keen to get thigns very, very wrong.
 
-# commit
-git init
-git add .
-git commit -m "first stash and commit"                                 # note comment arg
-git remote add origin github@github.com:handibles/XXX_REPO_NAME_XXX    # note syntax = ssh
-git push -u origin master                                              # local -> cloud
-```
-
-This repo should be pullable and usable for SB projects (16S focused at the mo).
-
-general structure
+Enough of this; lets make like tracked changes and train.
 
 ```
-      analysis
-        ¬| bash - pipeline, rsync, misc.
-         | py   - misc.
-         | R    - scripts and functions
+      preamble
+        ¬| see list of topics in analysis/*preamble*
 
-      documents
-        ¬| reproducibility guidelines etc
-         | outputs, generated HTML or PDF docs
+      shotgun assembly
+        ¬| assembly     : all the standard things to do
 
-      input
-        ¬| external data
-
-      output
-        ¬| outputs from different stages 
-
-      vis
-        ¬| visual outputs
-
-      SB__4.11.Rproj    # note prob with nomenclature
+      amplicon assembly
+        ¬| assembly     : all the standard things to do
 
 ```
-
-See 0.0 for the nascent blog-ish post detailing creating this repo. Should ideally be moved to a more narrative repo of unknown descent. 
-
 
 
