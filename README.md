@@ -1,4 +1,11 @@
-# `CLI`, `M`icro`b`ial `E`cology, and `R`
+---
+title: '`CLI`, `M`icro`b`ial `E`cology, and `R`'
+output:
+  html_document:
+    output_file: "README.MD"
+    toc: FALSE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../README.html') })
+---
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
@@ -31,7 +38,7 @@ Not yet written. The initial steps (setup, get data, QC) are very similar in mos
 Not yet written. This is the real magic, and we get to make _pictures_.
 
 
-
+---
   <a href="documents/climber_todo.html">`</a>
 
 <img src="vis/ucc.png" width="150" align="center" /> | <img src="vis/teag.png" width="150" align="center" /> | <img src="vis/v1group.png" width="150" align="center"/>

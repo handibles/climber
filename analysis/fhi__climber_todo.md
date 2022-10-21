@@ -1,4 +1,13 @@
-#  - CLI, Microbial Ecology, and R
+---
+title: 'climber - tasks outstanding'
+output:
+  html_document:
+    output_file: "climber_todo.html"
+    toc: FALSE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/climber_todo.html') })
+---
+
+#  CLI, Microbial Ecology, and R
 
 
 Some basic steps in microbial ecology, focusing on the processing of `NextGen` illumina data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets. 
@@ -49,6 +58,11 @@ Should eventually cover:
 ### Microbial Community Analysis
 
   * if you thought the above list was bad...
+  
+  
+#### Presentation
+
+Probably would do the best / look the best running on jekyll wiht the readthedocs theme (nice in teal, no?)
   
   
 #### About

@@ -11,7 +11,7 @@
 
 
 
-<title>climber_todo</title>
+<title>climber - tasks outstanding</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -298,8 +298,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -307,16 +307,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -361,12 +354,31 @@ pre code {
 
 
 
+<h1 class="title toc-ignore">climber - tasks outstanding</h1>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#cli-microbial-ecology-and-r">CLI, Microbial Ecology, and
+R</a>
+<ul>
+<li><a href="#guides-so-far">guides so far:</a>
+<ul>
+<li><a href="#metagenomic-assembly">Metagenomic Assembly</a></li>
+</ul></li>
+<li><a href="#guides-yet-to-start">guides yet to start:</a>
+<ul>
+<li><a href="#metagenomic-assembly-1">Metagenomic Assembly</a></li>
+<li><a href="#microbial-community-analysis">Microbial Community
+Analysis</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
 
 <div id="cli-microbial-ecology-and-r" class="section level1">
-<h1>- CLI, Microbial Ecology, and R</h1>
+<h1>CLI, Microbial Ecology, and R</h1>
 <p>Some basic steps in microbial ecology, focusing on the processing of
 <code>NextGen</code> illumina data, into either <code>amplicon</code>
 (e.g. 16S) or <code>metagenomic</code> (e.g. shotgun) datasets.</p>
@@ -424,6 +436,18 @@ Virulence, carbohydrate metabolism, and others</a></p></li>
 <ul>
 <li>if you thought the above list was bad…</li>
 </ul>
+<div id="presentation" class="section level4">
+<h4>Presentation</h4>
+<p>Probably would do the best / look the best running on jekyll wiht the
+readthedocs theme (nice in teal, no?)</p>
+</div>
+<div id="about" class="section level4">
+<h4>About</h4>
+<p>Written 2022 with the help of Jamie FitzGerald, Ines Calvete, Nuria
+Pena-Vidal, and all or most of those at UCC’s <a href="http://github.com/ClaessonLabUCC">Claesson Lab</a>, and Teagasc’s
+<a href="https://www.teagasc.ie/news--events/daily/other/teagascs-vision-1-lab-wins-at-the-irish-laboratory-awards.php">Vision1</a>
+group.</p>
+</div>
 </div>
 </div>
 </div>
