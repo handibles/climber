@@ -299,8 +299,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -308,16 +308,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -365,38 +358,36 @@ pre code {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">21 Oct 2022, 16:38</h4>
+<h4 class="date">21 Oct 2022, 22:00</h4>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
-<li><a href="#setup-your-environment" id="toc-setup-your-environment">0
-- setup your environment</a></li>
-<li><a href="#get-the-sequence-data-check" id="toc-get-the-sequence-data-check">1 - get the sequence data (&amp;
-check)</a></li>
-<li><a href="#quality-control-check" id="toc-quality-control-check">2 -
-Quality Control (&amp; check)</a>
-<ul>
-<li><a href="#first-pass-with-trimmomatic" id="toc-first-pass-with-trimmomatic">First Pass with
-<code>Trimmomatic</code></a></li>
-<li><a href="#second-pass-etc." id="toc-second-pass-etc.">Second Pass
-etc.</a></li>
-</ul></li>
-<li><a href="#decontaminate-data-check" id="toc-decontaminate-data-check">3 - decontaminate data (&amp;
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#setup-your-environment">0 - setup your
+environment</a></li>
+<li><a href="#get-the-sequence-data-check">1 - get the sequence data
+(&amp; check)</a></li>
+<li><a href="#quality-control-check">2 - Quality Control (&amp;
 check)</a>
 <ul>
-<li><a href="#manually-removing-contaminants---bowtie2-reference-genomes" id="toc-manually-removing-contaminants---bowtie2-reference-genomes">manually
+<li><a href="#first-pass-with-trimmomatic">First Pass with
+<code>Trimmomatic</code></a></li>
+<li><a href="#second-pass-etc.">Second Pass etc.</a></li>
+</ul></li>
+<li><a href="#decontaminate-data-check">3 - decontaminate data (&amp;
+check)</a>
+<ul>
+<li><a href="#manually-removing-contaminants---bowtie2-reference-genomes">manually
 removing contaminants - <code>bowtie2</code> + reference
 genomes</a></li>
-<li><a href="#contaminant-removal-pipeline---kneaddata" id="toc-contaminant-removal-pipeline---kneaddata">contaminant-removal
+<li><a href="#contaminant-removal-pipeline---kneaddata">Contaminant-removal
 pipeline - <code>KneadData</code></a></li>
 </ul></li>
-<li><a href="#this-document-isnt-finished" id="toc-this-document-isnt-finished">this document isn’t
+<li><a href="#this-document-isnt-finished">this document isn’t
 finished!</a></li>
-<li><a href="#reading-reference" id="toc-reading-reference">Reading /
-Reference</a></li>
+<li><a href="#reading-reference">Reading / Reference</a></li>
 </ul>
 </div>
 
@@ -604,26 +595,6 @@ KROUT=$WRK/4__krak2
 #!# set a filename to test things on
 TEST=SAMPLENAME
 </code></pre>
-<!-- ```{bash, eval = FALSE} -->
-<!-- # databases for different tools -->
-<!-- DB=/home/jfg/data/ref -->
-<!-- HGR38_BT=$DB/hg38 -->
-<!-- K2REFDIR=$DB/Kraken2_GTDB_r89_54k -->
-<!-- # our overall data structure -->
-<!-- RAW=/home/jfg/data/raw/ms__sile_raw -->
-<!-- WRK=/home/jfg/data/ferment/ms__sile -->
-<!-- # scripts, and slurms for queueing up jobs -->
-<!-- MAT=$WRK/Materials -->
-<!-- SLURM=$WRK/slurms -->
-<!-- # outputs etc -->
-<!-- QC=$WRK/1__qc -->
-<!-- FQC=$QC/fastqc -->
-<!-- FILT=$WRK/2__filt -->
-<!-- KDOUT=$WRK/3__knead -->
-<!-- KROUT=$WRK/4__krak2 -->
-<!-- #!# set a filename to test things on -->
-<!-- TEST=ARG-Sam6_S41 -->
-<!-- ``` -->
 </div>
 <div id="what-tools-do-we-need" class="section level4">
 <h4>What tools do we need?</h4>
@@ -1165,8 +1136,8 @@ remembering what happened much easier.</p>
 <p>Filtering and trimming in the previous steps should have removed
 nearly all (🤞) of the <em>fake sequences</em>: low-quality bases that
 can not be trusted (trimming), as well as artificial sequences
-introduced by library-preparation and sequencing (filtering).</p>
-<p>Next, it is a very good idea to consider what <em>real sequences</em>
+introduced by library-preparation and sequencing (filtering). %&gt;%
+Next, it is a very good idea to consider what <em>real sequences</em>
 have been included in our dataset, but do not belong in our analysis.
 Contaminants could come from:</p>
 <ul>
@@ -1291,19 +1262,21 @@ time bowtie2-build --t 9 \
 </code></pre>
 </div>
 <div id="contaminant-removal-pipeline---kneaddata" class="section level2">
-<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
+<h2>Contaminant-removal pipeline - <code>KneadData</code></h2>
 <p>The <a href="https://github.com/biobakery/kneaddata"><code>kneaddata</code></a>
 pipeline was developed to combine both trimming and filtering
-(<code>trimmomatic</code>), and this contaminant-matching step
-(<code>bowtie</code>) for processing samples from the human gut. It can
+(<code>Trimmomatic</code>), and this contaminant-matching step
+(<code>BowTie2</code>) for processing samples from the human gut. It can
 also be adapted for other types of sample (e.g. foods, or other
 hosts).</p>
 <pre class="bash"><code># re-run trimmomatic disabled using --bypass-trim
-
 module load kneaddata trimmomatic   # needs trimmo, even if you don&#39;t
 
 # trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KDOUT/$TEST/*fastq # 2&gt;&amp;1
+time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic 
+
+## is the output compressed?...
+# ; gzip $KDOUT/$TEST/*fastq # 2&gt;&amp;1
 </code></pre>
 <pre class="bash"><code>echo &#39;#!/bin/bash
 
@@ -1312,26 +1285,30 @@ time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${T
 
 #SBATCH –-ntasks=4
 #SBATCH –-time=40:00
-SAMPLE=$1
 
+SAMPLE=$1
 IN=$2
 OUT=$3
 REFDIR=$4
 
 ##   K N E A D D A T A
 # if youre going to change the output names, change for STOUT&lt; GZIP, and FASTQC also
-time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g &gt; $OUT/knead_${SAMPLE}.stout 2&gt;&amp;1
-gzip $OUT/$SAMPLE/*fastq
+time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g &gt; $OUT/knead_${SAMPLE}.stout 2&gt;&amp;1
 
+#gzip $OUT/$SAMPLE/*fastq
 
 &#39; &gt; $MAT/slurm_kd.sh
 
-ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
+# demonstrate use of parallel 
+ls $FILT/*R[12]_trimm.fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel ls $FILT/{}_R1_trimm.fastq.gz
 
-ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz
+# actual kneads
+ls $FILT/*R[12]_trimm.fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
 </code></pre>
 <div id="fastqc-and-multiqc-2" class="section level4">
 <h4>fastqc and multiqc</h4>
+<p>As above, we check the output quality (and can check how many reads
+etc. make it through).</p>
 <pre class="bash"><code>mkdir $FQC/fhi_redch_knead
 </code></pre>
 <!-- # 4 microbial community profiling -->

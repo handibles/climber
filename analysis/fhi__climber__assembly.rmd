@@ -155,32 +155,6 @@ TEST=SAMPLENAME
 
 ```
 
-<!-- ```{bash, eval = FALSE} -->
-<!-- # databases for different tools -->
-<!-- DB=/home/jfg/data/ref -->
-<!-- HGR38_BT=$DB/hg38 -->
-<!-- K2REFDIR=$DB/Kraken2_GTDB_r89_54k -->
-
-<!-- # our overall data structure -->
-<!-- RAW=/home/jfg/data/raw/ms__sile_raw -->
-<!-- WRK=/home/jfg/data/ferment/ms__sile -->
-
-<!-- # scripts, and slurms for queueing up jobs -->
-<!-- MAT=$WRK/Materials -->
-<!-- SLURM=$WRK/slurms -->
-
-<!-- # outputs etc -->
-<!-- QC=$WRK/1__qc -->
-<!-- FQC=$QC/fastqc -->
-<!-- FILT=$WRK/2__filt -->
-<!-- KDOUT=$WRK/3__knead -->
-<!-- KROUT=$WRK/4__krak2 -->
-
-<!-- #!# set a filename to test things on -->
-<!-- TEST=ARG-Sam6_S41 -->
-
-<!-- ``` -->
-
 
 #### What tools do we need?
 
@@ -194,7 +168,7 @@ Next, we tell the HPC which programs we'll need, which are parcelled into "modul
   * `GNU-parallel` for case where we can run many jobs in parallel.
 
 ```{bash, eval = FALSE}
-	module load parallel fastqc multiqc kraken2
+module load parallel fastqc multiqc kraken2
 ```
 
 
@@ -209,14 +183,14 @@ ls $QC
 In our unified data (`$RAW`) and work folders (`$WRK`), we create different folders for each output, using the variables above. It's not a problem if the folder already exists.
 
 ```{bash, eval = FALSE}
-	# make analysis dirs
-	mkdir $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
+# make analysis dirs
+mkdir $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
 
-	# make script dirs etc.
-	mkdir $MAT $SLURM
+# make script dirs etc.
+mkdir $MAT $SLURM
 
-  # make dirs for qc outputs
-	mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_trimm $FQC/multi_raw $FQC/multi_trimm
+# make dirs for qc outputs
+mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_trimm $FQC/multi_raw $FQC/multi_trimm
 ```
 
 
@@ -238,6 +212,7 @@ ls -lsh $RAW/$TEST*            # file details
 zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines
 less -S $RAW/$TEST*            # read through file, press q to quit
 ```
+
 
 ##### FastQC and MultiQC
 
@@ -530,7 +505,7 @@ Sometimes, it might be necessary to use `Trimmomatic` more than once before the 
 # 3 - decontaminate data (& check)
 
 Filtering and trimming in the previous steps should have removed nearly all (`r emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
-
+%>% 
 Next, it is a very good idea to consider what _real sequences_ have been included in our dataset, but do not belong in our analysis. Contaminants could come from: 
 
   * the experimental environment: host DNA, DNA from surfaces or substrates (foods?) in the environment
@@ -604,7 +579,6 @@ parallel gzip {} ::: $RAW/ref/*fna
 It's a lot of data! We then need use `bowtie2` to build reference databases for all of these genomes. `Threads=9` because available locally; one-off leads to poor `slurm` adherence.
 
 ```{bash, eval=FALSE}
-
 mkdir ~/data/ref/bt2_indices
 
 # bowtie2-build [options]* <reference_in> <bt2_base>
@@ -623,23 +597,27 @@ time bowtie2-build --t 9 \
   ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2 > \
   ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2.buildlog 
 
-
 ```
 
 
-## contaminant-removal pipeline - `KneadData`
+## Contaminant-removal pipeline - `KneadData`
 
-The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`trimmomatic`), and this contaminant-matching step (`bowtie`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts). 
+The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts). 
 
 ```{bash, eval = FALSE}
 # re-run trimmomatic disabled using --bypass-trim
-
 module load kneaddata trimmomatic   # needs trimmo, even if you don't
 
 # trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KDOUT/$TEST/*fastq # 2>&1
+time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic 
+
+## is the output compressed?...
+# ; gzip $KDOUT/$TEST/*fastq # 2>&1
 
 ```
+
+
+Super `bash` `slurm` powers. 
 
 ```{bash, eval=FALSE}
 echo '#!/bin/bash
@@ -649,28 +627,30 @@ echo '#!/bin/bash
 
 #SBATCH –-ntasks=4
 #SBATCH –-time=40:00
-SAMPLE=$1
 
+SAMPLE=$1
 IN=$2
 OUT=$3
 REFDIR=$4
 
 ##   K N E A D D A T A
 # if youre going to change the output names, change for STOUT< GZIP, and FASTQC also
-time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1
-gzip $OUT/$SAMPLE/*fastq
+time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1
 
+#gzip $OUT/$SAMPLE/*fastq
 
 ' > $MAT/slurm_kd.sh
 
-ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
-
-ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz
-
+# actual kneads
+ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
 
 ```
 
+
 #### fastqc and multiqc
+
+As above, we check the output quality (and can check how many reads etc. make it through).
+
 ```{bash, eval = FALSE}
 mkdir $FQC/fhi_redch_knead
 
