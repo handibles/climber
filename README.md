@@ -3,7 +3,12 @@
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
-![ucc](/vis/ucc.png)
+<img src="/vis/ucc.png" width="100" />
+
+<img src="/vis/teag.png" width="100" />
+
+<img src="/vis/v1group.png" width="100" />
+
 
 ## guides so far:
 
