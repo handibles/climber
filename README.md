@@ -15,10 +15,10 @@ Combining all the steps:
 
 The same process as above but separated into the different steps:
 
-  1. <a href="/documents/0.setup.html">0 - Setting up your analysis</a>
-  2. <a href="/documents/1.checkdata.html">1 - checking your sequence data</a>
-  3. <a href="/documents/2.seqcleaning.html">2 - sequencing QC - filtering and trimming your sequences</a>
-  4. <a href="/documents/3.seqpurity.html">3 - sequencing QC - purifying your sequences</a>
+  0. <a href="/documents/0.setup.html">Setting up your analysis</a>
+  1. <a href="/documents/1.checkdata.html">Checking your sequence data</a>
+  2. <a href="/documents/2.seqcleaning.html">Sequencing QC - filtering and trimming your sequences</a>
+  3. <a href="/documents/3.seqpurity.html">Sequencing QC - purifying your sequences</a>
 
 
 ### Amplicon data (e.g. 16S)

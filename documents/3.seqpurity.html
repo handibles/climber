@@ -299,8 +299,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "\e259";
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -308,9 +308,16 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "\e258";
-  font-family: 'Glyphicons Halflings';
+  content: "";
   border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -358,48 +365,174 @@ pre code {
 <h1 class="title toc-ignore">shotgun metagenomics - sequencing QC -
 purifying sequences</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">20 Oct 2022, 23:10</h4>
+<h4 class="date">21 Oct 2022, 16:41</h4>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#decontaminate-data-check">3 decontaminate data (&amp;
+<li><a href="#decontaminate-data-check" id="toc-decontaminate-data-check">3 - decontaminate data (&amp;
 check)</a>
 <ul>
-<li><a href="#kneaddata">kneaddata</a></li>
-<li><a href="#fastqc-and-multiqc">fastqc and multiqc</a></li>
+<li><a href="#manually-removing-contaminants---bowtie2-reference-genomes" id="toc-manually-removing-contaminants---bowtie2-reference-genomes">manually
+removing contaminants - <code>bowtie2</code> + reference
+genomes</a></li>
+<li><a href="#contaminant-removal-pipeline---kneaddata" id="toc-contaminant-removal-pipeline---kneaddata">contaminant-removal
+pipeline - <code>KneadData</code></a></li>
 </ul></li>
-<li><a href="#this-document-isnt-finished">this document isn’t
+<li><a href="#this-document-isnt-finished" id="toc-this-document-isnt-finished">this document isn’t
 finished!</a></li>
-<li><a href="#reading-reference">Reading / Reference</a></li>
+<li><a href="#reading-reference" id="toc-reading-reference">Reading /
+Reference</a></li>
 </ul>
 </div>
 
 <div id="decontaminate-data-check" class="section level1">
-<h1>3 decontaminate data (&amp; check)</h1>
-<p>No waffle yet!</p>
-<pre class="bash"><code>
-##   k n e a d d a t a 2   =======================
-
-## kneaddata - using /data/databases/hostremoval/Homo_sapiens/
-# re-run trimmomatic disabled using --bypass-trim
-
-## trial define
-# HGR38_BT -  for bt2
-KIN=$FILT
-KOUT=$KDOUT
-KSAMPLE=SC145C1-NS_S86 #_L00*
-REFDIR=$HGR38_BT
-QCDIR=$FQC/fhi_redch_knead
-
-module load kneaddata trimmomatic   # needs trimmo, even if you don&#39;t
-mkdir $FQC/fhi_redch_knead
-
-# trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $KIN/${KSAMPLE}_R1.fastq.gz -i $KIN/${KSAMPLE}_R2.fastq.gz -o $KOUT/${KSAMPLE}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KOUT/knead_${KSAMPLE}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KOUT/$KSAMPLE/*fastq # 2&gt;&amp;1
+<h1>3 - decontaminate data (&amp; check)</h1>
+<p>Filtering and trimming in the previous steps should have removed
+nearly all (🤞) of the <em>fake sequences</em>: low-quality bases that
+can not be trusted (trimming), as well as artificial sequences
+introduced by library-preparation and sequencing (filtering).</p>
+<p>Next, it is a very good idea to consider what <em>real sequences</em>
+have been included in our dataset, but do not belong in our analysis.
+Contaminants could come from:</p>
+<ul>
+<li>the experimental environment: host DNA, DNA from surfaces or
+substrates (foods?) in the environment</li>
+<li>the method used: i.e. sampling methodology, lab equipment</li>
+<li>the researcher: sneezing, dribbling, rhinotillexis, colds, coughs,
+sneezes, or deep PhD-related sighs</li>
+</ul>
+<p>In some environments (e.g. faeces, sludge, soil), contaminating
+sequences might comprise a small proportion of the total sequences, and
+are unlikely to change the “big picture” of the dataset, but could
+interfere with analysis of specific microbes, or metabolic functions in
+ways we cannot predict. In other environments (e.g. microbiomes from
+biopsy, the aeolian microbiome), contaminants can make up the majority
+of a sample, altering the “big picture” significantly, and making it
+difficult to draw meaningful conclusions.</p>
+<p>To address this as best we can, we remove contaminants based on a
+database of reference sequences <strong>appropriate to our
+study</strong>. We collect these sequences (search for the host, known
+contaminants, artificial sequences, foodstuffs, etc.), compile them into
+a database (i.e. a big file that’s formatted so that it’s easy for
+computers to search through it quickly), and then ask a program
+(e.g. the DNA-DNA alignment program, <code>bowtie2</code>) to look for,
+and remove, any sequences that match those contaminants.</p>
+<div id="manually-removing-contaminants---bowtie2-reference-genomes" class="section level2">
+<h2>manually removing contaminants - <code>bowtie2</code> + reference
+genomes</h2>
+<p>We need reference genomes relevant to our experiment. For this
+tutorial, we consider several possible sources of host
+contamination:</p>
+<ul>
+<li><a href="https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001405.40/">human
+genome, assembly <code>GRCh38.p14, GenBank GCF_000001405.40</code></a> -
+contamination from the preparation, extraction, &amp; sampling</li>
+<li><a href="https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/README_human_reference_20110707">the
+“decoy genome”, <code>hs37d5ss</code> (’11)</a> - a bundle of synthetic,
+virus-associated, and other miscellaneous sequences that don’t map well
+from/to the human genome (<a href="http://www.cureffi.org/2013/02/01/the-decoy-genome/">see more
+jhere</a>)</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCA_021234555.1/">the
+cow genome, GenBank <code>GCA_021234555.1</code> (’21, contig/scaffold
+N50s: 50M/104M)</a> - from the source milk</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_016772045.1/">the
+sheep genome, GenBank <code>GCA_016772045.1</code> (’21, contig/scaffold
+N50s: 43M/101M)</a> - from the source milk</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_001704415.2/">the
+goat genome, GenBank <code>GCA_001704415.2</code> (’16, contig/scaffold
+N50s: 26M/87M)</a> - from the source milk</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_016699485.2/">the
+chicken genome, genBank <code>GCA_016699485.1</code> (’21,
+contig/scaffold N50s: 19M/91M)</a> - host for the chicken gut
+microbiome</li>
+</ul>
+<p>We will first obtain all of these sequences from the NCBI
+(should/could use ENA…)</p>
+<pre class="bash"><code># download to our raw data folder!
 
 echo &#39;#!/bin/bash
+
+cd $1
+
+# download your own genome (more or less) - 1.2 GB, 12min :: from the NCBI browser https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001405.40/
+curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_000001405.40/download?filename=GCF_000001405.40.zip&quot; -H &quot;Accept: application/zip&quot;
+
+# decoy genome - 9 MB
+wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5ss.fa.gz
+
+# cow genome - 825 MB, 5min
+curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCA_021234555.1/download?filename=GCA_021234555.1.zip&quot; -H &quot;Accept: application/zip&quot;
+
+# sheep genome - 890 MB, 4min
+curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_016772045.1/download?filename=GCF_016772045.1.zip&quot; -H &quot;Accept: application/zip&quot;
+
+# goat genome - 930 MB, 3min
+curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_001704415.2/download?filename=GCF_001704415.2.zip&quot; -H &quot;Accept: application/zip&quot;
+
+# chicken genome - 440 MB, 1min
+curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_016699485.2/download?filename=GCF_016699485.2.zip&quot; -H &quot;Accept: application/zip&quot;&#39; &gt; /data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh
+
+# do check that curl is installed!
+curl -h
+# if not, try activating it: &quot;module load curl&quot;
+
+# give &quot;run&quot; permission for script to be run
+chmod +x /data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh
+# make a dir for files - just in case RAW isn&#39;t added as a variable
+mkdir /data/Food/primary/R0936_redcheese/ref
+# run the script while pointing at those files
+/data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh /data/Food/primary/R0936_redcheese/ref 
+</code></pre>
+<p>Our genomes should be under the directory
+<code>/ncbi_dataset/data/&lt;genbank-accession&gt;/</code>, and will be
+the largest <code>file.fna</code> in there. Extract them to your
+<code>$RAW/ref</code> folder, and then compress the <code>.fna</code> to
+<code>.fna.gz</code> with <code>gzip</code> to save space. Genome data
+is fairly dense, so this will/might only compress to about 1/3 the raw
+size.</p>
+<pre class="bash"><code>parallel gzip {} ::: $RAW/ref/*fna</code></pre>
+<p>It’s a lot of data! We then need use <code>bowtie2</code> to build
+reference databases for all of these genomes. <code>Threads=9</code>
+because available locally; one-off leads to poor <code>slurm</code>
+adherence.</p>
+<pre class="bash"><code>
+mkdir ~/data/ref/bt2_indices
+
+# bowtie2-build [options]* &lt;reference_in&gt; &lt;bt2_base&gt;
+# 19 seconds for decoy, 9 threads, 15GB RAM
+time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
+
+# 10min for chicken, 9 threads, 15GB RAM
+time bowtie2-build --t 9 \
+  ~/data/ref/bt2_indices/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz \
+  ~/data/ref/bt2_indices/broiler_GRCg7b.bt2 &gt; \
+  ~/data/ref/bt2_indices/broiler_GRCg7b.bt2.buildlog 
+
+# cow ... 
+time bowtie2-build --t 9 \
+  ~/data/ref/bt2_indices/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz \
+  ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2 &gt; \
+  ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2.buildlog 
+</code></pre>
+</div>
+<div id="contaminant-removal-pipeline---kneaddata" class="section level2">
+<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
+<p>The <a href="https://github.com/biobakery/kneaddata"><code>kneaddata</code></a>
+pipeline was developed to combine both trimming and filtering
+(<code>trimmomatic</code>), and this contaminant-matching step
+(<code>bowtie</code>) for processing samples from the human gut. It can
+also be adapted for other types of sample (e.g. foods, or other
+hosts).</p>
+<pre class="bash"><code># re-run trimmomatic disabled using --bypass-trim
+
+module load kneaddata trimmomatic   # needs trimmo, even if you don&#39;t
+
+# trial
+time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KDOUT/$TEST/*fastq # 2&gt;&amp;1
+</code></pre>
+<pre class="bash"><code>echo &#39;#!/bin/bash
 
 #SBATCH –-job-name=knead_fastq
 #SBATCH –-output=knead_fastq.txt
@@ -411,32 +544,25 @@ SAMPLE=$1
 IN=$2
 OUT=$3
 REFDIR=$4
-QCDIR=$5
 
 ##   K N E A D D A T A
 # if youre going to change the output names, change for STOUT&lt; GZIP, and FASTQC also
 time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g &gt; $OUT/knead_${SAMPLE}.stout 2&gt;&amp;1
 gzip $OUT/$SAMPLE/*fastq
 
-## mkdir
-## mkbreakfast
-## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz
 
+&#39; &gt; $MAT/slurm_kd.sh
 
-&#39; &gt; $MAT/slurm_kd2.sh
-
-ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd2.sh {} $FILT $KDOUT $HGR38_BT $FQC/fhi_redch_knead
+ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
 
 ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz
 </code></pre>
-<div id="kneaddata" class="section level2">
-<h2>kneaddata</h2>
-<pre class="bash"><code></code></pre>
-</div>
-<div id="fastqc-and-multiqc" class="section level2">
-<h2>fastqc and multiqc</h2>
-<pre class="bash"><code></code></pre>
+<div id="fastqc-and-multiqc" class="section level4">
+<h4>fastqc and multiqc</h4>
+<pre class="bash"><code>mkdir $FQC/fhi_redch_knead
+</code></pre>
 <hr />
+</div>
 </div>
 </div>
 <div id="this-document-isnt-finished" class="section level1">
@@ -459,10 +585,13 @@ story for another day…</li>
 <p>kneaddata</p>
 </blockquote>
 <blockquote>
+<p>genome data…</p>
+</blockquote>
+<blockquote>
 <p>decoy genome</p>
 </blockquote>
 <blockquote>
-<p>bowtie2 probably…</p>
+<p>bowtie2…</p>
 </blockquote>
 </div>
 
