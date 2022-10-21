@@ -1,6 +1,4 @@
-<img src="vis/ucc.png" width="50" /> | <img src="vis/teag.png" width="50" /> | <img src="vis/v1group.png" width="50" />
-
-[<img src="/vis/v1group.png" width="50" />](/vis/v1group.png)
+<img src="vis/ucc.png" width="150" align="center" /> | <img src="vis/teag.png" width="150" align="center" /> | <img src="vis/v1group.png" width="150" align="center"/>
 
 
 # `CLI`, `M`icro`b`ial `E`cology, and `R`
