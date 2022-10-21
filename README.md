@@ -1,4 +1,4 @@
-<img src="/vis/ucc.png" width="50" /> | <img src="/vis/teag.png" width="50" /> | <img src="/vis/v1group.png" width="50" />
+<img src="vis/ucc.png" width="50" /> | <img src="vis/teag.png" width="50" /> | <img src="vis/v1group.png" width="50" />
 
 [<img src="/vis/v1group.png" width="50" />](/vis/v1group.png)
 
