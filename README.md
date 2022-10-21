@@ -1,14 +1,6 @@
----
-title: '`CLI`, `M`icro`b`ial `E`cology, and `R`'
-output:
-  html_document:
-    output_file: "README.MD"
-    toc: FALSE
-knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../README.html') })
----
+# `CLI`, `M`icro`b`ial `E`cology, and `R`'
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
-
 
 
 ## guides so far:
@@ -17,7 +9,7 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
 Combining all the steps:
 
-  * <a href="documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data</a>
+  * <a href="documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
 
 
 The same process as above but separated into the different steps:
