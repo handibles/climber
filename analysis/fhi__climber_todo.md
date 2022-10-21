@@ -49,3 +49,10 @@ Should eventually cover:
 ### Microbial Community Analysis
 
   * if you thought the above list was bad...
+  
+  
+#### About
+
+Written 2022 with the help of Jamie FitzGerald, Ines Calvete, Nuria Pena-Vidal, and all or most of those at UCC's [Claesson Lab](http://github.com/ClaessonLabUCC), and Teagasc's [Vision1](https://www.teagasc.ie/news--events/daily/other/teagascs-vision-1-lab-wins-at-the-irish-laboratory-awards.php) group.
+
+

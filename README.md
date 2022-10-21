@@ -1,7 +1,7 @@
-# `climber` - `CLI`, `M`icrobial `E`cology, and `R`
+# `CLI`, `M`icro`b`ial `E`cology, and `R`
 
 
-Some basic steps in microbial ecology, focusing on the processing of `NextGen` illumina data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets. 
+Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
 
 ## guides so far:
@@ -23,7 +23,7 @@ The same process as above but separated into the different steps:
 
 ### Amplicon data (e.g. 16S)
 
-Not yet written. The initial steps (setup, get data, QC) are very similar in most cases (remember to cut off your primers!), but are followed by a denoising step (`DADA2`) and optionally attempting to predict the metabolic capabilities of the communities at hand (`PICRUSt2`)
+Not yet written. The initial steps (setup, get data, QC) are very similar in most cases (remember to cut off your primers!), but are followed by a denoising step (`DADA2`) and optionally an attempt to predict the metabolic capabilities of the communities at hand (`PICRUSt2`).
 
 
 ### Microbial Ecology (and `R`)
@@ -32,5 +32,4 @@ Not yet written. This is the real magic, and we ge to make _pictures_.
 
 
 
-
-  <a href="documents/climber_todo.html">.</a>
+  <a href="documents/climber_todo.html">`</a>
