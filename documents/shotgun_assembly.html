@@ -365,7 +365,7 @@ pre code {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">21 Oct 2022, 16:19</h4>
+<h4 class="date">21 Oct 2022, 16:38</h4>
 
 </div>
 
@@ -384,11 +384,14 @@ Quality Control (&amp; check)</a>
 <li><a href="#second-pass-etc." id="toc-second-pass-etc.">Second Pass
 etc.</a></li>
 </ul></li>
-<li><a href="#decontaminate-data-check" id="toc-decontaminate-data-check">3 decontaminate data (&amp; check)</a>
+<li><a href="#decontaminate-data-check" id="toc-decontaminate-data-check">3 - decontaminate data (&amp;
+check)</a>
 <ul>
-<li><a href="#kneaddata" id="toc-kneaddata">kneaddata</a></li>
-<li><a href="#fastqc-and-multiqc-2" id="toc-fastqc-and-multiqc-2">fastqc
-and multiqc</a></li>
+<li><a href="#manually-removing-contaminants---bowtie2-reference-genomes" id="toc-manually-removing-contaminants---bowtie2-reference-genomes">manually
+removing contaminants - <code>bowtie2</code> + reference
+genomes</a></li>
+<li><a href="#contaminant-removal-pipeline---kneaddata" id="toc-contaminant-removal-pipeline---kneaddata">contaminant-removal
+pipeline - <code>KneadData</code></a></li>
 </ul></li>
 <li><a href="#this-document-isnt-finished" id="toc-this-document-isnt-finished">this document isn’t
 finished!</a></li>
@@ -580,7 +583,7 @@ output goes inside this dir.</li>
 </ul>
 <pre class="bash"><code># databases for different tools
 DB=/data/data/databases
-HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2/
+HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2/     # &lt;?&gt;
 K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
 
 # our overall data structure
@@ -1158,7 +1161,7 @@ remembering what happened much easier.</p>
 </div>
 </div>
 <div id="decontaminate-data-check" class="section level1">
-<h1>3 decontaminate data (&amp; check)</h1>
+<h1>3 - decontaminate data (&amp; check)</h1>
 <p>Filtering and trimming in the previous steps should have removed
 nearly all (🤞) of the <em>fake sequences</em>: low-quality bases that
 can not be trusted (trimming), as well as artificial sequences
@@ -1189,9 +1192,9 @@ a database (i.e. a big file that’s formatted so that it’s easy for
 computers to search through it quickly), and then ask a program
 (e.g. the DNA-DNA alignment program, <code>bowtie2</code>) to look for,
 and remove, any sequences that match those contaminants.</p>
-<div id="manually-removing-contaminants---bowtie2-reference-genomes" class="section level4">
-<h4>manually removing contaminants - <code>bowtie2</code> + reference
-genomes</h4>
+<div id="manually-removing-contaminants---bowtie2-reference-genomes" class="section level2">
+<h2>manually removing contaminants - <code>bowtie2</code> + reference
+genomes</h2>
 <p>We need reference genomes relevant to our experiment. For this
 tutorial, we consider several possible sources of host
 contamination:</p>
@@ -1256,14 +1259,17 @@ mkdir /data/Food/primary/R0936_redcheese/ref
 /data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh /data/Food/primary/R0936_redcheese/ref 
 </code></pre>
 <p>Our genomes should be under the directory
-<code>/ncbi_dataset/data/(GCF_016699485.2&lt;genbank-accession&gt;/</code>,
-and will be the largest file in there. Extract them to your
-<code>ref</code> folder, and then compress them with <code>gzip</code>
-to save space (assuming they all end in <code>.fna</code> - this will
-compress to about 1/3 the size):</p>
+<code>/ncbi_dataset/data/&lt;genbank-accession&gt;/</code>, and will be
+the largest <code>file.fna</code> in there. Extract them to your
+<code>$RAW/ref</code> folder, and then compress the <code>.fna</code> to
+<code>.fna.gz</code> with <code>gzip</code> to save space. Genome data
+is fairly dense, so this will/might only compress to about 1/3 the raw
+size.</p>
 <pre class="bash"><code>parallel gzip {} ::: $RAW/ref/*fna</code></pre>
 <p>It’s a lot of data! We then need use <code>bowtie2</code> to build
-reference databases for all of these genomes.</p>
+reference databases for all of these genomes. <code>Threads=9</code>
+because available locally; one-off leads to poor <code>slurm</code>
+adherence.</p>
 <pre class="bash"><code>
 mkdir ~/data/ref/bt2_indices
 
@@ -1271,41 +1277,35 @@ mkdir ~/data/ref/bt2_indices
 # 19 seconds for decoy, 9 threads, 15GB RAM
 time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
 
+# 10min for chicken, 9 threads, 15GB RAM
 time bowtie2-build --t 9 \
   ~/data/ref/bt2_indices/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz \
   ~/data/ref/bt2_indices/broiler_GRCg7b.bt2 &gt; \
   ~/data/ref/bt2_indices/broiler_GRCg7b.bt2.buildlog 
+
+# cow ... 
+time bowtie2-build --t 9 \
+  ~/data/ref/bt2_indices/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz \
+  ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2 &gt; \
+  ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2.buildlog 
 </code></pre>
 </div>
-<div id="contaminant-removal-pipeline---kneaddata" class="section level4">
-<h4>contaminant-removal pipeline - <code>KneadData</code></h4>
+<div id="contaminant-removal-pipeline---kneaddata" class="section level2">
+<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
 <p>The <a href="https://github.com/biobakery/kneaddata"><code>kneaddata</code></a>
 pipeline was developed to combine both trimming and filtering
 (<code>trimmomatic</code>), and this contaminant-matching step
 (<code>bowtie</code>) for processing samples from the human gut. It can
 also be adapted for other types of sample (e.g. foods, or other
 hosts).</p>
-<pre class="bash"><code>
-##   k n e a d d a t a 2   =======================
-
-## kneaddata - using /data/databases/hostremoval/Homo_sapiens/
-# re-run trimmomatic disabled using --bypass-trim
-
-## trial define
-# HGR38_BT -  for bt2
-KIN=$FILT
-KOUT=$KDOUT
-KSAMPLE=SC145C1-NS_S86 #_L00*
-REFDIR=$HGR38_BT
-QCDIR=$FQC/fhi_redch_knead
+<pre class="bash"><code># re-run trimmomatic disabled using --bypass-trim
 
 module load kneaddata trimmomatic   # needs trimmo, even if you don&#39;t
-mkdir $FQC/fhi_redch_knead
 
 # trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $KIN/${KSAMPLE}_R1.fastq.gz -i $KIN/${KSAMPLE}_R2.fastq.gz -o $KOUT/${KSAMPLE}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KOUT/knead_${KSAMPLE}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KOUT/$KSAMPLE/*fastq # 2&gt;&amp;1
-
-echo &#39;#!/bin/bash
+time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic # ; gzip $KDOUT/$TEST/*fastq # 2&gt;&amp;1
+</code></pre>
+<pre class="bash"><code>echo &#39;#!/bin/bash
 
 #SBATCH –-job-name=knead_fastq
 #SBATCH –-output=knead_fastq.txt
@@ -1317,32 +1317,23 @@ SAMPLE=$1
 IN=$2
 OUT=$3
 REFDIR=$4
-QCDIR=$5
 
 ##   K N E A D D A T A
 # if youre going to change the output names, change for STOUT&lt; GZIP, and FASTQC also
 time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1.fastq.gz -i $IN/${SAMPLE}_R2.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g &gt; $OUT/knead_${SAMPLE}.stout 2&gt;&amp;1
 gzip $OUT/$SAMPLE/*fastq
 
-## mkdir
-## mkbreakfast
-## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz
 
+&#39; &gt; $MAT/slurm_kd.sh
 
-&#39; &gt; $MAT/slurm_kd2.sh
-
-ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd2.sh {} $FILT $KDOUT $HGR38_BT $FQC/fhi_redch_knead
+ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
 
 ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel ls $FILT/{}_R1.fastq.gz
 </code></pre>
-</div>
-<div id="kneaddata" class="section level2">
-<h2>kneaddata</h2>
-<pre class="bash"><code></code></pre>
-</div>
-<div id="fastqc-and-multiqc-2" class="section level2">
-<h2>fastqc and multiqc</h2>
-<pre class="bash"><code></code></pre>
+<div id="fastqc-and-multiqc-2" class="section level4">
+<h4>fastqc and multiqc</h4>
+<pre class="bash"><code>mkdir $FQC/fhi_redch_knead
+</code></pre>
 <!-- # 4 microbial community profiling -->
 <!-- ```{bash, eval = FALSE} -->
 <!-- usearch -fastq_join $KDOUT/$SAMPLE/${SAMPLE}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$SAMPLE/${SAMPLE}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${SAMPLE}_kneaddata_R1R2.fastq.gz -->
@@ -1439,6 +1430,7 @@ ls $FILT/*R[12].fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq
 <!-- ```{bash, eval = FALSE} -->
 <!-- ``` -->
 <hr />
+</div>
 </div>
 </div>
 <div id="this-document-isnt-finished" class="section level1">
