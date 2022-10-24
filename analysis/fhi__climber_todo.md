@@ -59,6 +59,11 @@ Should eventually cover:
 
   * if you thought the above list was bad...
   
+
+#### Picassan Refernces
+
+  * [microbiome helper](https://github.com/LangilleLab/microbiome_helper/wiki/Metagenomics-Tutorial-(Humann2)) - Langille et al. 2017-2021
+
   
 #### Presentation
 
