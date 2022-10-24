@@ -298,8 +298,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "\e259";
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -307,9 +307,16 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "\e258";
-  font-family: 'Glyphicons Halflings';
+  content: "";
   border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -358,24 +365,6 @@ pre code {
 
 </div>
 
-<div id="TOC">
-<ul>
-<li><a href="#cli-microbial-ecology-and-r">CLI, Microbial Ecology, and
-R</a>
-<ul>
-<li><a href="#guides-so-far">guides so far:</a>
-<ul>
-<li><a href="#metagenomic-assembly">Metagenomic Assembly</a></li>
-</ul></li>
-<li><a href="#guides-yet-to-start">guides yet to start:</a>
-<ul>
-<li><a href="#metagenomic-assembly-1">Metagenomic Assembly</a></li>
-<li><a href="#microbial-community-analysis">Microbial Community
-Analysis</a></li>
-</ul></li>
-</ul></li>
-</ul>
-</div>
 
 <div id="cli-microbial-ecology-and-r" class="section level1">
 <h1>CLI, Microbial Ecology, and R</h1>
@@ -436,6 +425,13 @@ Virulence, carbohydrate metabolism, and others</a></p></li>
 <ul>
 <li>if you thought the above list was bad…</li>
 </ul>
+<div id="picassan-refernces" class="section level4">
+<h4>Picassan Refernces</h4>
+<ul>
+<li><a href="https://github.com/LangilleLab/microbiome_helper/wiki/Metagenomics-Tutorial-(Humann2)">microbiome
+helper</a> - Langille et al. 2017-2021</li>
+</ul>
+</div>
 <div id="presentation" class="section level4">
 <h4>Presentation</h4>
 <p>Probably would do the best / look the best running on jekyll wiht the
@@ -447,6 +443,138 @@ readthedocs theme (nice in teal, no?)</p>
 Pena-Vidal, and all or most of those at UCC’s <a href="http://github.com/ClaessonLabUCC">Claesson Lab</a>, and Teagasc’s
 <a href="https://www.teagasc.ie/news--events/daily/other/teagascs-vision-1-lab-wins-at-the-irish-laboratory-awards.php">Vision1</a>
 group.</p>
+<hr />
+</div>
+<div id="a-quick-note-about-glomming-and-sed" class="section level4">
+<h4>a quick note about <code>glomming</code> and <code>sed</code></h4>
+<p>Lets look at the <code>sed</code> (“<code>s</code>tream
+<code>ed</code>itor”) command again! <code>r emo::ji(&quot;smile&quot;)</code> It
+can be used in lots of ways, but one of the most popular is to use <a href="https://robinwinslow.uk/regex">regular expressions
+(<code>regex</code>)</a>, a set of categories that allow matching and
+searching for different characters. We won’t go into all the details
+here, but it’s worth explaining why we do this/how this part works.</p>
+<p>The terminal does something similar when we use <code>*</code>, which
+<em>in the terminal</em> means “as many of any character as possible”.
+This is called <a href="https://linuxhint.com/bash_globbing_tutorial/"><strong><code>glomming</code></strong></a>
+The command <code>ls ~/data/ref/bt2_indices/*fna.gz</code> will normally
+list all files in <code>ls ~/data/ref/bt2_indices/</code>, with anything
+in the middle (the <code>*</code> character), as long as they also end
+in <code>fna.gz</code>, giving us:</p>
+<p><code>{bash, eval=TRUE} ls ~/data/ref/bt2_indices/*fna.gz</code></p>
+<table>
+<colgroup>
+<col width="15%" />
+<col width="84%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>command</th>
+<th>output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sed</code></td>
+<td>takes text, from a file, or <code>piped</code> using the
+<code>|</code> command, and changes it</td>
+</tr>
+<tr class="even">
+<td><code>-e</code></td>
+<td><code>sed</code> has many options; we’re using <code>-e</code> to
+tell it to use an <code>--expression</code> - i.e. regular expressions
+a.k.a. <code>regex</code></td>
+</tr>
+<tr class="odd">
+<td><code>s/...</code></td>
+<td>we want <code>sed</code> to <code>s</code>ubstitute something for
+something different</td>
+</tr>
+<tr class="even">
+<td><code>/.a./.b./</code></td>
+<td><code>sed</code> will look between the first pair of slashes, and
+<code>s</code>ubstitute, swapping <code>a</code> for <code>b</code></td>
+</tr>
+<tr class="odd">
+<td><code>*</code></td>
+<td>allows any number of characters to be matched times, 0-infinity</td>
+</tr>
+<tr class="even">
+<td><code>.</code></td>
+<td>will match any character - often put with <code>*</code> to give
+<code>.*</code>, meaning “match <em>any</em> character, as often as
+possible” (see “<a href="%22https://en.wikipedia.org/wiki/Greedy_algorithm%22">greedy</a>)</td>
+</tr>
+<tr class="odd">
+<td><code>(...)</code></td>
+<td>text matched within the brackets in <code>/.a./</code> will be
+copied, and can then be pasted into <code>/.b./</code>. Multiple
+different things can be captured from <code>/.a./</code>, and pasted
+back into <code>/.b./</code> using <code>\1</code> for the first thing
+saved, <code>\2</code> for the second thing, <code>\3</code> for the
+third thing, etc.</td>
+</tr>
+<tr class="even">
+<td><code>\</code></td>
+<td>backslash ‘escapes’ the next character - <code>sed</code> will not
+try <em>match</em> the next character, instead it interprets the next
+character’s <code>regex</code> meaning - see <a href="https://en.wikipedia.org/wiki/Regular_expression#POSIX_basic_and_extended">here</a>
+for a list.</td>
+</tr>
+<tr class="odd">
+<td><code>.../g</code></td>
+<td>here, we ask <code>sed</code> to do all of this
+<code>g</code>lobally, i.e. whereever it appears</td>
+</tr>
+</tbody>
+</table>
+<p>So, the command <code>sed -e &#39;s/.*\/\(.*\).fna.gz/\1/g&#39;</code>:</p>
+<table>
+<colgroup>
+<col width="15%" />
+<col width="84%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>command</th>
+<th>output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sed</code></td>
+<td>calls <code>sed</code></td>
+</tr>
+<tr class="even">
+<td><code>-e</code></td>
+<td>activates regular expression mode</td>
+</tr>
+<tr class="odd">
+<td><code>s</code></td>
+<td>asks for substitutions</td>
+</tr>
+<tr class="even">
+<td><code>/.*\/\(.*\)...</code></td>
+<td>part <code>a</code>: match as much as you can, i.e. <code>.*</code>,
+until you find the last <code>/</code> character; then save everything
+<em>after</em> the last <code>/</code>, using the <code>( )</code></td>
+</tr>
+<tr class="odd">
+<td><code>... .fna.gz</code></td>
+<td>part <code>a</code>: this part is outside of the <code>( )</code>
+brackets above, so don’t include it in the saved match from part
+<code>a</code></td>
+</tr>
+<tr class="even">
+<td><code>/\1/</code></td>
+<td>part <code>b</code>: paste in the bit saved from part
+<code>a</code>, i.e. everything after the last bracket</td>
+</tr>
+</tbody>
+</table>
+<p>Is changed to the below, giving us a list of our filenames, without
+the <code>fna.gz</code> extension - really useful for calling inside
+scripts!</p>
+<p><code>{bash, eval=TRUE} ls ~/data/ref/bt2_indices/*fna.gz | sed -e &#39;s/.*\/\(.*\).fna.gz/\1/g&#39;</code></p>
 </div>
 </div>
 </div>

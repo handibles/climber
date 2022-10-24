@@ -17,7 +17,7 @@ The same process as above but separated into the different steps:
   0. <a href="/climber/documents/0.setup.html">Setting up your analysis</a>
   1. <a href="/climber/documents/1.checkdata.html">Checking your sequence data</a>
   2. <a href="/climber/documents/2.seqcleaning.html">Sequencing QC - filtering and trimming your sequences</a>
-  3. <a href="/climber/documents/3.seqpurity.html">Sequencing QC - purifying your sequences</a>
+  3. <a href="/climber/documents/3.seqpurity.html">Sequencing QC - purifying your sequences - **not finished**</a>
 
 
 ### Amplicon data (e.g. 16S)
