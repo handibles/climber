@@ -540,7 +540,7 @@ We will first obtain all of these sequences from the NCBI (should/could use ENA.
 BT_DB=~/data/ref/bt2_indices
 
 # set this as appropriate
-BT_threads=9
+BT_threads=6
 
 # if not already:
 module load bowtie2
@@ -614,11 +614,10 @@ That was quick! It was quick because the amount of data (`9MB`!) was small. Larg
 cat $BT_DB/*fna.gz > $BT_DB/mult_ref.fasta.gz
 
 # one-off
-INOUT=$BT_DB
-time bowtie2-build --t 10 \
-  $INOUT/mult_ref.fasta.gz \
-  $INOUT/mult_ref.bt2 > \
-  $INOUT/mult_ref.buildlog
+time bowtie2-build --large-index --t $BT_threads \
+  $BT_DB/mult_ref.fasta.gz \
+  $BT_DB/mult_ref.bt2 > \
+  $BT_DB/mult_ref.buildlog
 
 
 # build our BT2 database
@@ -640,24 +639,10 @@ time bowtie2-build --t 10 \
   $INOUT/mult_ref.buildlog
 ' > $MAT/slurms/slurm_bt2db.sh
 
-# again, we use "|", the pipe character, to join commands, and make a list of filenames:
+# note - we're not passing any options to slurm - it's just to manage the workload...
 
-# this will list all the genomes
-ls ~/data/ref/bt2_indices/*fna.gz 
-
-# this sed bit will strip off the file path based on where it finds the last "/" character 
-ls ~/data/ref/bt2_indices/*fna.gz | sed -e 's/.*\/\(.*\)/\1/g'
-
-# this sed bit will strip off the file extenstion:
-ls ~/data/ref/bt2_indices/*fna.gz | sed -e 's/(.*\).fna.gz/\1/g'
-
-# this does both at the same time
-ls ~/data/ref/bt2_indices/*fna.gz | sed -e 's/.*\/\(.*\).fna.gz/\1/g'
-
-# then pass into a for-loop:
-for i in $(ls ~/data/ref/*fna.gz | cut -d '.' -f1);
-  do time $MAT/slurms/slurm_bt2db.sh $i $ $ ;
-done
+# and then run
+time $MAT/slurms/slurm_bt2db.sh
 
 
 ```
@@ -680,7 +665,7 @@ time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${T
 ```
 
 
-Super `bash` `slurm` powers. 
+Super `bash` `slurm` powers. **not finished**
 
 ```{bash, eval=FALSE}
 echo '#!/bin/bash

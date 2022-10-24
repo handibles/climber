@@ -11,6 +11,8 @@ Combining all the steps:
 
   * <a href="documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
 
+  * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly` - as above, but less explanation </a> 
+
 
 The same process as above but separated into the different steps:
 
