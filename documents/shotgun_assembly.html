@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 14:12</h4>
+<h4 class="date">25 Oct 2022, 14:43</h4>
 
 </div>
 
@@ -1775,7 +1775,7 @@ mkdir $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
 mkdir $MAT $SLURM
 
 # make dirs for qc outputs
-mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_trimm $FQC/multi_raw $FQC/multi_trimm</code></pre>
+mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/multi_raw $FQC/multi_filt</code></pre>
 </div>
 </div>
 <div id="get-the-sequence-data-check" class="section level1">
@@ -2391,7 +2391,7 @@ size.</p>
 for all of these genomes in one place. <code>BT_threads=9</code> because
 available locally - feel free to increase to something appropriate to
 your setup, as we check the <code>decoy genome</code> first.</p>
-<pre class="bash"><code>mkdir BT_DB
+<pre class="bash"><code>mkdir $BT_DB
 
 # bowtie2-build [options]* &lt;reference_in&gt; &lt;bt2_base&gt;
 time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
@@ -2503,7 +2503,7 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 </div>
 </div>
 <div id="contaminant-removal-pipeline---kneaddata" class="section level2">
-<h2>contaminant-removal pipeline - <a href="https://huttenhower.sph.harvard.edu/kneaddata"><code>KneadData</code></a></h2>
+<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
 <p><code>Kneaddata</code> is a quality control pipeline developed by the
 <a href="https://huttenhower.sph.harvard.edu">Huttenhower group</a>
 (home of <code>HUMAnN*</code>, <code>MetaPhlan*</code>,

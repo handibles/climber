@@ -211,7 +211,7 @@ mkdir $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
 mkdir $MAT $SLURM
 
 # make dirs for qc outputs
-mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_trimm $FQC/multi_raw $FQC/multi_trimm
+mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/multi_raw $FQC/multi_filt
 ```
 
 
@@ -612,7 +612,7 @@ parallel gzip {} ::: $RAW/ref/*fna
 We then need use `bowtie2` to build a reference database for all of these genomes in one place. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
 
 ```{bash, eval=FALSE}
-mkdir BT_DB
+mkdir $BT_DB
 
 # bowtie2-build [options]* <reference_in> <bt2_base>
 time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 > ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
@@ -709,7 +709,7 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 
 
 
-## contaminant-removal pipeline - [`KneadData`](https://huttenhower.sph.harvard.edu/kneaddata)
+## contaminant-removal pipeline - `KneadData`
 
 `Kneaddata` is a quality control pipeline developed by the [Huttenhower group](https://huttenhower.sph.harvard.edu) (home of `HUMAnN*`, `MetaPhlan*`, `LEfSe`, etc.) to do all of the above steps: `trimmomatic`, `bowtie2`, and `samtools`, in one go, using the human genome as a default reference. It can be very useful if we're setting things up for the first time, as it will download the required programs and a human database for us. We did not use it here because it is incredibly useful to have some idea of how to use `trimmomatic` and `bowtie2` to refine & identify reads of interest, alongside the face that our host sequences were not limited to humans and our programs are already installed.
 
