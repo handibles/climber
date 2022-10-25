@@ -30,6 +30,9 @@ In addition, the following steps are still missing:
 
 ```
 # todo for jfg
+
+ - ** catching fails**
+ 
  - utility 
  - intro document
  - reference material
@@ -153,7 +156,7 @@ Thank you for asking! **Remember, on the HPC:**
 ```{bash, eval = FALSE}
 # databases for different tools
 DB=/data/data/databases
-HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2/     # <?>
+HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2     # location on the HPC - won't be used
 K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
 
 # our overall data structure
@@ -488,7 +491,7 @@ MINLEN:80
 ```
 
 
-Then we make a simple [`for-loop` (see this link)](https://linuxize.com/post/bash-for-loop/) that repeats the command `sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT` for every possible value of `$i` (all the sample names). In this way, we can use 6 threads to process _one sample after another_, with the job using 6 threads as we specified above (i.e. process samples *in serial* rather than *in parallel*).
+Then we make a simple [`for-loop` (see this link)](https://linuxize.com/post/bash-for-loop/) that repeats the command `sbatch $MAT/slurm_trimmo.sh $i $RAW $FILT $MAT` for every possible value of `$i` (all the sample names). In this way, we can use 6 threads to process _one sample after another_, with the job using 6 threads as we specified above (i.e. process samples *in serial* rather than *in parallel*).
 
 ```{bash, eval=FALSE}
 # this command lists all the sample names
@@ -512,7 +515,13 @@ Again, we check the `Trimmomatic` output with `FastQC/MultiQC`, copying the mult
 
 ```{bash, eval = FALSE}
 fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
-multiqc $FQC/fhi_redch_filt -o $FQC/multi_filt
+
+# move unpaired reports away
+mkdir $FQC/fhi_redch_filt_unpaired
+mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
+
+# loom at just trimmed (no unpaired)
+multiqc $FQC/fhi_redch_filt/*trimm.fastq* -o $FQC/multi_filt
 ```
 
 
@@ -651,20 +660,19 @@ echo '#!/bin/bash
 INOUT=$1
 
 # do check the names before you run!
-time bowtie2-build --large-index --threads $BT_threads \
-  $INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
-  $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
-  $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
-  $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
-  $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
-  $INOUT/hs37d5ss.fna.gz \
-  $INOUT/mult_ref.bt2 > \
-  $INOUT/mult_ref.buildlog
+time bowtie2-build --large-index --threads 10 \
+$INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+$INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+$INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+$INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+$INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
+$INOUT/hs37d5ss.fna.gz \
+$INOUT/mult_ref.bt2 #> $INOUT/mult_ref.buildlog # 2>&1
 
-' > $MAT/slurms/slurm_bt2db.sh
+' > $MAT/slurm_bt2db.sh
 
 # and then run
-time $MAT/slurms/slurm_bt2db.sh $BT_DB
+time $MAT/slurm_bt2db.sh $BT_DB
 
 ```
 
@@ -755,7 +763,7 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 <!-- ' > $MAT/slurm_kd.sh -->
 
 <!-- # actual kneads -->
-<!-- ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT -->
+<!-- ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT -->
 
 <!-- ``` -->
 
@@ -828,8 +836,8 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 <!-- ' > $MAT/slurm_krak2.sh -->
 
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 sbatch $MAT/slurms/slurm_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 $MAT/slurms/bash_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
+<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 sbatch $MAT/slurm_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
+<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 $MAT/bash_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
 
 
 <!-- # lifeboat protocol -->
