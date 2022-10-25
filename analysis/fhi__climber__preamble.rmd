@@ -23,6 +23,8 @@ squeue | less
 mv fa fna
 
 
+catching failures from logs, compare etc. 
+
 ```
 # 3 - decontaminate data (& check)
 @jfg: there is, in addition, a database of human sequences which are poorly represented in the human genome, but are highlighted in Breitweizer et al.'s 2019 paper ["Human contamination in bacterial genomes has created thousands of spurious proteins"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6581058/). Currently looking for these sequences but not found yet. possibly pull out of kneaddata?
