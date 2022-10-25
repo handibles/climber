@@ -13,15 +13,22 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
+# `r emo::ji("construction")` this document is not finished `r emo::ji("construction")`
+
+Please note this page is still being written If something is missing, unclear, or flaming wrong, please point it out! 
+
+In addition, the following steps are still missing:
+
+  * feed clean sequences to `Kraken2`
+  * sanitise the `Kraken2` output using `Bracken`
+  * start doing the microbial ecology in `R`! But that's a story for another day...
+
 ```
 # todo for jfg
-
  - utility 
- 
  - intro document
  - reference material
  - bibliography
- 
  **NB** should unify materials and analysis dirs in setup
 ``` 
 
@@ -33,7 +40,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 #### What this **is**, and **who** it is for:
 
-**This document is not finished**, but covers _**How**_ someone (anyone!) can do the following:
+This document covers how to do the following:
 
   0. connect through `ssh` and set up a `bash`-based bioinformatics project
   1. collect and check a project's illumina short-read dataset (QC - `FastQC+MultiQC`)
@@ -41,16 +48,19 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
   3. remove contaminant and/or host sequences from the dataset (QC - `kneaddata`)
   4. generate a simple but effective community profile of the microbial community in that dataset (Microbial ecology - `Kraken2+Bracken`)
 
-We provide _minimal_ guidance on how to fit the different steps to the workflow (different parameters, different options or tools). 
+We provide _minimal_ guidance on how to adapt the different steps to the workflow (different parameters, different options or tools). 
 
-This document was originally put together by Ines Calvete (IPLA/CSIC) and Jamie FitzGerald (Teagasc/UCC/UCD) as a roadmap for analysing cheese microbiomes from Asturias, Spain (Oct 2022). It uses material sourced from well-written reference manuals, online communities, and our own mistakes (see *References* section).
+This document was originally put together by Ines Calvete (IPLA/CSIC), Nuria Peǹa Vidal (UCM), and Jamie FitzGerald (Teagasc/UCD) as a roadmap for analysing microbiomes from cheese, and chicken GI tract respectively. It uses material sourced from well-written reference manuals, online communities, and our own mistakes (see *References* section).
 
 We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. See the **Intro document which is not written yet**.  
 
+---
 
 #### What this document is **not**:
 
 This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Oct 2022: not yet written**).
+
+---
 
 
 #### When something goes **wrong**:
@@ -65,6 +75,8 @@ Also, one of the best ways to learn quickly (and hopefully make different, excit
   * note down the outcomes
   * write down what goes wrong
   * include the images if you can
+  
+---
 
 
 #### If you need **help**:
@@ -122,8 +134,7 @@ echo $HISTSIZE
 
 #### Where does **my** data go?
 
-Thank you for asking!  
-**Remember, on the HPC:**
+Thank you for asking! **Remember, on the HPC:**
 
   * **raw data** goes into the `primary` data directory (under your project name on the `hpc`) - here we give it the shortcut variable `$RAW`. This is your 'primary' data source, so do not edit it
   * **output** data goes in the `analysis` folder. We set this variable shortcuts as `$WRK`, and all our output goes inside this dir. 
@@ -158,9 +169,9 @@ TEST=SAMPLENAME
 
 #### What tools do we need?
 
-We will need to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client (`putty`).
+We will want to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client (`putty`).
 
-Next, we tell the HPC which programs we'll need, which are parcelled into "modules". If we don't load the modules, our session won't be able to "see" these programs in the `$PATH`. Some programs are always visible, others are loaded through e.g. `conda` and don't need to be mentioned here. 
+Next, we tell the HPC which programs we'll need for this work, which the HPC has parcelled into "modules". If we don't load the modules, our session won't be able to "see" these programs in the `$PATH` (list of places the computer looks to find programs) Some programs are always visible (e.g. commands like `ls`), others are loaded through e.g. `conda` (e.g. `R`...), and don't need to be mentioned here. 
 
   * `FastQC` and `MultiQC` for quality control
   * `Kraken2` for metagenomic community reconstruction
@@ -174,7 +185,7 @@ module load parallel fastqc multiqc kraken2 bowtie2
 
 #### Are we ready? 
 
-Finally, we make sure that all the locations for the work we're doing exist! When we start, they won't exist yet (but note how the command looks up the full location for the directory): if `$QC` has not been defined, it will show you the contents of your current directory; if `$QC` _is_ defined, but hasnt been _created_ yet, it will tell you that the folder doesn't exist (which should be true!).
+Finally, we make sure that all the locations for the work we're doing exist! When we start, they won't exist yet (but note how the command looks up the full location for the directory): if `$QC` has not been defined, it will show you the contents of your current directory; if `$QC` _is_ defined, but hasn't been _created_ yet, it will tell you that the folder doesn't exist (which should be true!).
 ```{bash, eval = FALSE}
 ls $QC
 ```
@@ -214,7 +225,7 @@ less -S $RAW/$TEST*            # read through file, press q to quit
 ```
 
 
-##### FastQC and MultiQC
+### FastQC and MultiQC
 
 `FastQC` is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this!
 
@@ -405,7 +416,7 @@ less $FILT/trimmo_${TEST}.out
 
   
   
-#### First Pass, with `Trimmomatic`, on multiple samples:
+#### first pass, with `Trimmomatic`, on multiple samples:
 
 Because these reads are paired-end, we need to set up a `slurm` script to process each **sample name**, find the `F` and `R` `fastq.gz` files, process them together, and output them to the correct folders. There are a few ways to get the sample names, but because we will need to process each sample name several times, we are going to use a simple, re-usable method:
 
@@ -495,7 +506,7 @@ multiqc $FQC/fhi_redch_filt -o $FQC/multi_filt
 ```
 
 
-## Second Pass etc.
+## second pass etc.
 
 It is hard to know when the quality is 'good enough'. In general, we should keep above `Q30`, but this is not an indicator of other things like adapter contamination. Often, a later step will not work, and it can be necessary to be stricter in our cleaning, or try different approaches etc. Be clear with yourself, and with other people, about what pre-processing steps you are taking.  
 
@@ -540,7 +551,7 @@ We will first obtain all of these sequences from the NCBI (should/could use ENA.
 BT_DB=~/data/ref/bt2_indices
 
 # set this as appropriate
-BT_threads=6
+BT_threads=2
 
 # if not already:
 module load bowtie2
@@ -617,7 +628,11 @@ That was quick! It was quick because the amount of data (`9MB`!) was small. Larg
 # one-off. 
 # necess list? yes!
 time bowtie2-build --large-index --threads $BT_threads \
-  $BT_DB/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,$BT_DB/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,$BT_DB/GCF_001704415.2_ARS1.2_genomic.fna.gz,$BT_DB/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,$BT_DB/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,$BT_DB/hs37d5ss.fna.gz \
+  $BT_DB/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+  $BT_DB/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+  $BT_DB/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+  $BT_DB/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+  $BT_DB/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,$BT_DB/hs37d5ss.fna.gz \
   $BT_DB/mult_ref.bt2 > \
   $BT_DB/mult_ref.buildlog
 
@@ -850,16 +865,6 @@ mkdir $FQC/fhi_redch_knead
 <!-- ``` -->
 
 
----
-
-# this document isn't finished!
-
-This document is still being written. It still needs the following steps:
-
-  * feed clean sequences to `Kraken2`
-  * sanitise the `Kraken2` output using `Bracken`
-  * start doing the microbial ecology in `R`! But that's a story for another day...
-  
 ---
 
 # Reading / Reference

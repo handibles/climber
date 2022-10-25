@@ -7,19 +7,21 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
 ### Metagenomic data (i.e. shotgun)
 
-Combining all the steps:
-
   * <a href="documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
 
-  * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly` - as above, but less explanation </a> 
+Metagenomic shotgun assembly covers the following steps:
 
+  0. <a href="/documents/shotgun_assembly.html#setup-your-environment">Setting up your analysis</a>
+  1. <a href="/documents/shotgun_assembly.html#get-the-sequence-data-check.html">Checking your sequence data</a>
+  2. <a href="/documents/shotgun_assembly.html#quality-control-check.html">Sequencing QC - filtering and trimming your sequences</a>
+  3. <a href="/documents/shotgun_assembly.html#decontaminate-data-check">Sequencing QC - purifying your sequences - **not finished**</a>
+  4. Kraken2 (unwritten)
+  5. Bracken (unwritten)
 
-The same process as above but separated into the different steps:
+A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 
-  0. <a href="/climber/documents/0.setup.html">Setting up your analysis</a>
-  1. <a href="/climber/documents/1.checkdata.html">Checking your sequence data</a>
-  2. <a href="/climber/documents/2.seqcleaning.html">Sequencing QC - filtering and trimming your sequences</a>
-  3. <a href="/climber/documents/3.seqpurity.html">Sequencing QC - purifying your sequences - **not finished**</a>
+  * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly`</a> - as above, but with less explanation 
+
 
 
 ### Amplicon data (e.g. 16S)
