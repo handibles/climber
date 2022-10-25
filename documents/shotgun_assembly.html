@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 15:47</h4>
+<h4 class="date">25 Oct 2022, 16:07</h4>
 
 </div>
 
@@ -1711,7 +1711,7 @@ folder. We set this variable shortcuts as <code>$WRK</code>, and all our
 output goes inside this dir.</li>
 </ul>
 <pre class="bash"><code># databases for different tools
-DB=/data/data/databases
+DB=/data/databases                # HPC databases - not really used here
 HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2     # location on the HPC - won&#39;t be used
 K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
 
@@ -1731,7 +1731,7 @@ KDOUT=$WRK/3__knead
 KROUT=$WRK/4__krak2
 
 #!# set a filename to test things on
-TEST=SAMPLENAME
+TEST=
 </code></pre>
 </div>
 <div id="what-tools-do-we-need" class="section level4">
@@ -2254,7 +2254,7 @@ done
 and seeing if there’s much improvement.</p>
 <pre class="bash"><code>fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
 
-# move unpaired reports away
+# move unpaired reports away - avoid clogging up multiqc vis
 mkdir $FQC/fhi_redch_filt_unpaired
 mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
 

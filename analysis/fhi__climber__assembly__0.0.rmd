@@ -155,7 +155,7 @@ Thank you for asking! **Remember, on the HPC:**
 
 ```{bash, eval = FALSE}
 # databases for different tools
-DB=/data/data/databases
+DB=/data/databases                # HPC databases - not really used here
 HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2     # location on the HPC - won't be used
 K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
 
@@ -175,7 +175,7 @@ KDOUT=$WRK/3__knead
 KROUT=$WRK/4__krak2
 
 #!# set a filename to test things on
-TEST=SAMPLENAME
+TEST=
 
 ```
 
@@ -516,7 +516,7 @@ Again, we check the `Trimmomatic` output with `FastQC/MultiQC`, copying the mult
 ```{bash, eval = FALSE}
 fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
 
-# move unpaired reports away
+# move unpaired reports away - avoid clogging up multiqc vis
 mkdir $FQC/fhi_redch_filt_unpaired
 mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
 
