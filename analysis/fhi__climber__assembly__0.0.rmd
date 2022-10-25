@@ -665,9 +665,6 @@ This will give us a number of files ending in `.bt2` in our output dir. These ar
 
 [`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
 
-When using paired-end reads, we might remove  
-
-
 <!-- ## contaminant-removal pipeline - `KneadData` -->
 
 <!-- The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts).  -->
