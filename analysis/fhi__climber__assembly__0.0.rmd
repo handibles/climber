@@ -610,15 +610,19 @@ That was quick! It was quick because the amount of data (`9MB`!) was small. Larg
 
 ```{bash, eval=FALSE}
 
-# cat our compressed fasta together, make the extension fasta to distinguish!
-cat $BT_DB/*fna.gz > $BT_DB/mult_ref.fasta.gz
+# alt - this fails on memory- try smply glomming all the matching fna.gz
+## cat our compressed fasta together, make the extension fasta to distinguish!
+#cat $BT_DB/*fna.gz > $BT_DB/mult_ref.fasta.gz
 
-# one-off
-time bowtie2-build --large-index --t $BT_threads \
-  $BT_DB/mult_ref.fasta.gz \
+# one-off. 
+# necess list? yes!
+time bowtie2-build --large-index --threads $BT_threads \
+  $BT_DB/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,$BT_DB/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,$BT_DB/GCF_001704415.2_ARS1.2_genomic.fna.gz,$BT_DB/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,$BT_DB/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,$BT_DB/hs37d5ss.fna.gz \
   $BT_DB/mult_ref.bt2 > \
   $BT_DB/mult_ref.buildlog
 
+
+## but also parcel in a slurm:
 
 # build our BT2 database
 echo '#!/bin/bash
