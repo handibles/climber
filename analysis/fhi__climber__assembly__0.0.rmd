@@ -264,11 +264,11 @@ We also found out that some `fasstq` files are compressed as `.gz`, and some are
 # write a slurm script first
 echo '#!/bin/bash
 
-SBATCH –job-name=knead_fastq
-SBATCH –output=knead_fastq.txt
+SBATCH --job-name=knead_fastq
+SBATCH --output=knead_fastq.txt
 
-SBATCH –ntasks=15
-SBATCH –time=15:00
+SBATCH --ntasks=15
+SBATCH --time=15:00
 
 IN=$1
 OUT=$2
@@ -458,11 +458,11 @@ First, we make a `slurm` script for running `Trimmomatic`:
 ```{bash, eval = FALSE}
 echo '#!/bin/bash
 
-#SBATCH –job-name=trimmoRaw
-#SBATCH –output=trimmoRaw.txt
+#SBATCH --job-name=trimmoRaw
+#SBATCH --output=trimmoRaw.txt
 
-#SBATCH –ntasks=4
-#SBATCH –time=06:00
+#SBATCH --ntasks=4
+#SBATCH --time=06:00
 
 # these take the terms given after the scriptname, i.e. "... $i $RAW $FILT $MAT"
 SAMPLE=$1
@@ -555,7 +555,7 @@ We will first obtain all of these sequences from the NCBI (should/could use ENA.
 # download to our raw data folder!
 
 # make a variable for this
-BT_DB=~/data/ref/bt2_indices
+BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # set this as appropriate
 BT_threads=2
@@ -605,6 +605,8 @@ Our genomes should be under the directory `/ncbi_dataset/data/<genbank-accession
 
 ```{bash, eval=FALSE}
 parallel gzip {} ::: $RAW/ref/*fna
+
+# check that all your reference genomes end in fna.gz! check that the names match in the next section...
 ```
 
 ### `bowtie2` building and aligning
@@ -640,11 +642,11 @@ However, as this is a big job, **we should notify `slurm` of the requirements**:
 # build our BT2 database in slurm:
 echo '#!/bin/bash
 
-#SBATCH –job-name=bt2DB
-#SBATCH –output=bt2DB.txt
+#SBATCH --job-name=bt2DB
+#SBATCH --output=bt2DB.txt
 
-#SBATCH –ntasks=10
-#SBATCH –time=179:00
+#SBATCH --ntasks=10
+#SBATCH --time=179:00
 
 INOUT=$1
 
@@ -733,11 +735,11 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 <!-- ```{bash, eval=FALSE} -->
 <!-- echo '#!/bin/bash -->
 
-<!-- #SBATCH –-job-name=knead_fastq -->
-<!-- #SBATCH –-output=knead_fastq.txt -->
+<!-- #SBATCH ---job-name=knead_fastq -->
+<!-- #SBATCH ---output=knead_fastq.txt -->
 
-<!-- #SBATCH –-ntasks=4 -->
-<!-- #SBATCH –-time=40:00 -->
+<!-- #SBATCH ---ntasks=4 -->
+<!-- #SBATCH ---time=40:00 -->
 
 <!-- SAMPLE=$1 -->
 <!-- IN=$2 -->
@@ -802,11 +804,11 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 <!-- echo '#!/bin/bash -->
 
-<!-- #SBATCH –-job-name=knead_fastq -->
-<!-- #SBATCH –-output=knead_fastq.txt -->
+<!-- #SBATCH ---job-name=knead_fastq -->
+<!-- #SBATCH ---output=knead_fastq.txt -->
 
-<!-- #SBATCH –-ntasks=5 -->
-<!-- #SBATCH –-time=40:00 -->
+<!-- #SBATCH ---ntasks=5 -->
+<!-- #SBATCH ---time=40:00 -->
 
 <!-- SAMPLE=$1 -->
 <!-- IN=$2 -->
