@@ -30,6 +30,9 @@ In addition, the following steps are still missing:
  - reference material
  - bibliography
  **NB** should unify materials and analysis dirs in setup
+ 
+ - can we add a sandbox?...
+ - persistent issue with C&P in putty
 ``` 
 
 
@@ -660,64 +663,70 @@ time $MAT/slurms/slurm_bt2db.sh $BT_DB
 
 This will give us a number of files ending in `.bt2` in our output dir. These are the reference files that `bowtie2` uses to check for contaminant sequences in the `fastq` data (if you want, you can now delete the reference `fna.gz` genomes!).
 
-We use these 
+[`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
+
+When using paired-end reads, we might remove  
 
 
-## contaminant-removal pipeline - `KneadData`
+<!-- ## contaminant-removal pipeline - `KneadData` -->
 
-The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts). 
+<!-- The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts).  -->
 
-```{bash, eval = FALSE}
-# re-run trimmomatic disabled using --bypass-trim
-module load kneaddata trimmomatic   # needs trimmo, even if you don't
+<!-- ```{bash, eval = FALSE} -->
+<!-- # re-run trimmomatic disabled using --bypass-trim -->
+<!-- module load kneaddata trimmomatic   # needs trimmo, even if you don't -->
 
-# trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic 
+<!-- # trial -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic  -->
 
-## is the output compressed?...
-# ; gzip $KDOUT/$TEST/*fastq # 2>&1
+<!-- ## is the output compressed?... -->
+<!-- # ; gzip $KDOUT/$TEST/*fastq # 2>&1 -->
 
-```
-
-
-Super `bash` `slurm` powers. **not finished**
-
-```{bash, eval=FALSE}
-echo '#!/bin/bash
-
-#SBATCH –-job-name=knead_fastq
-#SBATCH –-output=knead_fastq.txt
-
-#SBATCH –-ntasks=4
-#SBATCH –-time=40:00
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REFDIR=$4
-
-##   K N E A D D A T A
-# if youre going to change the output names, change for STOUT< GZIP, and FASTQC also
-time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1
-
-#gzip $OUT/$SAMPLE/*fastq
-
-' > $MAT/slurm_kd.sh
-
-# actual kneads
-ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
-
-```
+<!-- ``` -->
 
 
-#### fastqc and multiqc
+<!-- Super `bash` `slurm` powers. **not finished** -->
 
-As above, we check the output quality (and can check how many reads etc. make it through).
+<!-- ```{bash, eval=FALSE} -->
+<!-- echo '#!/bin/bash -->
 
-```{bash, eval = FALSE}
-mkdir $FQC/fhi_redch_knead
+<!-- #SBATCH –-job-name=knead_fastq -->
+<!-- #SBATCH –-output=knead_fastq.txt -->
 
-```
+<!-- #SBATCH –-ntasks=4 -->
+<!-- #SBATCH –-time=40:00 -->
+
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REFDIR=$4 -->
+
+<!-- ##   K N E A D D A T A -->
+<!-- # if youre going to change the output names, change for STOUT< GZIP, and FASTQC also -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1 -->
+
+<!-- #gzip $OUT/$SAMPLE/*fastq -->
+
+<!-- ' > $MAT/slurm_kd.sh -->
+
+<!-- # actual kneads -->
+<!-- ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT -->
+
+<!-- ``` -->
+
+
+<!-- #### fastqc and multiqc -->
+
+<!-- As above, we check the output quality (and can check how many reads etc. make it through). -->
+
+<!-- ```{bash, eval = FALSE} -->
+<!-- mkdir $FQC/fhi_redch_knead -->
+
+<!-- ``` -->
+
+
+----
+
 
 
 <!-- # 4 microbial community profiling -->
@@ -875,13 +884,15 @@ mkdir $FQC/fhi_redch_knead
 
 > [MultiQC site + support](https://multiqc.info)
 
-> [The Kraken Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
-
-> [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
-
 > [Trimmomatic site](http://www.usadellab.org/cms/index.php?page=trimmomatic)
 
 > [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf)
+
+> [`bowtie2 / samtools` filtering](https://www.metagenomics.wiki/tools/short-read/remove-host-sequences)
+
+> [The Kraken Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
+
+> [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
 
 > [`for-loop`s - first step in `bash` superpowers](https://linuxize.com/post/bash-for-loop/)
 

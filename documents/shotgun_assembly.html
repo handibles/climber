@@ -358,7 +358,7 @@ pre code {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 12:30</h4>
+<h4 class="date">25 Oct 2022, 13:31</h4>
 
 </div>
 
@@ -387,8 +387,6 @@ check)</a>
 <li><a href="#manually-removing-contaminants---bowtie2-reference-genomes">manually
 removing contaminants - <code>bowtie2</code> + reference
 genomes</a></li>
-<li><a href="#contaminant-removal-pipeline---kneaddata">contaminant-removal
-pipeline - <code>KneadData</code></a></li>
 </ul></li>
 <li><a href="#reading-reference">Reading / Reference</a></li>
 </ul>
@@ -412,7 +410,10 @@ story for another day…</li>
  - intro document
  - reference material
  - bibliography
- **NB** should unify materials and analysis dirs in setup</code></pre>
+ **NB** should unify materials and analysis dirs in setup
+ 
+ - can we add a sandbox?...
+ - persistent issue with C&amp;P in putty</code></pre>
 <hr />
 </div>
 <div id="introduction" class="section level1">
@@ -1337,57 +1338,49 @@ our output dir. These are the reference files that <code>bowtie2</code>
 uses to check for contaminant sequences in the <code>fastq</code> data
 (if you want, you can now delete the reference <code>fna.gz</code>
 genomes!).</p>
-<p>We use these</p>
-</div>
-<div id="contaminant-removal-pipeline---kneaddata" class="section level2">
-<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
-<p>The <a href="https://github.com/biobakery/kneaddata"><code>kneaddata</code></a>
-pipeline was developed to combine both trimming and filtering
-(<code>Trimmomatic</code>), and this contaminant-matching step
-(<code>BowTie2</code>) for processing samples from the human gut. It can
-also be adapted for other types of sample (e.g. foods, or other
-hosts).</p>
-<pre class="bash"><code># re-run trimmomatic disabled using --bypass-trim
-module load kneaddata trimmomatic   # needs trimmo, even if you don&#39;t
-
-# trial
-time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output &gt; $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic 
-
-## is the output compressed?...
-# ; gzip $KDOUT/$TEST/*fastq # 2&gt;&amp;1
-</code></pre>
-<p>Super <code>bash</code> <code>slurm</code> powers. <strong>not
-finished</strong></p>
-<pre class="bash"><code>echo &#39;#!/bin/bash
-
-#SBATCH –-job-name=knead_fastq
-#SBATCH –-output=knead_fastq.txt
-
-#SBATCH –-ntasks=4
-#SBATCH –-time=40:00
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REFDIR=$4
-
-##   K N E A D D A T A
-# if youre going to change the output names, change for STOUT&lt; GZIP, and FASTQC also
-time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g &gt; $OUT/knead_${SAMPLE}.stout 2&gt;&amp;1
-
-#gzip $OUT/$SAMPLE/*fastq
-
-&#39; &gt; $MAT/slurm_kd.sh
-
-# actual kneads
-ls $FILT/*R[12]_trimm.fastq.gz | sed -e &#39;s/.*\/\(.*\)_R..*/\1/g&#39; | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT
-</code></pre>
-<div id="fastqc-and-multiqc-2" class="section level4">
-<h4>fastqc and multiqc</h4>
-<p>As above, we check the output quality (and can check how many reads
-etc. make it through).</p>
-<pre class="bash"><code>mkdir $FQC/fhi_redch_knead
-</code></pre>
+<p><a href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction"><code>Bowtie2</code>
+will align our dataset</a> against these reference indices, and make a
+note of what reads matched between the input (dataset) and reference
+(host). For our study, we will be removing any reads that match the
+reference (hosts) as we are looking at the microbiome specifically.
+However, in other studies, we might be interested in the host sequences
+only, and would throw away everything else (all the microbes).</p>
+<p>When using paired-end reads, we might remove</p>
+<!-- ## contaminant-removal pipeline - `KneadData` -->
+<!-- The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts).  -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- # re-run trimmomatic disabled using --bypass-trim -->
+<!-- module load kneaddata trimmomatic   # needs trimmo, even if you don't -->
+<!-- # trial -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic  -->
+<!-- ## is the output compressed?... -->
+<!-- # ; gzip $KDOUT/$TEST/*fastq # 2>&1 -->
+<!-- ``` -->
+<!-- Super `bash` `slurm` powers. **not finished** -->
+<!-- ```{bash, eval=FALSE} -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH –-job-name=knead_fastq -->
+<!-- #SBATCH –-output=knead_fastq.txt -->
+<!-- #SBATCH –-ntasks=4 -->
+<!-- #SBATCH –-time=40:00 -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REFDIR=$4 -->
+<!-- ##   K N E A D D A T A -->
+<!-- # if youre going to change the output names, change for STOUT< GZIP, and FASTQC also -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1 -->
+<!-- #gzip $OUT/$SAMPLE/*fastq -->
+<!-- ' > $MAT/slurm_kd.sh -->
+<!-- # actual kneads -->
+<!-- ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurms/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT -->
+<!-- ``` -->
+<!-- #### fastqc and multiqc -->
+<!-- As above, we check the output quality (and can check how many reads etc. make it through). -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- mkdir $FQC/fhi_redch_knead -->
+<!-- ``` -->
+<hr />
 <!-- # 4 microbial community profiling -->
 <!-- ```{bash, eval = FALSE} -->
 <!-- usearch -fastq_join $KDOUT/$SAMPLE/${SAMPLE}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$SAMPLE/${SAMPLE}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${SAMPLE}_kneaddata_R1R2.fastq.gz -->
@@ -1486,7 +1479,6 @@ etc. make it through).</p>
 <hr />
 </div>
 </div>
-</div>
 <div id="reading-reference" class="section level1">
 <h1>Reading / Reference</h1>
 <blockquote>
@@ -1508,6 +1500,18 @@ and variables</a></p>
 <p><a href="https://multiqc.info">MultiQC site + support</a></p>
 </blockquote>
 <blockquote>
+<p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic
+site</a></p>
+</blockquote>
+<blockquote>
+<p><a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
+manual</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://www.metagenomics.wiki/tools/short-read/remove-host-sequences"><code>bowtie2 / samtools</code>
+filtering</a></p>
+</blockquote>
+<blockquote>
 <p><a href="http://ccb.jhu.edu/data/kraken2_protocol/">The Kraken
 Suite</a> - <strong>recent nature <a href="https://doi.org/10.1038/s41596-022-00738-y">paper</a></strong>
 from the developers of Kraken, KrakenUniq, &amp; Bracken etc.</p>
@@ -1515,14 +1519,6 @@ from the developers of Kraken, KrakenUniq, &amp; Bracken etc.</p>
 <blockquote>
 <p><a href="http://metagenome.cs.umn.edu/microbiomecodebrowser">microbiome
 code browser</a> - look v good also - Dan Knights &amp; co., 2016</p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic
-site</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
-manual</a></p>
 </blockquote>
 <blockquote>
 <p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s -
