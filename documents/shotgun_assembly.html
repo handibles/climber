@@ -358,7 +358,7 @@ pre code {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 10:56</h4>
+<h4 class="date">25 Oct 2022, 11:55</h4>
 
 </div>
 
@@ -387,7 +387,7 @@ check)</a>
 <li><a href="#manually-removing-contaminants---bowtie2-reference-genomes">manually
 removing contaminants - <code>bowtie2</code> + reference
 genomes</a></li>
-<li><a href="#contaminant-removal-pipeline---kneaddata">Contaminant-removal
+<li><a href="#contaminant-removal-pipeline---kneaddata">contaminant-removal
 pipeline - <code>KneadData</code></a></li>
 </ul></li>
 <li><a href="#reading-reference">Reading / Reference</a></li>
@@ -1282,57 +1282,65 @@ time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_in
 <p>That was quick! It was quick because the amount of data
 (<code>9MB</code>!) was small. Larger (real) genomes will require much
 longer to run, and so <strong>we use a <code>slurm</code>
-script</strong>. We will first concatenate (<code>cat</code>) all the
-reference genomes together, and then build a single database from this
-(hopefully avoiding overlapping sequence identities in the
-<code>DB</code>). As this is a one-off big job, we should simply notify
-<code>slurm</code> on the requirements:</p>
-<pre class="bash"><code>
-# alt - this fails on memory- try smply glomming all the matching fna.gz
-## cat our compressed fasta together, make the extension fasta to distinguish!
-#cat $BT_DB/*fna.gz &gt; $BT_DB/mult_ref.fasta.gz
-
-# one-off. 
-# necess list? yes!
-time bowtie2-build --large-index --threads $BT_threads \
-  $BT_DB/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
-  $BT_DB/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
-  $BT_DB/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
-  $BT_DB/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
-  $BT_DB/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,$BT_DB/hs37d5ss.fna.gz \
-  $BT_DB/mult_ref.bt2 &gt; \
-  $BT_DB/mult_ref.buildlog
-
-
-## but also parcel in a slurm:
-
-# build our BT2 database
+script</strong>.</p>
+<p>Although <code>jfg</code> is not certain of the theory behind
+aligning to an index built from <em>multiple</em> reference genomes, it
+should be possible by listing several <code>fasta</code> files as input
+to <code>bowtie2-build file1.fna.gz,file2.fna.gz,file3.fna.gz...</code>
+etc (as per the <a href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#main-arguments-1"><code>bowtie2</code>
+manual</a>). This avoids having to <code>cat</code> all the
+<code>fasta</code> files together to make one giant
+<code>fasta</code>.</p>
+<p>However, as this is a big job, <strong>we should notify
+<code>slurm</code> of the requirements</strong>:</p>
+<ul>
+<li>as the human genome takes about a half hour to build, and there are
+5-and-a-half genomes, we notify <code>slurm</code> that the job should
+take <code>30min * 5.5 ~= 3hr</code>.</li>
+<li>there are <a href="https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance">suggestions</a>
+that adding more and more threads to <code>bowtie2</code> doesn’t make a
+huge difference, and it could mean we wait a long time for our job to be
+started. So we ask for only ten threads.</li>
+<li>Some tests have shown that 15GB of RAM is not enough for this job
+(&gt;3GB per genome, x5.5…). RAM parameter is not specified below as the
+requirement is unknown.</li>
+</ul>
+<pre class="bash"><code># build our BT2 database in slurm:
 echo &#39;#!/bin/bash
 
 #SBATCH –job-name=bt2DB
-#SBATCH –output=bdDB.txt
+#SBATCH –output=bt2DB.txt
 
 #SBATCH –ntasks=10
 #SBATCH –time=179:00
 
-INOUT=$BT_DB
 INOUT=$1
 
-# bt2 build databases, basic
-time bowtie2-build --t 10 \
-  $INOUT/mult_ref.fasta.gz \
+# do check the names before you run!
+time bowtie2-build --large-index --threads $BT_threads \
+  $INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+  $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+  $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+  $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+  $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
+  $INOUT/hs37d5ss.fna.gz \
   $INOUT/mult_ref.bt2 &gt; \
   $INOUT/mult_ref.buildlog
+
 &#39; &gt; $MAT/slurms/slurm_bt2db.sh
 
-# note - we&#39;re not passing any options to slurm - it&#39;s just to manage the workload...
-
 # and then run
-time $MAT/slurms/slurm_bt2db.sh
+time $MAT/slurms/slurm_bt2db.sh $BT_DB
 </code></pre>
+<p>This will give us a number of files ending in <code>.bt2</code> in
+our output dir. These are the reference files that <code>bowtie2</code>
+uses to check for contaminant sequences in the <code>fastq</code> data
+(if you want, you can now delete the reference <code>fna.gz</code>
+genomes!).</p>
+<p>We use these</p>
 </div>
 <div id="contaminant-removal-pipeline---kneaddata" class="section level2">
-<h2>Contaminant-removal pipeline - <code>KneadData</code></h2>
+<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
 <p>The <a href="https://github.com/biobakery/kneaddata"><code>kneaddata</code></a>
 pipeline was developed to combine both trimming and filtering
 (<code>Trimmomatic</code>), and this contaminant-matching step
@@ -1498,6 +1506,15 @@ and variables</a></p>
 </blockquote>
 <blockquote>
 <p><a href="https://multiqc.info">MultiQC site + support</a></p>
+</blockquote>
+<blockquote>
+<p><a href="http://ccb.jhu.edu/data/kraken2_protocol/">The Kraken
+Suite</a> - <strong>recent nature <a href="https://doi.org/10.1038/s41596-022-00738-y">paper</a></strong>
+from the developers of Kraken, KrakenUniq, &amp; Bracken etc.</p>
+</blockquote>
+<blockquote>
+<p><a href="http://metagenome.cs.umn.edu/microbiomecodebrowser">microbiome
+code browser</a> - look v good also - Dan Knights &amp; co., 2016</p>
 </blockquote>
 <blockquote>
 <p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic

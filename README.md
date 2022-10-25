@@ -15,8 +15,8 @@ Metagenomic shotgun assembly covers the following steps:
   1. <a href="/documents/shotgun_assembly.html#get-the-sequence-data-check.html">Checking your sequence data</a>
   2. <a href="/documents/shotgun_assembly.html#quality-control-check.html">Sequencing QC - filtering and trimming your sequences</a>
   3. <a href="/documents/shotgun_assembly.html#decontaminate-data-check">Sequencing QC - purifying your sequences - **not finished**</a>
-  4. Kraken2 (unwritten)
-  5. Bracken (unwritten)
+  4. Kraken2 (not yet written)
+  5. Bracken (not yet written)
 
 A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 

@@ -617,57 +617,53 @@ time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_in
 ```
 
 
-That was quick! It was quick because the amount of data (`9MB`!) was small. Larger (real) genomes will require much longer to run, and so **we use a `slurm` script**. We will first concatenate (`cat`) all the reference genomes together, and then build a single database from this (hopefully avoiding overlapping sequence identities in the `DB`). As this is a one-off big job, we should simply notify `slurm` on the requirements: 
+That was quick! It was quick because the amount of data (`9MB`!) was small. Larger (real) genomes will require much longer to run, and so **we use a `slurm` script**. 
+
+Although `jfg` is not certain of the theory behind aligning to an index built from _multiple_ reference genomes, it should be possible by listing several `fasta` files as input to `bowtie2-build file1.fna.gz,file2.fna.gz,file3.fna.gz...` etc (as per the [`bowtie2` manual](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#main-arguments-1)). This avoids having to `cat` all the `fasta` files together to make one giant `fasta`. 
+
+However, as this is a big job, **we should notify `slurm` of the requirements**: 
+
+  * as the human genome takes about a half hour to build, and there are 5-and-a-half genomes, we notify `slurm` that the job should take `30min * 5.5 ~= 3hr`.
+  * there are [suggestions](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance) that adding more and more threads to `bowtie2` doesn't make a huge difference, and it could mean we wait a long time for our job to be started. So we ask for only ten threads.
+  * Some tests have shown that 15GB of RAM is not enough for this job (>3GB per genome, x5.5...). RAM parameter is not specified below as the requirement is unknown.
+
 
 ```{bash, eval=FALSE}
-
-# alt - this fails on memory- try smply glomming all the matching fna.gz
-## cat our compressed fasta together, make the extension fasta to distinguish!
-#cat $BT_DB/*fna.gz > $BT_DB/mult_ref.fasta.gz
-
-# one-off. 
-# necess list? yes!
-time bowtie2-build --large-index --threads $BT_threads \
-  $BT_DB/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
-  $BT_DB/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
-  $BT_DB/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
-  $BT_DB/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
-  $BT_DB/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,$BT_DB/hs37d5ss.fna.gz \
-  $BT_DB/mult_ref.bt2 > \
-  $BT_DB/mult_ref.buildlog
-
-
-## but also parcel in a slurm:
-
-# build our BT2 database
+# build our BT2 database in slurm:
 echo '#!/bin/bash
 
 #SBATCH –job-name=bt2DB
-#SBATCH –output=bdDB.txt
+#SBATCH –output=bt2DB.txt
 
 #SBATCH –ntasks=10
 #SBATCH –time=179:00
 
-INOUT=$BT_DB
 INOUT=$1
 
-# bt2 build databases, basic
-time bowtie2-build --t 10 \
-  $INOUT/mult_ref.fasta.gz \
+# do check the names before you run!
+time bowtie2-build --large-index --threads $BT_threads \
+  $INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+  $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+  $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+  $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+  $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
+  $INOUT/hs37d5ss.fna.gz \
   $INOUT/mult_ref.bt2 > \
   $INOUT/mult_ref.buildlog
+
 ' > $MAT/slurms/slurm_bt2db.sh
 
-# note - we're not passing any options to slurm - it's just to manage the workload...
-
 # and then run
-time $MAT/slurms/slurm_bt2db.sh
-
+time $MAT/slurms/slurm_bt2db.sh $BT_DB
 
 ```
 
+This will give us a number of files ending in `.bt2` in our output dir. These are the reference files that `bowtie2` uses to check for contaminant sequences in the `fastq` data (if you want, you can now delete the reference `fna.gz` genomes!).
 
-## Contaminant-removal pipeline - `KneadData`
+We use these 
+
+
+## contaminant-removal pipeline - `KneadData`
 
 The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts). 
 
@@ -879,6 +875,10 @@ mkdir $FQC/fhi_redch_knead
 
 > [MultiQC site + support](https://multiqc.info)
 
+> [The Kraken Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
+
+> [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
+
 > [Trimmomatic site](http://www.usadellab.org/cms/index.php?page=trimmomatic)
 
 > [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf)
@@ -888,3 +888,4 @@ mkdir $FQC/fhi_redch_knead
 > [How to read an error](https://www.baeldung.com/linux/bash-errors)
 
 > [info on variables](https://ostechnix.com/bash-variables-shell-scripting/)
+
