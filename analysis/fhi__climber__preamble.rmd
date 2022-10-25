@@ -9,6 +9,7 @@ output:
     toc: TRUE
 ---
 
+See [RMD reference](https://rmarkdown.rstudio.com/docs/reference/html_document.html) for all header terms
 
   0. <a href="/climber/documents/0.setup.html">Setting up your analysis</a>
   1. <a href="/climber/documents/1.checkdata.html">Checking your sequence data</a>
@@ -20,6 +21,13 @@ sbatch
 squeue | less
 
 mv fa fna
+
+
+```
+# 3 - decontaminate data (& check)
+@jfg: there is, in addition, a database of human sequences which are poorly represented in the human genome, but are highlighted in Breitweizer et al.'s 2019 paper ["Human contamination in bacterial genomes has created thousands of spurious proteins"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6581058/). Currently looking for these sequences but not found yet. possibly pull out of kneaddata?
+```
+
 
 # to do
 ```{bash, eval = FALSE}

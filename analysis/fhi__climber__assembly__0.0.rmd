@@ -6,8 +6,13 @@ output:
   html_document:
     output_file: "shotgun_assembly.html"
     toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+    number_sections: FALSE
   pdf_document: 
     toc: TRUE
+    toc_depth: 3
+    number_sections: FALSE
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/shotgun_assembly.html') })
 ---
 
@@ -29,11 +34,13 @@ In addition, the following steps are still missing:
  - intro document
  - reference material
  - bibliography
- **NB** should unify materials and analysis dirs in setup
+ - unify materials and analysis dirs in setup
  
  - can we add a sandbox?...
  - persistent issue with C&P in putty
-``` 
+ - demo bt2 outdir
+ - enumerate sections better
+ ``` 
 
 
 ---
@@ -41,7 +48,7 @@ In addition, the following steps are still missing:
 
 # Introduction
 
-#### What this **is**, and **who** it is for:
+#### what this **is**, and **who** it is for:
 
 This document covers how to do the following:
 
@@ -59,14 +66,14 @@ We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. S
 
 ---
 
-#### What this document is **not**:
+#### what this document is **not**:
 
 This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Oct 2022: not yet written**).
 
 ---
 
 
-#### When something goes **wrong**:
+#### when something goes **wrong**:
 
 Mistakes, and trial-and-error, are part of learning any skill. Bioinformatics involves a particularly large and constant amount of trialing, as well as lots of errors (web search: [**how to read an error**](https://www.baeldung.com/linux/bash-errors)).
 
@@ -82,7 +89,7 @@ Also, one of the best ways to learn quickly (and hopefully make different, excit
 ---
 
 
-#### If you need **help**:
+#### if you need **help**:
 
   * in `bash`: for some e.g. `program`, try entering `program --help`, `program -h`, or `man program`..
   * in `R`: for a `function()`, enter `?function` to see that function's help page, or try pressing `tab` after a comma to see other options that `function()` understands.
@@ -135,7 +142,7 @@ echo $HISTSIZE
 ```
 
 
-#### Where does **my** data go?
+#### where does **my** data go?
 
 Thank you for asking! **Remember, on the HPC:**
 
@@ -170,7 +177,7 @@ TEST=SAMPLENAME
 ```
 
 
-#### What tools do we need?
+#### what tools do we need?
 
 We will want to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client (`putty`).
 
@@ -186,7 +193,7 @@ module load parallel fastqc multiqc kraken2 bowtie2
 ```
 
 
-#### Are we ready? 
+#### are we ready? 
 
 Finally, we make sure that all the locations for the work we're doing exist! When we start, they won't exist yet (but note how the command looks up the full location for the directory): if `$QC` has not been defined, it will show you the contents of your current directory; if `$QC` _is_ defined, but hasn't been _created_ yet, it will tell you that the folder doesn't exist (which should be true!).
 ```{bash, eval = FALSE}
@@ -228,7 +235,7 @@ less -S $RAW/$TEST*            # read through file, press q to quit
 ```
 
 
-### FastQC and MultiQC
+### [`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and [`MultiQC`](multiqc.info/)
 
 `FastQC` is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this!
 
@@ -293,7 +300,7 @@ time multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw
 Again, open the HTML report in your browser to see what the overall quality is like, and how much cleaning you will need to do.
 
 
-#### Choosing your sample trimming parameters
+#### choosing your sample trimming parameters
 
 With information on all the samples, it is possible (but not necessarily easy) to pick appropriate trimming and quality parameters. 
 
@@ -303,9 +310,9 @@ With information on all the samples, it is possible (but not necessarily easy) t
 
 Consider: How do the sequences look? Is quality uniform throughout, or does it vary? What other warnings (in red) do `FQC+MQC` detect?
 
-# 2 - Quality Control (& check)
+# 2 - quality control (& check)
 
-## First Pass with `Trimmomatic`
+## first pass with `Trimmomatic`
 
 Hopefully, there are not too many problems with the data! Nevertheless, we _always_ do a little cleaning of the sequences before we analyse them. There are several things that can go wrong, and we can make the overall dataset better by removing reads or trimming off: 
 
@@ -355,7 +362,7 @@ less $MAT/fqc_trimmo_ill_ref.fa   # press q to exit
 ```
 
 
-#### First Pass, with `Trimmomatic`, on one sample:
+#### first pass, with `Trimmomatic`, on one sample:
 
 To clean the `$TEST` sample, we use these variables:
 
@@ -530,9 +537,6 @@ In some environments (e.g. faeces, sludge, soil), contaminating sequences might 
 
 To address this as best we can, we remove contaminants based on a database of reference sequences **appropriate to our study**. We collect these sequences (search for the host, known contaminants, artificial sequences, foodstuffs, etc.), compile them into a database (i.e. a big file that's formatted so that it's easy for computers to search through it quickly), and then ask a program (e.g. the DNA-DNA alignment program, `bowtie2`) to look for, and remove, any sequences that match those contaminants.
 
-```
-@jfg: there is, in addition, a database of human sequences which are poorly represented in the human genome, but are highlighted in Breitweizer et al.'s 2019 paper ["Human contamination in bacterial genomes has created thousands of spurious proteins"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6581058/). Currently looking for these sequences but not found yet. possibly pull out of kneaddata?
-```
 
 ## manually removing contaminants - `bowtie2` + reference genomes
 
@@ -603,8 +607,9 @@ Our genomes should be under the directory `/ncbi_dataset/data/<genbank-accession
 parallel gzip {} ::: $RAW/ref/*fna
 ```
 
+### `bowtie2` building and aligning
 
-It's a lot of data! We then need use `bowtie2` to build reference databases for all of these genomes together. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
+We then need use `bowtie2` to build a reference database for all of these genomes in one place. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
 
 ```{bash, eval=FALSE}
 mkdir BT_DB
@@ -665,9 +670,50 @@ This will give us a number of files ending in `.bt2` in our output dir. These ar
 
 [`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
 
-<!-- ## contaminant-removal pipeline - `KneadData` -->
+We _can_ use `bowtie2` directly for filtering out contaminant reads, but because there are paired (`F+R`) reads, it's not quite as specific as we'd like. For better control, we can use the `samtools` program.
 
-<!-- The [`kneaddata`](https://github.com/biobakery/kneaddata) pipeline was developed to combine both trimming and filtering (`Trimmomatic`), and this contaminant-matching step (`BowTie2`) for processing samples from the human gut. It can also be adapted for other types of sample (e.g. foods, or other hosts).  -->
+  * 
+
+```{bash, eval=FALSE}
+
+## firstly, align our sequences to ref using bt2.
+bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${SAMPLE}_R1.fastq.gz -2 $FILT/${SAMPLE}_R2.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
+## feel free to look at the output
+less $KDOUT/${TEST}_bt2_refmapped.sam
+
+```
+
+
+### `samtools` for filtering sequence alignments
+
+```{bash, eval=FALSE}
+## next with samtools, 
+samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam > $KDOUT/${TEST}_bt2_refmapped.bam
+
+
+# F 256 : exclude those mapping to ref
+# f 12 : F and R *both* unmapped
+samtools view -b -f 12 -F 256 $KDOUT/${TEST}_bt2_refmapped.bam > $KDOUT/${TEST}_bt2_decontamd.bam
+
+# ensure reads are in a sensible order 
+samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam
+
+# stream outputs of non-interest to /dev/null
+samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+## opt
+# rm sam 
+# output host mapped for checking
+```
+
+
+
+## contaminant-removal pipeline - [`KneadData`](https://huttenhower.sph.harvard.edu/kneaddata)
+
+`Kneaddata` is a quality control pipeline developed by the [Huttenhower group](https://huttenhower.sph.harvard.edu) (home of `HUMAnN*`, `MetaPhlan*`, `LEfSe`, etc.) to do all of the above steps: `trimmomatic`, `bowtie2`, and `samtools`, in one go, using the human genome as a default reference. It can be very useful if we're setting things up for the first time, as it will download the required programs and a human database for us. We did not use it here because it is incredibly useful to have some idea of how to use `trimmomatic` and `bowtie2` to refine & identify reads of interest, alongside the face that our host sequences were not limited to humans and our programs are already installed.
+
+If we wanted to achieve the same things with `KneadData`, we could provide similar arguments to those above (often, its the _exact_ same argument, we're just asking `KneadData` to tell `Trimmomatic`/`BowTie2`). Note that we would still have had to download our reference genomes and build a database from them using `bowtie-build`. 
 
 <!-- ```{bash, eval = FALSE} -->
 <!-- # re-run trimmomatic disabled using --bypass-trim -->
@@ -875,19 +921,21 @@ This will give us a number of files ending in `.bt2` in our output dir. These ar
 
 > [`slurm` and variables](https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs)
 
-> [**`glomming`**](https://linuxhint.com/bash_globbing_tutorial/)
+> [`glomming`](https://linuxhint.com/bash_globbing_tutorial/)
 
 > [regular expressions (`regex`)](https://robinwinslow.uk/regex)
 
-> [MultiQC site + support](https://multiqc.info)
+> [`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) 
 
-> [Trimmomatic site](http://www.usadellab.org/cms/index.php?page=trimmomatic)
+> [`MultiQC` site + support](https://multiqc.info)
 
-> [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf)
+> [`Trimmomatic` site](http://www.usadellab.org/cms/index.php?page=trimmomatic)
+
+> [`Trimmomatic` manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf)
 
 > [`bowtie2 / samtools` filtering](https://www.metagenomics.wiki/tools/short-read/remove-host-sequences)
 
-> [The Kraken Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
+> [The `Kraken` Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
 
 > [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
 
