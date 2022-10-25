@@ -438,7 +438,7 @@ command | output
 
 ```{bash, eval=FALSE}
 # combine all those different parts!
-ls $RAW/*fastq.gz | sed -e 's/.*\/\(.*\)_R._001.*/\1/g' | sort | uniq | > $MAT/samples
+ls $RAW/*fastq.gz | sed -e 's/.*\/\(.*\)_R._001.*/\1/g' | sort | uniq > $MAT/samples
 ```
 
 We can then use `cat $MAT/samples` or `less $MAT/samples` to print out all the sample names. We can also feed all these sample names into a `for-loop`, which takes each row (sample name) and places it inside the `for-loop` wherever it finds (e.g.) `$i`  (`$i` is what everyone uses, but it's just a variable like $MAT etc - it could be anything you choose).
@@ -462,18 +462,18 @@ REFDIR=$4
 
 # trimmomatic - use backslash to separate rows
 trimmomatic PE \
-$IN/${SAMPLE}_R1_001.fastq.{bz2,gz} \
-$IN/${SAMPLE}_R2_001.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.{bz2,gz} \
+$IN/${SAMPLE}_R1.fastq.gz \
+$IN/${SAMPLE}_R2.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.gz \
 HEADCROP:25 \
 CROP:125 \
 ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
 SLIDINGWINDOW:6:15 \
 MINLEN:80 
--threads 6 > $OUT/trimmo_${SAMPLE}.out #2>&1' > $MAT/slurms/slurm_trimmo.sh
+-threads 6 > $OUT/trimmo_${SAMPLE}.out #2>&1' > $MAT/slurm_trimmo.sh
 
 ```
 
@@ -488,7 +488,7 @@ cat $MAT/samples
 for i in $(cat $MAT/samples);
 
   # and it will repeat this command for all the different values of $i, below:
-  do sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT;
+  do sbatch $MAT/slurm_trimmo.sh $i $RAW $FILT $MAT;
 
 # close the for-loop
 done

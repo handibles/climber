@@ -358,7 +358,7 @@ pre code {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 11:55</h4>
+<h4 class="date">25 Oct 2022, 12:30</h4>
 
 </div>
 
@@ -1063,7 +1063,7 @@ just paste in the bit found in brackets</td>
 </tbody>
 </table>
 <pre class="bash"><code># combine all those different parts!
-ls $RAW/*fastq.gz | sed -e &#39;s/.*\/\(.*\)_R._001.*/\1/g&#39; | sort | uniq | &gt; $MAT/samples</code></pre>
+ls $RAW/*fastq.gz | sed -e &#39;s/.*\/\(.*\)_R._001.*/\1/g&#39; | sort | uniq &gt; $MAT/samples</code></pre>
 <p>We can then use <code>cat $MAT/samples</code> or
 <code>less $MAT/samples</code> to print out all the sample names. We can
 also feed all these sample names into a <code>for-loop</code>, which
@@ -1089,18 +1089,18 @@ REFDIR=$4
 
 # trimmomatic - use backslash to separate rows
 trimmomatic PE \
-$IN/${SAMPLE}_R1_001.fastq.{bz2,gz} \
-$IN/${SAMPLE}_R2_001.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.{bz2,gz} \
+$IN/${SAMPLE}_R1.fastq.gz \
+$IN/${SAMPLE}_R2.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.gz \
 HEADCROP:25 \
 CROP:125 \
 ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
 SLIDINGWINDOW:6:15 \
 MINLEN:80 
--threads 6 &gt; $OUT/trimmo_${SAMPLE}.out #2&gt;&amp;1&#39; &gt; $MAT/slurms/slurm_trimmo.sh
+-threads 6 &gt; $OUT/trimmo_${SAMPLE}.out #2&gt;&amp;1&#39; &gt; $MAT/slurm_trimmo.sh
 </code></pre>
 <p>Then we make a simple <a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>
 (see this link)</a> that repeats the command
@@ -1116,7 +1116,7 @@ cat $MAT/samples
 for i in $(cat $MAT/samples);
 
   # and it will repeat this command for all the different values of $i, below:
-  do sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT;
+  do sbatch $MAT/slurm_trimmo.sh $i $RAW $FILT $MAT;
 
 # close the for-loop
 done
