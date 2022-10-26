@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 17:06</h4>
+<h4 class="date">26 Oct 2022, 18:04</h4>
 
 </div>
 
@@ -1525,7 +1525,8 @@ story for another day…</li>
 </ul>
 <pre><code># todo for jfg
 
- - ** catching fails**
+ - how to catch fails
+ - slurm quirks
  
  - utility 
  - intro document
@@ -2310,8 +2311,8 @@ remembering what happened much easier.</p>
 <p>Filtering and trimming in the previous steps should have removed
 nearly all (🤞) of the <em>fake sequences</em>: low-quality bases that
 can not be trusted (trimming), as well as artificial sequences
-introduced by library-preparation and sequencing (filtering). %&gt;%
-Next, it is a very good idea to consider what <em>real sequences</em>
+introduced by library-preparation and sequencing (filtering).</p>
+<p>Next, it is a very good idea to consider what <em>real sequences</em>
 have been included in our dataset, but do not belong in our analysis.
 Contaminants could come from:</p>
 <ul>
@@ -2546,20 +2547,53 @@ rm $KDOUT/${TEST}*[sam,bam]
 <div id="decontaminate-multiple-samples" class="section level3">
 <h3>decontaminate multiple samples</h3>
 <p>We can apply the same technique to all of our samples using
-<code>slurm</code>. THe database is already present, so we write a
-<code>slurm</code> script for the <code>BowTie2</code> alignment,
-<code>samtools</code> filtering, and <code>samtools</code>
-processing.</p>
+<code>slurm</code>. THe database is already present, so we write
+<code>slurm</code> scripts for the <code>BowTie2</code> alignment,
+<code>samtools</code> filtering, and <code>samtools</code> processing.
+Separating out the jobs allows us to troubleshoot issues more
+easily..hopefully…</p>
 <p><strong>NB</strong> : <code>time</code> flag is totally spurious ;
 lots of large intermediate files being created - we’ll need to delete
-these as we go.</p>
-<pre class="bash"><code># build our BT2 database in slurm:
+these as we go; <strong>see the <code>bt_deco.txt</code> for
+output</strong>, which should be in the <code>~</code> directory…
+Problems may be recorded there ; also check name formats in bt2 align
+step</p>
+<!-- # one big job -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=bt_deco -->
+<!-- #SBATCH --output=bt_deco.txt -->
+<!-- # note no time, mem, tasks specified -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- ## find the contaminants in our sequences, using bt2 + DB -->
+<!-- time bowtie2 -p $THREADS \ -->
+<!-- -x $REF/mult_ref \ -->
+<!-- -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \ -->
+<!-- -2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \ -->
+<!-- -S $OUT/${SAMPLE}_bt2_refmapped.sam  >> $MAT/${SAMPLE}_decont_out.log -->
+<!-- ## change format -->
+<!-- time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam >> $MAT/${SAMPLE}_decont_out.log -->
+<!-- rm $OUT/${SAMPLE}_bt2_refmapped.sam && -->
+<!-- # samtools removes reads which match (contaminant) reference genome -->
+<!-- time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam >> $MAT/${SAMPLE}_decont_out.log -->
+<!-- rm $OUT/${SAMPLE}_bt2_refmapped.bam && -->
+<!-- # samtools re-roganises reads  -->
+<!-- time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam >> $MAT/${SAMPLE}_decont_out.log -->
+<!-- rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam && -->
+<!-- # stream outputs of non-interest to /dev/null -->
+<!-- time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n >> $MAT/${SAMPLE}_decont_out.log -->
+<!-- rm $OUT/${SAMPLE}_*.[bam,sam] && -->
+<!-- ' > $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS -->
+<pre class="bash"><code>## multiple small jobs
+
+# Bowtie2 align sequences
 echo &#39;#!/bin/bash
 
-#SBATCH --job-name=bt_deco
-#SBATCH --output=bt_deco.txt
-
-# note no time, mem, tasks specified
+#SBATCH --job-name=deco_bt2align
+#SBATCH --output=decoalign.txt
 
 SAMPLE=$1
 IN=$2
@@ -2567,39 +2601,110 @@ OUT=$3
 REF=$4
 THREADS=$5
 
-## find the contaminants in our sequences, using bt2 + DB
 time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
 -2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam  &gt;&gt; $MAT/${SAMPLE}_decont_out.log
 
+&#39; &gt; $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# convert bowtie2 SAM output to BAM
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=deco_sambam
+#SBATCH --output=deco_sambam.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
 ## change format
 time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.sam &amp;&amp;
+
+&#39; &gt; $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# filter contaminants from BAM
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=deco_bamfilt
+#SBATCH --output=deco_bamfilt.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
 
 # samtools removes reads which match (contaminant) reference genome
 time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.bam &amp;&amp;
 
+&#39; &gt; $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# resort BAM to sensible order
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=deco_bamsort
+#SBATCH --output=deco_bamsort.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
 # samtools re-roganises reads 
 time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam &amp;&amp;
+
+&#39; &gt; $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# convert decontaminated, sorted BAM, to FASTQ
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=deco_bamfq
+#SBATCH --output=deco_bamfq.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
 
 # stream outputs of non-interest to /dev/null
 time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n &gt;&gt; $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_*.[bam,sam] &amp;&amp;
 
-&#39; &gt; $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
+&#39; &gt; $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
 </code></pre>
 <p>As before, we can then send these jobs to the
 <code>slurm queue</code> for processing when resources become
 available.</p>
+<!-- sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1 -->
 <pre class="bash"><code>
 # ultimate test
-sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
 
+# overall 
 less $MAT/${TEST}_decont_out.log
+# intermediate
+less $MAT/deco_bt2align.txt
+less $MAT/deco_sambam.txt
+less $MAT/deco_bamfilt.txt
+less $MAT/deco_bamsort.txt
+less $MAT/deco_bamfq.txt
 
 ls -lsh $KDOUT/${TEST}*
 
