@@ -193,7 +193,8 @@ Next, we tell the HPC which programs we'll need for this work, which the HPC has
   * `GNU-parallel` for case where we can run many jobs in parallel.
 
 ```{bash, eval = FALSE}
-module load parallel fastqc multiqc kraken2 bowtie2
+# this is a list of all programs explicitly required in this workflow
+module load parallel fastqc multiqc trimmomtic bowtie2 kraken2 bracken
 ```
 
 
@@ -221,7 +222,16 @@ mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/fhi_redch_raw_multi $FQC/fhi_r
 
 # 1 - get the sequence data (& check)
 
-We copied the data from IPLA-CSIC (or elsewhere!) manually, into the `$RAW` dir, using `FileZilla`. Sometimes we will have to use `scp`, `sFTP`, or `rsync` instead - a web search should show how to do this. 
+We copied the data from IPLA-CSIC (or elsewhere!) manually, into the `$RAW` dir, using `FileZilla`. Sometimes we will have to use `scp`, `sFTP`, or `rsync` instead - a web search should show how to do this, and these programs should all be available on the HPC.
+
+For checking the sequence quality, we'll need the programs `FastQC` (quality profiling), and `MulltiQC` (unifying `FastQC` reports):
+
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+module load fastqc multiqc
+
+```
+
 
 Next, for our own information, we look at just the `fastq.gz` files, count the number of files, and run `FastQC` and `MultiQC` on them. 
 
@@ -239,11 +249,11 @@ less -S $RAW/$TEST*            # read through file, press q to quit
 ```
 
 
-### [`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) and [`MultiQC`](multiqc.info/)
+### `FastQC` and `MultiQC`
 
-`FastQC` is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this!
+[`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this!
 
-`FastQC` will process all `fastq(.qz)` files that it is passed. `MultiQC` will process all the `FastQC` outputs it finds in a directory, combine them, and place output in the dir specified (`multiqc_report.html` in `-o`). Keep in mind that `FastQC` and `MultiQC` outputs also contain text files of all this data (see the `multiqc_data` dir), if you want to use them for other graphics/reports etc.
+`FastQC` will process all `fastq(.qz)` files that it is passed. [`MultiQC`](multiqc.info/) will process all the `FastQC` outputs it finds in a directory, combine them, and place output in the dir specified (`multiqc_report.html` in `-o`). Keep in mind that `FastQC` and `MultiQC` outputs also contain text files of all this data (see the `multiqc_data` dir), if you want to use them for other graphics/reports etc.
 
 #### Check sequence quality, with `FastQC`, on one sample:
 
@@ -289,7 +299,7 @@ cat $SLURM/slurm_fqc.sh
 
 This `slurm` script will give a name, output-log, runtime, and number of threads needed to the `slurm manager`, and use the input and output dirs we give to find `fastq.gz\bz2` files, start FastQC, and place outputs in the $OUT dir. We need to 'give' this `slurm` to `sbatch`:
 
-**Note**: we have noticed that the `{}` brackets do not solve the problem of missing the `bz2` samples. We simply resubmitted the samples as `fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw` - this is not the right thing to do!
+> **NB**: we have noticed that the `{}` brackets do not solve the problem of missing the `bz2` samples. We simply resubmitted the samples as `fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw` - this is not solving the problem!
 
 ```{bash, eval = FALSE}
 # trust slurm
@@ -330,6 +340,13 @@ We use the program [`Trimmomatic`](http://www.usadellab.org/cms/index.php?page=t
 
   * removing adapter sequences
   * trimming the start and ends of reads, based on the `MultiQC` profile we made in section 1.
+
+For quality control, we'll need the programs `Trimmomatic` (trimming and filtering), `FastQC` (quality profiling), and `MulltiQC` (unifying `FastQC` reports):
+
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+module load fastqc multiqc trimmomatic
+```
 
 
 First, we will use `echo '...' > file.fa` to make a `fasta` file of the known adapter sequences, using references available on the Teagsc HPC, as well as the sequences provided by `Trimmomatic.`
@@ -558,8 +575,15 @@ In some environments (e.g. faeces, sludge, soil), contaminating sequences might 
 
 To address this as best we can, we remove contaminants based on a database of reference sequences **appropriate to our study**. We collect these sequences (search for the host, known contaminants, artificial sequences, foodstuffs, etc.), compile them into a database (i.e. a big file that's formatted so that it's easy for computers to search through it quickly), and then ask a program (e.g. the DNA-DNA alignment program, `bowtie2`) to look for, and remove, any sequences that match those contaminants.
 
+For decontamination, we'll need the programs `BowTie2` (database-building & aligning) and `samtools` (filtering files in `sam` and `bam` formats), as well as FastQC & MultiQC for profiling the sequences output.
 
-## manually removing contaminants - `bowtie2` + reference genomes
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+module load bowtie2 samtools parallel fastqc multiqc
+```
+
+
+## Decontaminate with `BowTie2`
 
 We need reference genomes relevant to our experiment. For this tutorial, we consider several possible sources of host contamination:
 
@@ -630,7 +654,8 @@ parallel gzip {} ::: $RAW/ref/*fna
 # check that all your reference genomes end in fna.gz! check that the names match in the next section...
 ```
 
-### `bowtie2` building and aligning
+
+###  `BowTie2` : make database
 
 We then need use `bowtie2` to build a reference database for all of these genomes in one place. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
 
@@ -648,15 +673,15 @@ time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_in
 ```
 
 
-That was quick! It was quick because the amount of data (`9MB`!) was small. Larger (real) genomes will require much longer to run, and so **we use a `slurm` script**. 
+That was quick! It was quick because the amount of data (`9MB`!) was small. Larger (real) genomes will require much longer to run, and likely require a `slurm` script.  
 
 Although `jfg` is not certain of the theory behind aligning to an index built from _multiple_ reference genomes (probably it uses the first match, even if there are several paralogous sequences), it should be possible by listing several `fasta` files as input to `bowtie2-build file1.fna.gz,file2.fna.gz,file3.fna.gz...` etc (as per the [`bowtie2` manual](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#main-arguments-1)). This avoids having to `cat` all the `fasta` files together to make one giant `fasta`. 
 
-However, as this is a big job, **we should notify `slurm` of the requirements**: 
+We need to notify `slurm` of the requirements: 
 
-  * as the human genome takes about a half hour to build, and there are 5-and-a-half genomes, we notify `slurm` that the job should take `30min * 5.5 ~= 3hr`.
-  * there are [suggestions](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance) that adding more and more threads to `bowtie2` doesn't make a huge difference, and it could mean we wait a long time for our job to be started. So we ask for only ten threads.
-  * Some tests have shown that 15GB of RAM is not enough for this job (>3GB per genome, x5.5...). RAM parameter is not specified below as the requirement is unknown.
+  * as the human genome takes about a half hour to build, and there are 5-and-a-half genomes, we notify `slurm` that the job should take `30min * 5.5 ~= 3hr`. Alternatively, remove this line to avoid the job being killed if it runs over. 
+  * there are [suggestions](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance) that adding more and more threads to `bowtie2` doesn't make a huge difference, and it could mean we wait a long time for our job to be started. So we ask for only 10 threads. We don';'t use the `$BT_threads` vairable as `slurm` can't 'see' this variable when it starts.
+  * Some desktop-pc tests have shown that 15GB of RAM is not enough for this job (>3GB per genome, x5.5...). RAM parameter is not specified below as the requirement is unknown.
 
 
 ```{bash, eval=FALSE}
@@ -684,17 +709,16 @@ $INOUT/mult_ref.bt2 #> $INOUT/mult_ref.buildlog # 2>&1
 ' > $MAT/slurm_bt2db.sh
 
 # and then run
-time $MAT/slurm_bt2db.sh $BT_DB
+$MAT/slurm_bt2db.sh $BT_DB
 
 ```
 
 This will give us a number of files ending in `.bt2` in our output dir. These are the reference files that `bowtie2` uses to check for contaminant sequences in the `fastq` data (if you want, you can now delete the reference `fna.gz` genomes!).
 
+
+### `BowTie2` : find contaminants 
+
 [`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
-
-We _can_ use `bowtie2` directly for filtering out contaminant reads, but because there are paired (`F+R`) reads, it's not quite as specific as we'd like. For better control, we can use the `samtools` program.
-
-  * 
 
 ```{bash, eval=FALSE}
 
@@ -705,8 +729,10 @@ less $KDOUT/${TEST}_bt2_refmapped.sam
 
 ```
 
+We _can_ use `bowtie2` directly for filtering out contaminant reads, but because there are paired (`F+R`) reads, it's not quite as specific as we'd like. For better control, we can use the `samtools` program below.
 
-### `samtools` for filtering sequence alignments
+
+### `samtools` : filtering contaminants
 
 ```{bash, eval=FALSE}
 ## next with samtools, 
@@ -730,8 +756,53 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 ```
 
 
+### decontaminate multiple samples
 
-## contaminant-removal pipeline - `KneadData`
+We can apply the same technique to all of our samples using `slurm`. THe database is already present, so we write a `slurm` script for the `BowTie2` alignment, `samtools` filtering, and `samtools` processing.
+
+```{bash, eval=FALSE}
+# build our BT2 database in slurm:
+echo '#!/bin/bash
+
+#SBATCH --job-name=bt_deco
+#SBATCH --output=bt_deco.txt
+#SBATCH --ntasks=10
+#SBATCH --time=179:00
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+## find the contaminants in our sequences, using bt2 + DB
+bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1.fastq.gz \
+-2 $FILT/${SAMPLE}_R2.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+## change format
+samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+
+# samtools removes reads which match (contaminant) reference genome
+samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+
+# samtools re-roganises reads 
+samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+# stream outputs of non-interest to /dev/null
+samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+
+
+
+
+```
+
+
+## Decontaminate with `KneadData`
 
 `Kneaddata` is a quality control pipeline developed by the [Huttenhower group](https://huttenhower.sph.harvard.edu) (home of `HUMAnN*`, `MetaPhlan*`, `LEfSe`, etc.) to do all of the above steps: `trimmomatic`, `bowtie2`, and `samtools`, in one go, using the human genome as a default reference. It can be very useful if we're setting things up for the first time, as it will download the required programs and a human database for us. We did not use it here because it is incredibly useful to have some idea of how to use `trimmomatic` and `bowtie2` to refine & identify reads of interest, alongside the face that our host sequences were not limited to humans and our programs are already installed.
 

@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">25 Oct 2022, 17:08</h4>
+<h4 class="date">26 Oct 2022, 11:15</h4>
 
 </div>
 
@@ -1756,7 +1756,8 @@ reconstruction</li>
 <li><code>GNU-parallel</code> for case where we can run many jobs in
 parallel.</li>
 </ul>
-<pre class="bash"><code>module load parallel fastqc multiqc kraken2 bowtie2</code></pre>
+<pre class="bash"><code># this is a list of all programs explicitly required in this workflow
+module load parallel fastqc multiqc trimmomtic bowtie2 kraken2 bracken</code></pre>
 </div>
 <div id="are-we-ready" class="section level4">
 <h4>are we ready?</h4>
@@ -1787,7 +1788,14 @@ mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/fhi_redch_raw_multi $FQC/fhi_r
 <p>We copied the data from IPLA-CSIC (or elsewhere!) manually, into the
 <code>$RAW</code> dir, using <code>FileZilla</code>. Sometimes we will
 have to use <code>scp</code>, <code>sFTP</code>, or <code>rsync</code>
-instead - a web search should show how to do this.</p>
+instead - a web search should show how to do this, and these programs
+should all be available on the HPC.</p>
+<p>For checking the sequence quality, we’ll need the programs
+<code>FastQC</code> (quality profiling), and <code>MulltiQC</code>
+(unifying <code>FastQC</code> reports):</p>
+<pre class="bash"><code># make sure you&#39;re on a compute node!
+module load fastqc multiqc
+</code></pre>
 <p>Next, for our own information, we look at just the
 <code>fastq.gz</code> files, count the number of files, and run
 <code>FastQC</code> and <code>MultiQC</code> on them.</p>
@@ -1802,25 +1810,25 @@ ls -lsh $RAW/$TEST*            # file details
 zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines
 less -S $RAW/$TEST*            # read through file, press q to quit</code></pre>
 <div id="fastqc-and-multiqc" class="section level3">
-<h3><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"><code>FastQC</code></a>
-and <a href="multiqc.info/"><code>MultiQC</code></a></h3>
-<p><code>FastQC</code> is an amazingly useful tool, for profiling the
-quality, consistency, and content of your sequence data. It takes
-samples of each file it is shown (compressed or uncompressed), checks
-the sequences and returns a <code>HTML</code> &amp; <code>zip</code>
-file for each <code>FASTQ</code>: the <code>HTML</code> is a report, and
-the <code>zip</code> is all the data from that report. Next,
+<h3><code>FastQC</code> and <code>MultiQC</code></h3>
+<p><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"><code>FastQC</code></a>
+is an amazingly useful tool, for profiling the quality, consistency, and
+content of your sequence data. It takes samples of each file it is shown
+(compressed or uncompressed), checks the sequences and returns a
+<code>HTML</code> &amp; <code>zip</code> file for each
+<code>FASTQ</code>: the <code>HTML</code> is a report, and the
+<code>zip</code> is all the data from that report. Next,
 <code>MultiQC</code> combines all the <code>FastQC</code> outputs into
 one report, summarising all that info in one place. Always check
 this!</p>
 <p><code>FastQC</code> will process all <code>fastq(.qz)</code> files
-that it is passed. <code>MultiQC</code> will process all the
-<code>FastQC</code> outputs it finds in a directory, combine them, and
-place output in the dir specified (<code>multiqc_report.html</code> in
-<code>-o</code>). Keep in mind that <code>FastQC</code> and
-<code>MultiQC</code> outputs also contain text files of all this data
-(see the <code>multiqc_data</code> dir), if you want to use them for
-other graphics/reports etc.</p>
+that it is passed. <a href="multiqc.info/"><code>MultiQC</code></a> will
+process all the <code>FastQC</code> outputs it finds in a directory,
+combine them, and place output in the dir specified
+(<code>multiqc_report.html</code> in <code>-o</code>). Keep in mind that
+<code>FastQC</code> and <code>MultiQC</code> outputs also contain text
+files of all this data (see the <code>multiqc_data</code> dir), if you
+want to use them for other graphics/reports etc.</p>
 <div id="check-sequence-quality-with-fastqc-on-one-sample" class="section level4">
 <h4>Check sequence quality, with <code>FastQC</code>, on one
 sample:</h4>
@@ -1874,11 +1882,13 @@ and number of threads needed to the <code>slurm manager</code>, and use
 the input and output dirs we give to find <code>fastq.gz\bz2</code>
 files, start FastQC, and place outputs in the $OUT dir. We need to
 ‘give’ this <code>slurm</code> to <code>sbatch</code>:</p>
-<p><strong>Note</strong>: we have noticed that the <code>{}</code>
+<blockquote>
+<p><strong>NB</strong>: we have noticed that the <code>{}</code>
 brackets do not solve the problem of missing the <code>bz2</code>
 samples. We simply resubmitted the samples as
 <code>fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw</code> - this is
-not the right thing to do!</p>
+not solving the problem!</p>
+</blockquote>
 <pre class="bash"><code># trust slurm
 sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
 
@@ -1942,6 +1952,11 @@ your quality, but we will focus on:</p>
 <li>trimming the start and ends of reads, based on the
 <code>MultiQC</code> profile we made in section 1.</li>
 </ul>
+<p>For quality control, we’ll need the programs <code>Trimmomatic</code>
+(trimming and filtering), <code>FastQC</code> (quality profiling), and
+<code>MulltiQC</code> (unifying <code>FastQC</code> reports):</p>
+<pre class="bash"><code># make sure you&#39;re on a compute node!
+module load fastqc multiqc trimmomatic</code></pre>
 <p>First, we will use <code>echo &#39;...&#39; &gt; file.fa</code> to make a
 <code>fasta</code> file of the known adapter sequences, using references
 available on the Teagsc HPC, as well as the sequences provided by
@@ -2324,9 +2339,14 @@ a database (i.e. a big file that’s formatted so that it’s easy for
 computers to search through it quickly), and then ask a program
 (e.g. the DNA-DNA alignment program, <code>bowtie2</code>) to look for,
 and remove, any sequences that match those contaminants.</p>
-<div id="manually-removing-contaminants---bowtie2-reference-genomes" class="section level2">
-<h2>manually removing contaminants - <code>bowtie2</code> + reference
-genomes</h2>
+<p>For decontamination, we’ll need the programs <code>BowTie2</code>
+(database-building &amp; aligning) and <code>samtools</code> (filtering
+files in <code>sam</code> and <code>bam</code> formats), as well as
+FastQC &amp; MultiQC for profiling the sequences output.</p>
+<pre class="bash"><code># make sure you&#39;re on a compute node!
+module load bowtie2 samtools parallel fastqc multiqc</code></pre>
+<div id="decontaminate-with-bowtie2" class="section level2">
+<h2>Decontaminate with <code>BowTie2</code></h2>
 <p>We need reference genomes relevant to our experiment. For this
 tutorial, we consider several possible sources of host
 contamination:</p>
@@ -2410,8 +2430,8 @@ size.</p>
 <pre class="bash"><code>parallel gzip {} ::: $RAW/ref/*fna
 
 # check that all your reference genomes end in fna.gz! check that the names match in the next section...</code></pre>
-<div id="bowtie2-building-and-aligning" class="section level3">
-<h3><code>bowtie2</code> building and aligning</h3>
+<div id="bowtie2-make-database" class="section level3">
+<h3><code>BowTie2</code> : make database</h3>
 <p>We then need use <code>bowtie2</code> to build a reference database
 for all of these genomes in one place. <code>BT_threads=9</code> because
 available locally - feel free to increase to something appropriate to
@@ -2428,8 +2448,7 @@ time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_in
 </code></pre>
 <p>That was quick! It was quick because the amount of data
 (<code>9MB</code>!) was small. Larger (real) genomes will require much
-longer to run, and so <strong>we use a <code>slurm</code>
-script</strong>.</p>
+longer to run, and likely require a <code>slurm</code> script.</p>
 <p>Although <code>jfg</code> is not certain of the theory behind
 aligning to an index built from <em>multiple</em> reference genomes
 (probably it uses the first match, even if there are several paralogous
@@ -2440,19 +2459,21 @@ files as input to
 manual</a>). This avoids having to <code>cat</code> all the
 <code>fasta</code> files together to make one giant
 <code>fasta</code>.</p>
-<p>However, as this is a big job, <strong>we should notify
-<code>slurm</code> of the requirements</strong>:</p>
+<p>We need to notify <code>slurm</code> of the requirements:</p>
 <ul>
 <li>as the human genome takes about a half hour to build, and there are
 5-and-a-half genomes, we notify <code>slurm</code> that the job should
-take <code>30min * 5.5 ~= 3hr</code>.</li>
+take <code>30min * 5.5 ~= 3hr</code>. Alternatively, remove this line to
+avoid the job being killed if it runs over.</li>
 <li>there are <a href="https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance">suggestions</a>
 that adding more and more threads to <code>bowtie2</code> doesn’t make a
 huge difference, and it could mean we wait a long time for our job to be
-started. So we ask for only ten threads.</li>
-<li>Some tests have shown that 15GB of RAM is not enough for this job
-(&gt;3GB per genome, x5.5…). RAM parameter is not specified below as the
-requirement is unknown.</li>
+started. So we ask for only 10 threads. We don’;‘t use the
+<code>$BT_threads</code> vairable as <code>slurm</code> can’t ’see’ this
+variable when it starts.</li>
+<li>Some desktop-pc tests have shown that 15GB of RAM is not enough for
+this job (&gt;3GB per genome, x5.5…). RAM parameter is not specified
+below as the requirement is unknown.</li>
 </ul>
 <pre class="bash"><code># build our BT2 database in slurm:
 echo &#39;#!/bin/bash
@@ -2478,13 +2499,16 @@ $INOUT/mult_ref.bt2 #&gt; $INOUT/mult_ref.buildlog # 2&gt;&amp;1
 &#39; &gt; $MAT/slurm_bt2db.sh
 
 # and then run
-time $MAT/slurm_bt2db.sh $BT_DB
+$MAT/slurm_bt2db.sh $BT_DB
 </code></pre>
 <p>This will give us a number of files ending in <code>.bt2</code> in
 our output dir. These are the reference files that <code>bowtie2</code>
 uses to check for contaminant sequences in the <code>fastq</code> data
 (if you want, you can now delete the reference <code>fna.gz</code>
 genomes!).</p>
+</div>
+<div id="bowtie2-find-contaminants" class="section level3">
+<h3><code>BowTie2</code> : find contaminants</h3>
 <p><a href="https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction"><code>Bowtie2</code>
 will align our dataset</a> against these reference indices, and make a
 note of what reads matched between the input (dataset) and reference
@@ -2492,22 +2516,19 @@ note of what reads matched between the input (dataset) and reference
 reference (hosts) as we are looking at the microbiome specifically.
 However, in other studies, we might be interested in the host sequences
 only, and would throw away everything else (all the microbes).</p>
-<p>We <em>can</em> use <code>bowtie2</code> directly for filtering out
-contaminant reads, but because there are paired (<code>F+R</code>)
-reads, it’s not quite as specific as we’d like. For better control, we
-can use the <code>samtools</code> program.</p>
-<ul>
-<li></li>
-</ul>
 <pre class="bash"><code>
 ## firstly, align our sequences to ref using bt2.
 bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${SAMPLE}_R1.fastq.gz -2 $FILT/${SAMPLE}_R2.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
 ## feel free to look at the output
 less $KDOUT/${TEST}_bt2_refmapped.sam
 </code></pre>
+<p>We <em>can</em> use <code>bowtie2</code> directly for filtering out
+contaminant reads, but because there are paired (<code>F+R</code>)
+reads, it’s not quite as specific as we’d like. For better control, we
+can use the <code>samtools</code> program below.</p>
 </div>
-<div id="samtools-for-filtering-sequence-alignments" class="section level3">
-<h3><code>samtools</code> for filtering sequence alignments</h3>
+<div id="samtools-filtering-contaminants" class="section level3">
+<h3><code>samtools</code> : filtering contaminants</h3>
 <pre class="bash"><code>## next with samtools, 
 samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam &gt; $KDOUT/${TEST}_bt2_refmapped.bam
 
@@ -2527,9 +2548,50 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 # rm sam 
 # output host mapped for checking</code></pre>
 </div>
+<div id="decontaminate-multiple-samples" class="section level3">
+<h3>decontaminate multiple samples</h3>
+<p>We can apply the same technique to all of our samples using
+<code>slurm</code>. THe database is already present, so we write a
+<code>slurm</code> script for the <code>BowTie2</code> alignment,
+<code>samtools</code> filtering, and <code>samtools</code>
+processing.</p>
+<pre class="bash"><code># build our BT2 database in slurm:
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=bt_deco
+#SBATCH --output=bt_deco.txt
+#SBATCH --ntasks=10
+#SBATCH --time=179:00
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+## find the contaminants in our sequences, using bt2 + DB
+bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1.fastq.gz \
+-2 $FILT/${SAMPLE}_R2.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+## change format
+samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+
+# samtools removes reads which match (contaminant) reference genome
+samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+
+# samtools re-roganises reads 
+samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+# stream outputs of non-interest to /dev/null
+samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+</code></pre>
 </div>
-<div id="contaminant-removal-pipeline---kneaddata" class="section level2">
-<h2>contaminant-removal pipeline - <code>KneadData</code></h2>
+</div>
+<div id="decontaminate-with-kneaddata" class="section level2">
+<h2>Decontaminate with <code>KneadData</code></h2>
 <p><code>Kneaddata</code> is a quality control pipeline developed by the
 <a href="https://huttenhower.sph.harvard.edu">Huttenhower group</a>
 (home of <code>HUMAnN*</code>, <code>MetaPhlan*</code>,

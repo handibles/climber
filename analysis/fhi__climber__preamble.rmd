@@ -30,6 +30,9 @@ catching failures from logs, compare etc.
 @jfg: there is, in addition, a database of human sequences which are poorly represented in the human genome, but are highlighted in Breitweizer et al.'s 2019 paper ["Human contamination in bacterial genomes has created thousands of spurious proteins"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6581058/). Currently looking for these sequences but not found yet. possibly pull out of kneaddata?
 ```
 
+no paramters are explored for bt build align, or samtools. Samtools format will require its own giude...
+
+rename, and standardising the name of samples & extentions etc.
 
 # to do
 ```{bash, eval = FALSE}
