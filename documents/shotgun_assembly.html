@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 16:36</h4>
+<h4 class="date">26 Oct 2022, 17:06</h4>
 
 </div>
 
@@ -2595,7 +2595,15 @@ rm $OUT/${SAMPLE}_*.[bam,sam] &amp;&amp;
 <p>As before, we can then send these jobs to the
 <code>slurm queue</code> for processing when resources become
 available.</p>
-<pre class="bash"><code>cat $MAT/samples | head -1
+<pre class="bash"><code>
+# ultimate test
+sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+
+less $MAT/${TEST}_decont_out.log
+
+ls -lsh $KDOUT/${TEST}*
+
+cat $MAT/samples | head -1
 
 for i in $(cat $MAT/samples | head -1 );
 
@@ -2607,6 +2615,16 @@ less $MAT/decont_out.log
 
 # should just show your stuff
 squeue -u $USER</code></pre>
+<!-- for i in $( cat $MAT/samples | head -1): -->
+<!--     do bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam ; -->
+<!--     samtools view -bS $KDOUT/${i}_bt2_refmapped.sam > $KDOUT/${i}_bt2_refmapped.bam ; -->
+<!--     samtools view -b -f 12 -F 256 $KDOUT/${i}_bt2_refmapped.bam > $KDOUT/${i}_bt2_decontamd.bam ; -->
+<!--     samtools sort -n -m 5G -@ $BT_threads $KDOUT/${i}_bt2_decontamd.bam -o $KDOUT/${i}_bt2_decontamd_sort.bam > ${i}_bam_sort.out ; -->
+<!--     samtools fastq -@ $BT_threads $KDOUT/${i}_bt2_decontamd_sort.bam -1 $KDOUT/${i}_bt2decon_R1.fastq.gz -2 $KDOUT/${i}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n ; -->
+<!-- done  >> $MAT/${i}_decont_out.log 2&>1 ; -->
+<!-- ls -lsh $KDOUT/${i}* -->
+<!--   ## removing intermediates: SAM and BAM are huge! delete --WHEN FINISHED-- -->
+<!--   rm $KDOUT/${i}*[sam,bam] -->
 </div>
 </div>
 <div id="decontaminate-with-kneaddata" class="section level2">
