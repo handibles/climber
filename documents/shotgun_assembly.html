@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 16:20</h4>
+<h4 class="date">26 Oct 2022, 16:22</h4>
 
 </div>
 
@@ -2570,8 +2570,8 @@ THREADS=$5
 ## find the contaminants in our sequences, using bt2 + DB
 time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
--1 $IN/${SAMPLE}_R1.fastq.gz \
--2 $FILT/${SAMPLE}_R2.fastq.gz \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 ## change format

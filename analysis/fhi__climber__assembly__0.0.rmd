@@ -779,8 +779,8 @@ THREADS=$5
 ## find the contaminants in our sequences, using bt2 + DB
 time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
--1 $IN/${SAMPLE}_R1.fastq.gz \
--2 $FILT/${SAMPLE}_R2.fastq.gz \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 ## change format
