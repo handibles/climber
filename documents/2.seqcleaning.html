@@ -358,410 +358,176 @@ pre code {
 <h1 class="title toc-ignore">shotgun metagenomics - sequencing QC -
 filtering and trimming</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">20 Oct 2022, 23:10</h4>
+<h4 class="date">26 Oct 2022, 14:13</h4>
 
 </div>
 
-<div id="TOC">
-<ul>
-<li><a href="#quality-control-check">2 - Quality Control (&amp;
-check)</a>
-<ul>
-<li><a href="#first-pass-with-trimmomatic">First Pass with
-<code>Trimmomatic</code></a></li>
-<li><a href="#second-pass-etc.">Second Pass etc.</a></li>
-</ul></li>
-<li><a href="#reading-reference">Reading / Reference</a></li>
-</ul>
-</div>
 
-<div id="quality-control-check" class="section level1">
-<h1>2 - Quality Control (&amp; check)</h1>
-<div id="first-pass-with-trimmomatic" class="section level2">
-<h2>First Pass with <code>Trimmomatic</code></h2>
-<p>Hopefully, there are not too many problems with the data!
-Nevertheless, we <em>always</em> do a little cleaning of the sequences
-before we analyse them. There are several things that can go wrong, and
-we can make the overall dataset better by removing reads or trimming
-off:</p>
-<ul>
-<li>bases with low quality scores (Q score, for illumina: &lt; ~20),
-meaning that you cannot be sure a base is correct / accurate</li>
-<li>even if the Q score is good, the start (<code>5&#39;</code>) and end
-(<code>3&#39;</code>) of a read are often best removed</li>
-<li>“adapter”, “artefact”, or “technical” sequences (the bits of DNA
-that attach the DNA sample to the machine) can get included by
-accident</li>
-<li>“read-through” sequences, where the sequencing gets all the way to
-the opposite end, and starts reading adapter sequences, or making
-sequences up</li>
-<li>other strange problems with operation</li>
-</ul>
-<p>We use the program <a href="http://www.usadellab.org/cms/index.php?page=trimmomatic"><code>Trimmomatic</code></a>
-to do all of this. This java-based program can do many things to check
-your quality, but we will focus on:</p>
-<ul>
-<li>removing adapter sequences</li>
-<li>trimming the start and ends of reads, based on the
-<code>MultiQC</code> profile we made in section 1.</li>
-</ul>
-<p>First, we will use <code>echo &#39;...&#39; &gt; file.fa</code> to make a
-<code>fasta</code> file of the known adapter sequences, using references
-available on the Teagsc HPC, as well as the sequences provided by
-<code>Trimmomatic.</code></p>
-<pre class="bash"><code>echo &#39;&gt;adapter_seq
-CTGTCTCTTATACACATCT
-&gt;adapter_mate_seq
-AGATGTGTATAAGAGACAG
-&gt;Transposase_Adap__for_tagmentation_1
-TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
-&gt;Transposase_Adap__for_tagmentation_2
-GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
-&gt;PCR_primer_index_1
-CAAGCAGAAGACGGCATACGAGATNNNNNNNGTCTCGTGGGCTCGG
-&gt;PCR_primer_index_2
-AATGATACGGCGACCACCGAGATCTACACNNNNNTCGTCGGCAGCGTC
-&gt;PCR_primer_index_2_rc
-GACGCTGCCGACGANNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT
-&gt;PCR_primer_index_1_rc
-CCGAGCCCACGAGACNNNNNNNATCTCGTATGCCGTCTTCTGCTTG
-&gt;Transposase_Adap__for_tagmentation_2_rc
-CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
-&gt;Transposase_Adap__for_tagmentation_1_rc
-CTGTCTCTTATACACATCTGACGCTGCCGACGA
-&gt;adapter_mate_seq_rc
-CTGTCTCTTATACACATCT
-&gt;adapter_seq_rc
-AGATGTGTATAAGAGACAG&#39; &gt; $MAT/fqc_trimmo_ill_ref.fa
-
-# have a look!
-less $MAT/fqc_trimmo_ill_ref.fa   # press q to exit
-</code></pre>
-<div id="first-pass-with-trimmomatic-on-one-sample" class="section level4">
-<h4>First Pass, with <code>Trimmomatic</code>, on one sample:</h4>
-<p>To clean the <code>$TEST</code> sample, we use these variables:</p>
-<ul>
-<li><code>$RAW</code> : this was input dir assigned as
-<code>/data/Food/primary/../././</code></li>
-<li><code>$FILT</code> : this was the output dir assigned as
-<code>/data/Food/analysis/../././</code></li>
-<li><code>$TEST</code> : this was the ‘test’ sample, assigned as
-<code>XXXXXXX</code></li>
-<li><code>$MAT</code> : this was where we stored scripts, logs, and the
-<code>fasta</code> above assigned as <code>./././Materials</code>
-<ul>
-<li><em>note</em> paths above not completed without reference to Teagasc
-HPC…</li>
-</ul></li>
-</ul>
-<p>These variables help us to tell <code>Trimmomatic</code> the
-following:</p>
-<table>
-<colgroup>
-<col width="49%" />
-<col width="50%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>option</th>
-<th>effect</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>PE</code></td>
-<td>paired-end mode, so examine them together</td>
-</tr>
-<tr class="even">
-<td><code>$RAW/${TEST}_R1_001.fastq.gz</code></td>
-<td>input <code>F</code> reads</td>
-</tr>
-<tr class="odd">
-<td><code>$RAW/${TEST}_R2_001.fastq.gz</code></td>
-<td>input <code>R</code> reads</td>
-</tr>
-<tr class="even">
-<td><code>$FILT/${TEST}_R1_trimm.fastq.gz</code></td>
-<td>output for trimmed <code>F</code> reads</td>
-</tr>
-<tr class="odd">
-<td><code>$FILT/${TEST}_R1_trimm_unpaired.fastq.gz</code></td>
-<td>output for trimmed <code>F</code> reads that have lost their
-<code>R</code> mate (see below)</td>
-</tr>
-<tr class="even">
-<td><code>$FILT/${TEST}_R2_trimm.fastq.gz</code></td>
-<td>output for trimmed <code>R</code> reads</td>
-</tr>
-<tr class="odd">
-<td><code>$FILT/${TEST}_R2_trimm_unpaired.fastq.gz</code></td>
-<td>output for trimmed <code>R</code> reads that have lost their
-<code>F</code> mate (see below)</td>
-</tr>
-<tr class="even">
-<td><code>HEADCROP:25</code></td>
-<td>trim the first 25bp from 5’ ends</td>
-</tr>
-<tr class="odd">
-<td><code>CROP:125</code></td>
-<td>trim everything*after** 125bp from 3’ ends</td>
-</tr>
-<tr class="even">
-<td><code>ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5</code></td>
-<td>using the reference <code>fasta</code> above, we trim reads with
-<strong>check parameters on trimming</strong></td>
-</tr>
-<tr class="odd">
-<td><code>SLIDINGWINDOW:6:15</code></td>
-<td><strong>check parameters on trimming</strong></td>
-</tr>
-<tr class="even">
-<td><code>MINLEN:80</code></td>
-<td>after cropping &amp; trimming, sequences must be at least 80bp long
-to be kept (otherwise delete them)</td>
-</tr>
-<tr class="odd">
-<td><code>-threads 6</code></td>
-<td>use 6 threads (tasks/jobs) in parallel</td>
-</tr>
-<tr class="even">
-<td><code>&gt; $FILT/trimmo_${TEST}.out</code></td>
-<td>use <code>&gt;</code> to send error or system messages to a
-<code>logfile</code> so you can check for errors afterwards.</td>
-</tr>
-</tbody>
-</table>
-<p><code>Trimmomatic</code> checks the quality of our sequences,
-trimming off “bad” sequence bases, and discarding “bad” reads. Most
-reads will still be paired (have a matching <code>F</code> and
-<code>R</code> read). In some cases, the <code>F</code> read is
-discarded (thrown away) but we keep the matching <code>R</code> read
-because it is good quality (or keep <code>F</code> and discard
-<code>R</code>). As a result of this, <code>Trimmomatic</code> will sort
-each <em>sample</em> into 4 files:</p>
-<ol style="list-style-type: decimal">
-<li>paired F reads that have a matching R read:
-<code>$FILT/${TEST}_R1_trimm.fastq.gz</code></li>
-<li>paired R reads that have a matching F read:
-<code>$FILT/${TEST}_R2_trimm.fastq.gz</code></li>
-<li>unpaired F reads that don’t have a matching R read:
-<code>$FILT/${TEST}_R1_trimm_unpaired.fastq.gz</code></li>
-<li>unpaired R reads that don’t have a matching F read:
-<code>$FILT/${TEST}_R2_trimm_unpaired.fastq.gz</code></li>
-</ol>
-<p><strong>For now</strong>, we will <strong>not</strong> use the
-unpaired reads (we ignore them!), as it can lead to complications
-elsewhere (because of the mix of paired and unpaired reads, which is a
-problem for some programs). Note also that there are <em>many</em> other
-options available, to tackle different problems - see the <a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
-manual</a> for more.</p>
-<!-- ...but here's the code for it: -->
+<p><code>article in suspension</code></p>
+<!-- # 2 - Quality Control (& check) -->
+<!-- ## First Pass with `Trimmomatic` -->
+<!-- Hopefully, there are not too many problems with the data! Nevertheless, we _always_ do a little cleaning of the sequences before we analyse them. There are several things that can go wrong, and we can make the overall dataset better by removing reads or trimming off:  -->
+<!--   * bases with low quality scores (Q score, for illumina: < ~20), meaning that you cannot be sure a base is correct / accurate -->
+<!--   * even if the Q score is good, the start (`5'`) and end (`3'`) of a read are often best removed -->
+<!--   * "adapter", "artefact", or "technical" sequences (the bits of DNA that attach the DNA sample to the machine) can get included by accident -->
+<!--   * "read-through" sequences, where the sequencing gets all the way to the opposite end, and starts reading adapter sequences, or making sequences up -->
+<!--   * other strange problems with operation -->
+<!-- We use the program [`Trimmomatic`](http://www.usadellab.org/cms/index.php?page=trimmomatic) to do all of this. This java-based program can do many things to check your quality, but we will focus on: -->
+<!--   * removing adapter sequences -->
+<!--   * trimming the start and ends of reads, based on the `MultiQC` profile we made in section 1. -->
+<!-- First, we will use `echo '...' > file.fa` to make a `fasta` file of the known adapter sequences, using references available on the Teagsc HPC, as well as the sequences provided by `Trimmomatic.` -->
 <!-- ```{bash, eval = FALSE} -->
-<!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R1_trimm.fastq.gz > $FILT/{}_R1.fastq.gz" -->
-<!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R2_trimm.fastq.gz > $FILT/{}_R2.fastq.gz" -->
+<!-- echo '>adapter_seq -->
+<!-- CTGTCTCTTATACACATCT -->
+<!-- >adapter_mate_seq -->
+<!-- AGATGTGTATAAGAGACAG -->
+<!-- >Transposase_Adap__for_tagmentation_1 -->
+<!-- TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG -->
+<!-- >Transposase_Adap__for_tagmentation_2 -->
+<!-- GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG -->
+<!-- >PCR_primer_index_1 -->
+<!-- CAAGCAGAAGACGGCATACGAGATNNNNNNNGTCTCGTGGGCTCGG -->
+<!-- >PCR_primer_index_2 -->
+<!-- AATGATACGGCGACCACCGAGATCTACACNNNNNTCGTCGGCAGCGTC -->
+<!-- >PCR_primer_index_2_rc -->
+<!-- GACGCTGCCGACGANNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT -->
+<!-- >PCR_primer_index_1_rc -->
+<!-- CCGAGCCCACGAGACNNNNNNNATCTCGTATGCCGTCTTCTGCTTG -->
+<!-- >Transposase_Adap__for_tagmentation_2_rc -->
+<!-- CTGTCTCTTATACACATCTCCGAGCCCACGAGAC -->
+<!-- >Transposase_Adap__for_tagmentation_1_rc -->
+<!-- CTGTCTCTTATACACATCTGACGCTGCCGACGA -->
+<!-- >adapter_mate_seq_rc -->
+<!-- CTGTCTCTTATACACATCT -->
+<!-- >adapter_seq_rc -->
+<!-- AGATGTGTATAAGAGACAG' > $MAT/fqc_trimmo_ill_ref.fa -->
+<!-- # have a look! -->
+<!-- less $MAT/fqc_trimmo_ill_ref.fa   # press q to exit -->
 <!-- ``` -->
-<p>When it is all put together, it looks like this (the <code>\</code>
-character allows us to start a newline without interrupting the
-command):</p>
-<pre class="bash"><code>trimmomatic PE \
-  $RAW/${TEST}_R1_001.fastq.gz $RAW/${TEST}_R2_001.fastq.gz \
-  $FILT/${TEST}_R1_trimm.fastq.gz $FILT/${TEST}_R1_trimm_unpaired.fastq.gz \
-  $FILT/${TEST}_R2_trimm.fastq.gz $FILT/${TEST}_R2_trimm_unpaired.fastq.gz \
-  HEADCROP:25 \
-  CROP:125 \
-  ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5 \
-  SLIDINGWINDOW:6:15 MINLEN:80 \
-  -threads 6 &gt; $FILT/trimmo_${TEST}.out
-
-# when finished, look at the output:
-less $FILT/trimmo_${TEST}.out</code></pre>
-</div>
-<div id="first-pass-with-trimmomatic-on-multiple-samples" class="section level4">
-<h4>First Pass, with <code>Trimmomatic</code>, on multiple samples:</h4>
-<p>Because these reads are paired-end, we need to set up a
-<code>slurm</code> script to process each <strong>sample name</strong>,
-find the <code>F</code> and <code>R</code> <code>fastq.gz</code> files,
-process them together, and output them to the correct folders. There are
-a few ways to get the sample names, but because we will need to process
-each sample name several times, we are going to use a simple, re-usable
-method:</p>
-<ul>
-<li>copy the sample names (not the full file names) to a text file, with
-one sample name per line</li>
-<li>to process each sample, we then go through the text file, using each
-sample name in turn.</li>
-</ul>
-<p>If you are very careful and have a lot of time, you can type all the
-sample names into a text file by hand. You can also do it quickly using
-a chain of bash commands joined together by the <a href="https://ubuntu.com/tutorials/command-line-for-beginners#6-a-bit-of-plumbing">‘<code>|</code>’
-or <code>pipe</code> character</a>:</p>
-<table>
-<colgroup>
-<col width="53%" />
-<col width="46%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>command</th>
-<th>output</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>ls $RAW/*fastq.gz</code></td>
-<td>list all filenames in <code>$RAW</code> ending in
-<code>fastq.gz</code></td>
-</tr>
-<tr class="even">
-<td><code>sed -e ...</code></td>
-<td>simplifies the filename using <code>regex</code> (<code>-e</code>
-flag; <code>sed</code> &amp; <code>regex</code> are complex but ++useful
-- see <a href="https://www.codesmith.io/blog/understanding-regex">intro
-here</a>)</td>
-</tr>
-<tr class="odd">
-<td><code>s/a/b/g</code></td>
-<td><code>sed</code>: <code>s</code>ubstitute <code>a</code> for
-<code>b</code>, everywhere its found (i.e. <code>g</code>lobally)</td>
-</tr>
-<tr class="even">
-<td><code>.*\/\(.*\)_R._001.*</code></td>
-<td><code>sed</code> - our <code>a</code> to be replaced: find text
-matching <code>/(...)_R._001</code>, where ‘<code>.</code>’ can be
-anything, and <em>keep the bit in brackets</em></td>
-</tr>
-<tr class="odd">
-<td><code>\1</code></td>
-<td><code>sed</code> - our <code>b</code> to replace <code>a</code>:
-just paste in the bit found in brackets</td>
-</tr>
-<tr class="even">
-<td><code>sort</code></td>
-<td>sorts filenames alphabetically - this is necessary for
-<code>uniq</code></td>
-</tr>
-<tr class="odd">
-<td><code>uniq</code></td>
-<td>gives each unique name</td>
-</tr>
-<tr class="even">
-<td><code>&gt; $MAT/samples</code></td>
-<td>send filenames to a file in <code>$MAT</code> called
-<code>samples</code></td>
-</tr>
-</tbody>
-</table>
-<pre class="bash"><code># combine all those different parts!
-ls $RAW/*fastq.gz | sed -e &#39;s/.*\/\(.*\)_R._001.*/\1/g&#39; | sort | uniq | &gt; $MAT/samples</code></pre>
-<p>We can then use <code>cat $MAT/samples</code> or
-<code>less $MAT/samples</code> to print out all the sample names. We can
-also feed all these sample names into a <code>for-loop</code>, which
-takes each row (sample name) and places it inside the
-<code>for-loop</code> wherever it finds (e.g.) <code>$i</code>
-(<code>$i</code> is what everyone uses, but it’s just a variable like
-$MAT etc - it could be anything you choose).</p>
-<p>First, we make a <code>slurm</code> script for running
-<code>Trimmomatic</code>:</p>
-<pre class="bash"><code>echo &#39;#!/bin/bash
-
-#SBATCH –job-name=trimmo_raw
-#SBATCH –output=trimmo_raw.txt
-
-#SBATCH –ntasks=4
-#SBATCH –time=06:00
-
-# these take the terms given after the  
-SAMPLE=$1
-IN=$2
-OUT=$3
-REFDIR=$4
-
-# trimmomatic - use backslash to separate rows
-trimmomatic PE \
-$IN/${SAMPLE}_R1_001.fastq.{bz2,gz} \
-$IN/${SAMPLE}_R2_001.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm.fastq.{bz2,gz} \
-$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.{bz2,gz} \
-HEADCROP:25 \
-CROP:125 \
-ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
-SLIDINGWINDOW:6:15 \
-MINLEN:80 
--threads 6 &gt; $OUT/trimmo_${SAMPLE}.out #2&gt;&amp;1&#39; &gt; $MAT/slurms/slurm_trimmo.sh
-</code></pre>
-<p>Then we make a simple <a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>
-(see this link)</a> that repeats the command
-<code>sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT</code> for
-every possible value of <code>$i</code> (all the sample names). In this
-way, we can use 6 threads to process <em>one sample after another</em>,
-with the job using 6 threads as we specified above (i.e. process samples
-<em>in serial</em> rather than <em>in parallel</em>).</p>
-<pre class="bash"><code># this command lists all the sample names
-cat $MAT/samples
-
-# we can put that command $(in backets);, and feed it into the for-loop like this:
-for i in $(cat $MAT/samples);
-
-  # and it will repeat this command for all the different values of $i, below:
-  do sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT;
-
-# close the for-loop
-done
-</code></pre>
-</div>
-<div id="fastqc-and-multiqc" class="section level4">
-<h4>fastqc and multiqc</h4>
-<p>Again, we check the <code>Trimmomatic</code> output with
-<code>FastQC/MultiQC</code>, copying the multiqc_report to our computer,
-and seeing if there’s much improvement.</p>
-<pre class="bash"><code>fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
-multiqc $FQC/fhi_redch_filt -o $FQC/multi_filt</code></pre>
-</div>
-</div>
-<div id="second-pass-etc." class="section level2">
-<h2>Second Pass etc.</h2>
-<p>It is hard to know when the quality is ‘good enough’. In general, we
-should keep above <code>Q30</code>, but this is not an indicator of
-other things like adapter contamination. Often, a later step will not
-work, and it can be necessary to be stricter in our cleaning, or try
-different approaches etc. Be clear with yourself, and with other people,
-about what pre-processing steps you are taking.</p>
-<p>Sometimes, it might be necessary to use <code>Trimmomatic</code> more
-than once before the sequence is ‘clean’. In general it is easier to
-program, easier to organise, and easier to reproduce a metagenomics
-analysis when all sequence cleaning steps are carried out in one go.
-Again, <strong>keep notes of what you have done</strong> - this makes
-remembering what happened much easier.</p>
-<hr />
-</div>
-</div>
-<div id="reading-reference" class="section level1">
-<h1>Reading / Reference</h1>
-<blockquote>
-<p><a href="https://duckduckgo.com/?q=fastqc&amp;t=vivaldi&amp;atb=v314-1&amp;ia=web">FastQC
-site + support</a> - note that it’s also available as an <code>R</code>
-library…</p>
-</blockquote>
-<blockquote>
-<p><a href="https://multiqc.info">MultiQC site + support</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic
-site</a> and <a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf">Trimmomatic
-manual</a>.</p>
-</blockquote>
-<blockquote>
-<p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s -
-first step in <code>bash</code> superpowers</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://www.marcc.jhu.edu/getting-started/additional-resources/distributing-tasks-with-slurm-and-gnu-parallel/">slurm
-: examples of fancy job-queues for supercomputers like the
-<code>HPC</code></a></p>
-</blockquote>
-</div>
+<!-- #### First Pass, with `Trimmomatic`, on one sample: -->
+<!-- To clean the `$TEST` sample, we use these variables: -->
+<!--   * `$RAW` : this was input dir assigned as `/data/Food/primary/../././`  -->
+<!--   * `$FILT` : this was the output dir assigned as `/data/Food/analysis/../././`  -->
+<!--   * `$TEST` :  this was the 'test' sample, assigned as `XXXXXXX` -->
+<!--   * `$MAT` :  this was where we stored scripts, logs, and the `fasta` above assigned as `./././Materials` -->
+<!--     + *note* paths above not completed without reference to Teagasc HPC...   -->
+<!-- These variables help us to tell `Trimmomatic` the following: -->
+<!-- option                            | effect -->
+<!-- --------------------------------- | ---------------------------------- -->
+<!-- `PE`                              | paired-end mode, so examine them together -->
+<!-- `$RAW/${TEST}_R1_001.fastq.gz`    | input `F`  reads -->
+<!-- `$RAW/${TEST}_R2_001.fastq.gz`    | input `R` reads -->
+<!-- `$FILT/${TEST}_R1_trimm.fastq.gz` | output for trimmed `F` reads -->
+<!-- `$FILT/${TEST}_R1_trimm_unpaired.fastq.gz` | output for trimmed `F` reads that have lost their `R` mate (see below) -->
+<!-- `$FILT/${TEST}_R2_trimm.fastq.gz` | output for trimmed `R` reads -->
+<!-- `$FILT/${TEST}_R2_trimm_unpaired.fastq.gz` | output for trimmed `R` reads that have lost their `F` mate (see below)  -->
+<!-- `HEADCROP:25`                     | trim the first 25bp from 5' ends   -->
+<!-- `CROP:125`                        | trim everything*after** 125bp from 3' ends -->
+<!-- `ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5` | using the reference `fasta` above, we trim reads with **check parameters on trimming** -->
+<!-- `SLIDINGWINDOW:6:15`              | **check parameters on trimming** -->
+<!-- `MINLEN:80`                       | after cropping & trimming, sequences must be at least 80bp long to be kept (otherwise delete them) -->
+<!-- `-threads 6`                      | use 6 threads (tasks/jobs) in parallel -->
+<!-- `> $FILT/trimmo_${TEST}.out`      | use `>` to send error or system messages to a `logfile` so you can check for errors afterwards.  -->
+<!-- `Trimmomatic` checks the quality of our sequences, trimming off "bad" sequence bases, and discarding "bad" reads. Most reads will still be paired (have a matching `F` and `R` read). In some cases, the `F` read is discarded (thrown away) but we keep the matching `R` read because it is good quality (or keep `F` and discard `R`). As a result of this, `Trimmomatic` will sort each _sample_ into 4 files: -->
+<!--   1. paired F reads that have a matching R read: `$FILT/${TEST}_R1_trimm.fastq.gz` -->
+<!--   2. paired R reads that have a matching F read: `$FILT/${TEST}_R2_trimm.fastq.gz` -->
+<!--   3. unpaired F reads that don't have a matching R read: `$FILT/${TEST}_R1_trimm_unpaired.fastq.gz` -->
+<!--   4. unpaired R reads that don't have a matching F read: `$FILT/${TEST}_R2_trimm_unpaired.fastq.gz` -->
+<!--   **For now**, we will **not** use the unpaired reads (we ignore them!), as it can lead to complications elsewhere (because of the mix of paired and unpaired reads, which is a problem for some programs). Note also that there are _many_ other options available, to tackle different problems - see the [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf) for more.   -->
+<!-- <!-- ...but here's the code for it: -->
+<p>–&gt; <!-- <!-- ```{bash, eval = FALSE} --> –&gt;
+<!-- <!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R1_trimm.fastq.gz > $FILT/{}_R1.fastq.gz" -->
+–&gt;
+<!-- <!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R2_trimm.fastq.gz > $FILT/{}_R2.fastq.gz" -->
+–&gt; <!-- <!-- ``` --> –&gt;</p>
+<!-- When it is all put together, it looks like this (the `\` character allows us to start a newline without interrupting the command): -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- trimmomatic PE \ -->
+<!--   $RAW/${TEST}_R1_001.fastq.gz $RAW/${TEST}_R2_001.fastq.gz \ -->
+<!--   $FILT/${TEST}_R1_trimm.fastq.gz $FILT/${TEST}_R1_trimm_unpaired.fastq.gz \ -->
+<!--   $FILT/${TEST}_R2_trimm.fastq.gz $FILT/${TEST}_R2_trimm_unpaired.fastq.gz \ -->
+<!--   HEADCROP:25 \ -->
+<!--   CROP:125 \ -->
+<!--   ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5 \ -->
+<!--   SLIDINGWINDOW:6:15 MINLEN:80 \ -->
+<!--   -threads 6 > $FILT/trimmo_${TEST}.out -->
+<!-- # when finished, look at the output: -->
+<!-- less $FILT/trimmo_${TEST}.out -->
+<!-- ``` -->
+<!-- #### First Pass, with `Trimmomatic`, on multiple samples: -->
+<!-- Because these reads are paired-end, we need to set up a `slurm` script to process each **sample name**, find the `F` and `R` `fastq.gz` files, process them together, and output them to the correct folders. There are a few ways to get the sample names, but because we will need to process each sample name several times, we are going to use a simple, re-usable method: -->
+<!--   * copy the sample names (not the full file names) to a text file, with one sample name per line -->
+<!--   * to process each sample, we then go through the text file, using each sample name in turn. -->
+<!-- If you are very careful and have a lot of time, you can type all the sample names into a text file by hand. You can also do it quickly using a chain of bash commands joined together by the ['`|`' or `pipe` character](https://ubuntu.com/tutorials/command-line-for-beginners#6-a-bit-of-plumbing): -->
+<!-- command | output -->
+<!-- ------- | ------ -->
+<!-- `ls $RAW/*fastq.gz` | list all filenames in `$RAW` ending in `fastq.gz` -->
+<!-- `sed -e ...` | simplifies the filename using `regex` (`-e` flag; `sed` & `regex` are complex but ++useful - see [intro here](https://www.codesmith.io/blog/understanding-regex)) -->
+<!-- `s/a/b/g` | `sed`: `s`ubstitute `a` for `b`, everywhere its found (i.e. `g`lobally) -->
+<!-- `.*\/\(.*\)_R._001.*` | `sed` - our `a` to be replaced: find text matching `/(...)_R._001`, where '`.`' can be anything, and _keep the bit in brackets_ -->
+<!-- `\1` | `sed` - our `b` to replace `a`: just paste in the bit found in brackets -->
+<!-- `sort` | sorts filenames alphabetically - this is necessary for `uniq` -->
+<!-- `uniq` | gives each unique name -->
+<!-- `> $MAT/samples` | send filenames to a file in `$MAT` called `samples` -->
+<!-- ```{bash, eval=FALSE} -->
+<!-- # combine all those different parts! -->
+<!-- ls $RAW/*fastq.gz | sed -e 's/.*\/\(.*\)_R._001.*/\1/g' | sort | uniq | > $MAT/samples -->
+<!-- ``` -->
+<!-- We can then use `cat $MAT/samples` or `less $MAT/samples` to print out all the sample names. We can also feed all these sample names into a `for-loop`, which takes each row (sample name) and places it inside the `for-loop` wherever it finds (e.g.) `$i`  (`$i` is what everyone uses, but it's just a variable like $MAT etc - it could be anything you choose). -->
+<!-- First, we make a `slurm` script for running `Trimmomatic`: -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH –job-name=trimmo_raw -->
+<!-- #SBATCH –output=trimmo_raw.txt -->
+<!-- #SBATCH –ntasks=4 -->
+<!-- #SBATCH –time=06:00 -->
+<!-- # these take the terms given after the   -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REFDIR=$4 -->
+<!-- # trimmomatic - use backslash to separate rows -->
+<!-- trimmomatic PE \ -->
+<!-- $IN/${SAMPLE}_R1_001.fastq.{bz2,gz} \ -->
+<!-- $IN/${SAMPLE}_R2_001.fastq.{bz2,gz} \ -->
+<!-- $OUT/${SAMPLE}_R1_trimm.fastq.{bz2,gz} \ -->
+<!-- $OUT/${SAMPLE}_R1_trimm_unpaired.fastq.{bz2,gz} \ -->
+<!-- $OUT/${SAMPLE}_R2_trimm.fastq.{bz2,gz} \ -->
+<!-- $OUT/${SAMPLE}_R2_trimm_unpaired.fastq.{bz2,gz} \ -->
+<!-- HEADCROP:25 \ -->
+<!-- CROP:125 \ -->
+<!-- ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \ -->
+<!-- SLIDINGWINDOW:6:15 \ -->
+<!-- MINLEN:80  -->
+<!-- -threads 6 > $OUT/trimmo_${SAMPLE}.out #2>&1' > $MAT/slurms/slurm_trimmo.sh -->
+<!-- ``` -->
+<!-- Then we make a simple [`for-loop` (see this link)](https://linuxize.com/post/bash-for-loop/) that repeats the command `sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT` for every possible value of `$i` (all the sample names). In this way, we can use 6 threads to process _one sample after another_, with the job using 6 threads as we specified above (i.e. process samples *in serial* rather than *in parallel*). -->
+<!-- ```{bash, eval=FALSE} -->
+<!-- # this command lists all the sample names -->
+<!-- cat $MAT/samples -->
+<!-- # we can put that command $(in backets);, and feed it into the for-loop like this: -->
+<!-- for i in $(cat $MAT/samples); -->
+<!--   # and it will repeat this command for all the different values of $i, below: -->
+<!--   do sbatch $MAT/slurms/slurm_trimmo.sh $i $RAW $FILT $MAT; -->
+<!-- # close the for-loop -->
+<!-- done -->
+<!-- ``` -->
+<!-- #### fastqc and multiqc -->
+<!-- Again, we check the `Trimmomatic` output with `FastQC/MultiQC`, copying the multiqc_report to our computer, and seeing if there's much improvement. -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt -->
+<!-- multiqc $FQC/fhi_redch_filt -o $FQC/multi_filt -->
+<!-- ``` -->
+<!-- ## Second Pass etc. -->
+<!-- It is hard to know when the quality is 'good enough'. In general, we should keep above `Q30`, but this is not an indicator of other things like adapter contamination. Often, a later step will not work, and it can be necessary to be stricter in our cleaning, or try different approaches etc. Be clear with yourself, and with other people, about what pre-processing steps you are taking.   -->
+<!-- Sometimes, it might be necessary to use `Trimmomatic` more than once before the sequence is 'clean'. In general it is easier to program, easier to organise, and easier to reproduce a metagenomics analysis when all sequence cleaning steps are carried out in one go. Again, **keep notes of what you have done** - this makes remembering what happened much easier.   -->
+<!-- --- -->
+<!-- # Reading / Reference -->
+<!-- > [FastQC site + support](https://duckduckgo.com/?q=fastqc&t=vivaldi&atb=v314-1&ia=web) - note that it's also available as an `R` library... -->
+<!-- > [MultiQC site + support](https://multiqc.info) -->
+<!-- > [Trimmomatic site](http://www.usadellab.org/cms/index.php?page=trimmomatic) and [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf). -->
+<!-- > [`for-loop`s - first step in `bash` superpowers](https://linuxize.com/post/bash-for-loop/) -->
+<!-- > [slurm : examples of fancy job-queues for supercomputers like the `HPC`](https://www.marcc.jhu.edu/getting-started/additional-resources/distributing-tasks-with-slurm-and-gnu-parallel/) -->
 
 
 

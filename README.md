@@ -17,12 +17,12 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
 Metagenomic shotgun assembly covers the following steps:
 
-  0. <a href="/documents/shotgun_assembly.html#setup-your-environment">Setting up your analysis</a>
-  1. <a href="/documents/shotgun_assembly.html#get-the-sequence-data-check.html">Checking your sequence data</a>
-  2. <a href="/documents/shotgun_assembly.html#quality-control-check.html">Sequencing QC - filtering and trimming your sequences</a>
-  3. <a href="/documents/shotgun_assembly.html#decontaminate-data-check">Sequencing QC - purifying your sequences - **not yet finished**</a>
-  4. Kraken2 (**not yet finished**)
-  5. Bracken (**not yet finished**)
+  0. Setting up your analysis
+  1. Checking your sequence data
+  2. Sequencing QC - filtering and trimming your sequences
+  3. Sequencing QC - purifying your sequences - **not yet finished**
+  4. Kraken2 (**not yet started**)
+  5. Bracken (**not yet started**)
 
 A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 

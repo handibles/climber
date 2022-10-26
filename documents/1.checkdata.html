@@ -358,164 +358,77 @@ pre code {
 <h1 class="title toc-ignore">shotgun metagenomics - checking sequencing
 data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">20 Oct 2022, 23:10</h4>
+<h4 class="date">26 Oct 2022, 14:13</h4>
 
 </div>
 
-<div id="TOC">
-<ul>
-<li><a href="#get-the-sequence-data-check">1 - get the sequence data
-(&amp; check)</a></li>
-<li><a href="#reading-reference">Reading / Reference</a></li>
-</ul>
-</div>
 
-<div id="get-the-sequence-data-check" class="section level1">
-<h1>1 - get the sequence data (&amp; check)</h1>
-<p>We copied the data from IPLA-CSIC (or elsewhere!) manually, into the
-<code>$RAW</code> dir, using <code>FileZilla</code>. Sometimes we will
-have to use <code>scp</code>, <code>sFTP</code>, or <code>rsync</code>
-instead - a web search should show how to do this.</p>
-<p>Next, for our own information, we look at just the
-<code>fastq.gz</code> files, count the number of files, and run
-<code>FastQC</code> and <code>MultiQC</code> on them.</p>
-<pre class="bash"><code># use ls arguments &quot;-lsh&quot; to output it as an informative list
-ls -lsh $RAW
-
-# How many files? - use &quot;|&quot; charater to pipe the ls output to wc (wordcount), and count the n of lines (-l or --lines)
-ls -lsh $RAW/*fastq.gz | wc -l
-
-# can also easily check a fastq file
-ls -lsh $RAW/$TEST*            # file details
-zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines
-less -S $RAW/$TEST*            # read through file, press q to quit</code></pre>
-<div id="fastqc-and-multiqc" class="section level5">
-<h5>FastQC and MultiQC</h5>
-<p><code>FastQC</code> is an amazingly useful tool, for profiling the
-quality, consistency, and content of your sequence data. It takes
-samples of each file it is shown (compressed or uncompressed), checks
-the sequences and returns a <code>HTML</code> &amp; <code>zip</code>
-file for each <code>FASTQ</code>: the <code>HTML</code> is a report, and
-the <code>zip</code> is all the data from that report. Next,
-<code>MultiQC</code> combines all the <code>FastQC</code> outputs into
-one report, summarising all that info in one place. Always check
-this!</p>
-<p><code>FastQC</code> will process all <code>fastq(.qz)</code> files
-that it is passed. <code>MultiQC</code> will process all the
-<code>FastQC</code> outputs it finds in a directory, combine them, and
-place output in the dir specified (<code>multiqc_report.html</code> in
-<code>-o</code>). Keep in mind that <code>FastQC</code> and
-<code>MultiQC</code> outputs also contain text files of all this data
-(see the <code>multiqc_data</code> dir), if you want to use them for
-other graphics/reports etc.</p>
-</div>
-<div id="check-sequence-quality-with-fastqc-on-one-sample" class="section level4">
-<h4>Check sequence quality, with <code>FastQC</code>, on one
-sample:</h4>
-<pre class="bash"><code># then run a fastqc for F and R files, output in the dirs we made above
-fastqc -t 4 $RAW/${TEST}* -o $FQC/fhi_redch_raw
-
-# make a report that includes both F and R reads for this sample
-multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw</code></pre>
-<p>Copy the output <code>multiqc</code> files to your local computer,
-and doubleclick to open in your browser. For help reading
-<code>FastQC/MultiQC</code>, there’s an <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0">introductory tutorial
-video</a> in the top of the <code>MultiQC</code> report.</p>
-</div>
-<div id="check-sequence-quality-with-fastqc-on-multiple-sample" class="section level4">
-<h4>Check sequence quality, with <code>FastQC</code>, on multiple
-sample:</h4>
-<p>We need to be responsible with our use of the HPC. Here we write a
-script in <code>slurm</code>(see the <a href="http://hcux400.teagasc.net/">HPC website</a> for more info on
-<code>slurm</code>!!) format to queue all these jobs politely into one
-<code>FastQC</code> task, and then summarise using <code>MultiQC</code>
-again.</p>
-<p>We also found out that some <code>fasstq</code> files are compressed
-as <code>.gz</code>, and some are compressed at <code>.bz2</code>. This
-means that we need to specify both type fo <code>fastq</code> if we want
-it to work. Best way is to change our command to match both! We show the
-computer the two different compression types using the curly brackets:
-<code>{gz,bz2}</code>. This allows the computer to accept
-<code>*fastq.gz</code> and <code>fastq.bz2</code>:</p>
-<pre class="bash"><code># write a slurm script first
-echo &#39;#!/bin/bash
-
-SBATCH –job-name=knead_fastq
-SBATCH –output=knead_fastq.txt
-
-SBATCH –ntasks=15
-SBATCH –time=15:00
-
-IN=$1
-OUT=$2
-
-# time just tells us how long this takes, so we know for next time
-# -t is the number of threads (tasks) to use
-# curly brackets {} allow us to match either gz or bz2 file extensions
-time fastqc -t 15 $IN/*fastq.{bz2,gz} -o $OUT
-&#39; &gt; $SLURM/slurm_fqc.sh
-
-# review:
-cat $SLURM/slurm_fqc.sh</code></pre>
-<p>This <code>slurm</code> script will give a name, output-log, runtime,
-and number of threads needed to the <code>slurm manager</code>, and use
-the input and output dirs we give to find <code>fastq.gz\bz2</code>
-files, start FastQC, and place outputs in the $OUT dir. We need to
-‘give’ this <code>slurm</code> to <code>sbatch</code>:</p>
-<p><strong>Note</strong>: we have noticed that the <code>{}</code>
-brackets do not solve the problem of missing the <code>bz2</code>
-samples. We simply resubmitted the samples as
-<code>fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw</code> - this is
-not the right thing to do!</p>
-<pre class="bash"><code># trust slurm
-sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
-
-# combine outputs
-time multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw
-
-# then copy to local computer (try FileZilla), and open in your browser! </code></pre>
-<p>Again, open the HTML report in your browser to see what the overall
-quality is like, and how much cleaning you will need to do.</p>
-</div>
-<div id="choosing-your-sample-trimming-parameters" class="section level4">
-<h4>Choosing your sample trimming parameters</h4>
-<p>With information on all the samples, it is possible (but not
-necessarily easy) to pick appropriate trimming and quality
-parameters.</p>
-<ul>
-<li>Trimming of the <code>5&#39;</code> end removes “artificial” bases at
-the start of <code>F+R</code> reads : check the FastQC or MultiQC
-outputs to see how long it takes for
-<code>Per-Base Sequence Content</code> to become
-homogeneous/balanced</li>
-<li>Trimming of the <code>3&#39;</code> end removes bases where the
-sequencing quality declines gradually (especially the <code>R</code>
-reads)</li>
-<li>removing adapters removes synthetic sequences that were used to
-construct the sequencing library, but are not biological</li>
-</ul>
-<p>Consider: How do the sequences look? Is quality uniform throughout,
-or does it vary? What other warnings (in red) do <code>FQC+MQC</code>
-detect?</p>
-<hr />
-</div>
-</div>
-<div id="reading-reference" class="section level1">
-<h1>Reading / Reference</h1>
-<blockquote>
-<p><a href="https://duckduckgo.com/?q=fastqc&amp;t=vivaldi&amp;atb=v314-1&amp;ia=web">FastQC
-site + support</a> - note that it’s also available as an <code>R</code>
-library…</p>
-</blockquote>
-<blockquote>
-<p><a href="https://multiqc.info">MultiQC site + support</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://www.marcc.jhu.edu/getting-started/additional-resources/distributing-tasks-with-slurm-and-gnu-parallel/">slurm
-: examples of fancy job-queues for supercomputers like the
-<code>HPC</code></a></p>
-</blockquote>
-</div>
+<p><code>article in suspension</code></p>
+<!-- # 1 - get the sequence data (& check) -->
+<!-- We copied the data from IPLA-CSIC (or elsewhere!) manually, into the `$RAW` dir, using `FileZilla`. Sometimes we will have to use `scp`, `sFTP`, or `rsync` instead - a web search should show how to do this.  -->
+<!-- Next, for our own information, we look at just the `fastq.gz` files, count the number of files, and run `FastQC` and `MultiQC` on them.  -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- # use ls arguments "-lsh" to output it as an informative list -->
+<!-- ls -lsh $RAW -->
+<!-- # How many files? - use "|" charater to pipe the ls output to wc (wordcount), and count the n of lines (-l or --lines) -->
+<!-- ls -lsh $RAW/*fastq.gz | wc -l -->
+<!-- # can also easily check a fastq file -->
+<!-- ls -lsh $RAW/$TEST*            # file details -->
+<!-- zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines -->
+<!-- less -S $RAW/$TEST*            # read through file, press q to quit -->
+<!-- ``` -->
+<!-- ##### FastQC and MultiQC -->
+<!-- `FastQC` is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this! -->
+<!-- `FastQC` will process all `fastq(.qz)` files that it is passed. `MultiQC` will process all the `FastQC` outputs it finds in a directory, combine them, and place output in the dir specified (`multiqc_report.html` in `-o`). Keep in mind that `FastQC` and `MultiQC` outputs also contain text files of all this data (see the `multiqc_data` dir), if you want to use them for other graphics/reports etc. -->
+<!-- #### Check sequence quality, with `FastQC`, on one sample: -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- # then run a fastqc for F and R files, output in the dirs we made above -->
+<!-- fastqc -t 4 $RAW/${TEST}* -o $FQC/fhi_redch_raw -->
+<!-- # make a report that includes both F and R reads for this sample -->
+<!-- multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw -->
+<!-- ``` -->
+<!-- Copy the output `multiqc` files to your local computer, and doubleclick to open in your browser. For help reading `FastQC/MultiQC`, there's an [introductory tutorial video](https://www.youtube.com/watch?v=qPbIlO_KWN0) in the top of the `MultiQC` report. -->
+<!-- #### Check sequence quality, with `FastQC`, on multiple sample: -->
+<!-- We need to be responsible with our use of the HPC. Here we write a script in `slurm`(see the [HPC website](http://hcux400.teagasc.net/) for more info on `slurm`!!) format to queue all these jobs politely into one `FastQC` task, and then summarise using `MultiQC` again.  -->
+<!-- We also found out that some `fasstq` files are compressed as `.gz`, and some are compressed at `.bz2`. This means that we need to specify both type fo `fastq` if we want it to work. Best way is to change our command to match both! We show the computer the two different compression types using the curly brackets: `{gz,bz2}`. This allows the computer to accept `*fastq.gz` and `fastq.bz2`: -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- # write a slurm script first -->
+<!-- echo '#!/bin/bash -->
+<!-- SBATCH –job-name=knead_fastq -->
+<!-- SBATCH –output=knead_fastq.txt -->
+<!-- SBATCH –ntasks=15 -->
+<!-- SBATCH –time=15:00 -->
+<!-- IN=$1 -->
+<!-- OUT=$2 -->
+<!-- # time just tells us how long this takes, so we know for next time -->
+<!-- # -t is the number of threads (tasks) to use -->
+<!-- # curly brackets {} allow us to match either gz or bz2 file extensions -->
+<!-- time fastqc -t 15 $IN/*fastq.{bz2,gz} -o $OUT -->
+<!-- ' > $SLURM/slurm_fqc.sh -->
+<!-- # review: -->
+<!-- cat $SLURM/slurm_fqc.sh -->
+<!-- ``` -->
+<!-- This `slurm` script will give a name, output-log, runtime, and number of threads needed to the `slurm manager`, and use the input and output dirs we give to find `fastq.gz\bz2` files, start FastQC, and place outputs in the $OUT dir. We need to 'give' this `slurm` to `sbatch`: -->
+<!-- **Note**: we have noticed that the `{}` brackets do not solve the problem of missing the `bz2` samples. We simply resubmitted the samples as `fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw` - this is not the right thing to do! -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- # trust slurm -->
+<!-- sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw -->
+<!-- # combine outputs -->
+<!-- time multiqc $FQC/fhi_redch_raw -o $FQC/multi_raw -->
+<!-- # then copy to local computer (try FileZilla), and open in your browser!  -->
+<!-- ``` -->
+<!-- Again, open the HTML report in your browser to see what the overall quality is like, and how much cleaning you will need to do. -->
+<!-- #### Choosing your sample trimming parameters -->
+<!-- With information on all the samples, it is possible (but not necessarily easy) to pick appropriate trimming and quality parameters.  -->
+<!--   * Trimming of the `5'` end removes "artificial" bases at the start of `F+R` reads : check the FastQC or MultiQC outputs to see how long it takes for `Per-Base Sequence Content` to become homogeneous/balanced -->
+<!--   * Trimming of the `3'` end removes bases where the sequencing quality declines gradually (especially the `R` reads) -->
+<!--   * removing adapters removes synthetic sequences that were used to construct the sequencing library, but are not biological -->
+<!-- Consider: How do the sequences look? Is quality uniform throughout, or does it vary? What other warnings (in red) do `FQC+MQC` detect? -->
+<!-- --- -->
+<!-- # Reading / Reference -->
+<!-- > [FastQC site + support](https://duckduckgo.com/?q=fastqc&t=vivaldi&atb=v314-1&ia=web) - note that it's also available as an `R` library... -->
+<!-- > [MultiQC site + support](https://multiqc.info) -->
+<!-- > [slurm : examples of fancy job-queues for supercomputers like the `HPC`](https://www.marcc.jhu.edu/getting-started/additional-resources/distributing-tasks-with-slurm-and-gnu-parallel/) -->
 
 
 

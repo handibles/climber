@@ -146,12 +146,18 @@ ls ~/data/ref/bt2_indices/*fna.gz | sed -e 's/.*\/\(.*\).fna.gz/\1/g'
 <!-- #     toc: TRUE -->
 <!-- # --- -->
 
+
+---
 See [RMD reference](https://rmarkdown.rstudio.com/docs/reference/html_document.html) for all header terms
+
+## NOTE: this is the linking material for top of README.MD, links to HTML documents within repo
 
   0. <a href="/climber/documents/0.setup.html">Setting up your analysis</a>
   1. <a href="/climber/documents/1.checkdata.html">Checking your sequence data</a>
   2. <a href="/climber/documents/2.seqcleaning.html">Sequencing QC - filtering and trimming your sequences</a>
   3. <a href="/climber/documents/3.seqpurity.html">Sequencing QC - purifying your sequences - **not finished**</a>
+
+---
 
 screen -list
 sbatch 
