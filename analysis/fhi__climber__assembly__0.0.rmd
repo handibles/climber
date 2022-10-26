@@ -781,22 +781,22 @@ time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
 -2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \
--S $OUT/${SAMPLE}_bt2_refmapped.sam
+-S $OUT/${SAMPLE}_bt2_refmapped.sam  >> $MAT/${SAMPLE}_decont_out.log
 
 ## change format
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam >> $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.sam &&
 
 # samtools removes reads which match (contaminant) reference genome
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam >> $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.bam &&
 
 # samtools re-roganises reads 
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam >> $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam &&
 
 # stream outputs of non-interest to /dev/null
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n >> $MAT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_*.[bam,sam] &&
 
 ' > $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
@@ -813,6 +813,8 @@ for i in $(cat $MAT/samples | head -1 );
   do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
 
 done
+
+less $MAT/decont_out.log
 
 # should just show your stuff
 squeue -u $USER
