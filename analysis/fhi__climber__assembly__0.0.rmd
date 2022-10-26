@@ -749,9 +749,9 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 $KDOUT/${TEST}_bt2d
 # look at the fastq! 
 ls -lsh $KDOUT/${TEST}*
 
-## opt
-# rm sam 
-# output host mapped for checking
+## removing intermediates: SAM and BAM are huge! delete --WHEN FINISHED--
+rm $KDOUT/${TEST}*[sam,bam]
+
 ```
 
 
@@ -792,11 +792,11 @@ time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAM
 rm $OUT/${SAMPLE}_bt2_refmapped.bam &&
 
 # samtools re-roganises reads 
-time samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+time samtools sort -n -m 5G -@ 6 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
 rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam &&
 
 # stream outputs of non-interest to /dev/null
-time samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+time samtools fastq -@ 6 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 rm $OUT/${SAMPLE}_*.bam &&
 
 ' > $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
