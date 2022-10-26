@@ -9,7 +9,8 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ## `<!> this document is not finished </!>`
 
-This guide to metagenomic analysis is still being written. All (+/-)feedback is welcome: simply throw objects directly at me, or drop us a line [at the related repo](https://github.com/handibles/climber/issues) .
+This guide to metagenomic analysis is still being written (0ct '22). 
+All (+/-)feedback is welcome: simply throw objects directly at me, or drop us a line [at the related repo](https://github.com/handibles/climber/issues) .
 
 
 #  CLI, Microbial Ecology, and R

@@ -298,8 +298,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -307,16 +307,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -366,6 +359,13 @@ pre code {
 </div>
 
 
+<div id="this-document-is-not-finished" class="section level2">
+<h2><code>&lt;!&gt; this document is not finished &lt;/!&gt;</code></h2>
+<p>This guide to metagenomic analysis is still being written. All
+(+/-)feedback is welcome: simply throw objects directly at me, or drop
+us a line <a href="https://github.com/handibles/climber/issues">at the
+related repo</a> .</p>
+</div>
 <div id="cli-microbial-ecology-and-r" class="section level1">
 <h1>CLI, Microbial Ecology, and R</h1>
 <p>Some basic steps in microbial ecology, focusing on the processing of
@@ -575,6 +575,13 @@ brackets above, so don’t include it in the saved match from part
 the <code>fna.gz</code> extension - really useful for calling inside
 scripts!</p>
 <p><code>{bash, eval=TRUE} ls ~/data/ref/bt2_indices/*fna.gz | sed -e &#39;s/.*\/\(.*\).fna.gz/\1/g&#39;</code></p>
+<hr />
+<!-- To do this, we'll use another `for-loop`, which loops through the reference genomes we have, and builds an index for each one. It might be easier (to read, to look at, to type, etc.) if you rename your genomes to something simple, like `chicken.fna.gz` etc., but we won't take that step here. -->
+<!-- # cow.853MB.fna.gz; 28m, 15GB rRAM, 9 threads, -->
+<!-- time bowtie2-build --t 9 \ -->
+<!--   ~/data/ref/bt2_indices/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz \ -->
+<!--   ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2 > \ -->
+<!--   ~/data/ref/bt2_indices/jersey_ARS-LIC.bt2.buildlog -->
 </div>
 </div>
 </div>
