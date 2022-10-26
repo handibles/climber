@@ -917,26 +917,28 @@ sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_d
 sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
 sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
 
-# overall 
+# overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
 less $MAT/${TEST}_decont_out.log
 # intermediate
-less $MAT/deco_bt2align.txt
-less $MAT/deco_sambam.txt
-less $MAT/deco_bamfilt.txt
-less $MAT/deco_bamsort.txt
-less $MAT/deco_bamfq.txt
+less deco_bt2align.txt
+less deco_sambam.txt
+less deco_bamfilt.txt
+less deco_bamsort.txt
+less deco_bamfq.txt
 
+# check for outputs
 ls -lsh $KDOUT/${TEST}*
 
+# this will list just one sample
 cat $MAT/samples | head -1
 
+
+# many slurms require many for-loops - this is only the first one...
 for i in $(cat $MAT/samples | head -1 );
 
-  do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+  do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ;
 
 done
-
-less $MAT/decont_out.log
 
 # should just show your stuff
 squeue -u $USER
