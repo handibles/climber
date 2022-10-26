@@ -403,8 +403,8 @@ option                            | effect
 `$FILT/${TEST}_R1_trimm_unpaired.fastq.gz` | output for trimmed `F` reads that have lost their `R` mate (see below)
 `$FILT/${TEST}_R2_trimm.fastq.gz` | output for trimmed `R` reads
 `$FILT/${TEST}_R2_trimm_unpaired.fastq.gz` | output for trimmed `R` reads that have lost their `F` mate (see below) 
-`HEADCROP:25`                     | trim the first 25bp from 5' ends  
-`CROP:125`                        | trim everything*after** 125bp from 3' ends
+`HEADCROP:20`                     | trim the first 25bp from 5' ends  
+`CROP:130`                        | trim everything*after** 125bp from 3' ends
 `ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5` | using the reference `fasta` above, we trim reads with **check parameters on trimming**
 `SLIDINGWINDOW:6:15`              | **check parameters on trimming**
 `MINLEN:80`                       | after cropping & trimming, sequences must be at least 80bp long to be kept (otherwise delete them)
@@ -434,8 +434,8 @@ trimmomatic PE \
   $RAW/${TEST}_R1_001.fastq.gz $RAW/${TEST}_R2_001.fastq.gz \
   $FILT/${TEST}_R1_trimm.fastq.gz $FILT/${TEST}_R1_trimm_unpaired.fastq.gz \
   $FILT/${TEST}_R2_trimm.fastq.gz $FILT/${TEST}_R2_trimm_unpaired.fastq.gz \
-  HEADCROP:25 \
-  CROP:125 \
+  HEADCROP:20 \
+  CROP:130 \
   ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5 \
   SLIDINGWINDOW:6:15 MINLEN:80 \
   -threads 6 > $FILT/trimmo_${TEST}.out
@@ -547,8 +547,8 @@ fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
 mkdir $FQC/fhi_redch_filt_unpaired
 mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
 
-# loom at just trimmed (no unpaired)
-multiqc $FQC/fhi_redch_filt/*trimm.fastq* -o $FQC/fhi_redch_filt_multi
+# look at just the trimmed, paired data (no unpaired reads)
+multiqc $FQC/fhi_redch_filt/ -o $FQC/fhi_redch_filt_multi
 ```
 
 
@@ -577,7 +577,8 @@ For decontamination, we'll need the programs `BowTie2` (database-building & alig
 
 ```{bash,eval=FALSE}
 # make sure you're on a compute node!
-module load bowtie2 samtools parallel fastqc multiqc
+# note the samtools version.. for the teagasc HPC at any rate.
+module load bowtie2 samtools/1.10 parallel fastqc multiqc
 ```
 
 
@@ -599,12 +600,6 @@ We will first obtain all of these sequences from the NCBI (should/could use ENA.
 
 # make a variable for this
 BT_DB=/data/Food/analysis/R0936_redcheese/ref
-
-# set this as appropriate
-BT_threads=2
-
-# if not already:
-module load bowtie2
 
 
 echo '#!/bin/bash
@@ -701,7 +696,7 @@ $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
 $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
 $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
 $INOUT/hs37d5ss.fna.gz \
-$INOUT/mult_ref.bt2 #> $INOUT/mult_ref.buildlog # 2>&1
+$INOUT/mult_ref #> $INOUT/mult_ref.buildlog # 2>&1
 
 ' > $MAT/slurm_bt2db.sh
 
@@ -717,10 +712,16 @@ This will give us a number of files ending in `.bt2` in our output dir. These ar
 
 [`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
 
+**NB**: bowtie2 output interpretation
+
+**NB**: ths SAM tools spec
+
+
+
 ```{bash, eval=FALSE}
 
 ## firstly, align our sequences to ref using bt2.
-bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${SAMPLE}_R1.fastq.gz -2 $FILT/${SAMPLE}_R2.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
+bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
 ## feel free to look at the output
 less $KDOUT/${TEST}_bt2_refmapped.sam
 
@@ -735,16 +736,15 @@ We _can_ use `bowtie2` directly for filtering out contaminant reads, but because
 ## next with samtools, 
 samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam > $KDOUT/${TEST}_bt2_refmapped.bam
 
-
 # F 256 : exclude those mapping to ref
 # f 12 : F and R *both* unmapped
 samtools view -b -f 12 -F 256 $KDOUT/${TEST}_bt2_refmapped.bam > $KDOUT/${TEST}_bt2_decontamd.bam
 
 # ensure reads are in a sensible order 
-samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam
+samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam > ${TEST}_bam_sort.out
 
 # stream outputs of non-interest to /dev/null
-samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${TEST}_bt2decon_R1.fastq.gz -2 ${TEST}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 
 
 ## opt

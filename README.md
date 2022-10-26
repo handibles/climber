@@ -32,12 +32,12 @@ A similar workflow is also present in simple, `raw code` (the two workflows will
 
 ### Amplicon data (e.g. 16S)
 
-Not yet written. The initial steps (setup, get data, QC) are very similar in most cases (remember to cut off your primers!), but are followed by a denoising step (`DADA2`) and optionally an attempt to predict the metabolic capabilities of the communities at hand (`PICRUSt2`).
+Not yet started. The initial steps (setup, get data, QC) are very similar in most cases (remember to cut off your primers!), but are followed by a denoising step (`DADA2`) and optionally an attempt to predict the metabolic capabilities of the communities at hand (`PICRUSt2`).
 
 
 ### Microbial Ecology (and `R`)
 
-Not yet written. This is the real magic, and we get to make _pictures_.
+Not yet started. This is the real magic, and we get to make _pictures_.
 
 
 ---

@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 13:56</h4>
+<h4 class="date">26 Oct 2022, 16:03</h4>
 
 </div>
 
@@ -2050,11 +2050,11 @@ following:</p>
 <code>F</code> mate (see below)</td>
 </tr>
 <tr class="even">
-<td><code>HEADCROP:25</code></td>
+<td><code>HEADCROP:20</code></td>
 <td>trim the first 25bp from 5’ ends</td>
 </tr>
 <tr class="odd">
-<td><code>CROP:125</code></td>
+<td><code>CROP:130</code></td>
 <td>trim everything*after** 125bp from 3’ ends</td>
 </tr>
 <tr class="even">
@@ -2118,8 +2118,8 @@ command):</p>
   $RAW/${TEST}_R1_001.fastq.gz $RAW/${TEST}_R2_001.fastq.gz \
   $FILT/${TEST}_R1_trimm.fastq.gz $FILT/${TEST}_R1_trimm_unpaired.fastq.gz \
   $FILT/${TEST}_R2_trimm.fastq.gz $FILT/${TEST}_R2_trimm_unpaired.fastq.gz \
-  HEADCROP:25 \
-  CROP:125 \
+  HEADCROP:20 \
+  CROP:130 \
   ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5 \
   SLIDINGWINDOW:6:15 MINLEN:80 \
   -threads 6 &gt; $FILT/trimmo_${TEST}.out
@@ -2285,8 +2285,8 @@ and seeing if there’s much improvement.</p>
 mkdir $FQC/fhi_redch_filt_unpaired
 mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
 
-# loom at just trimmed (no unpaired)
-multiqc $FQC/fhi_redch_filt/*trimm.fastq* -o $FQC/fhi_redch_filt_multi</code></pre>
+# look at just the trimmed, paired data (no unpaired reads)
+multiqc $FQC/fhi_redch_filt/ -o $FQC/fhi_redch_filt_multi</code></pre>
 </div>
 </div>
 <div id="second-pass-etc." class="section level2">
@@ -2342,7 +2342,8 @@ and remove, any sequences that match those contaminants.</p>
 files in <code>sam</code> and <code>bam</code> formats), as well as
 FastQC &amp; MultiQC for profiling the sequences output.</p>
 <pre class="bash"><code># make sure you&#39;re on a compute node!
-module load bowtie2 samtools parallel fastqc multiqc</code></pre>
+# note the samtools version.. for the teagasc HPC at any rate.
+module load bowtie2 samtools/1.10 parallel fastqc multiqc</code></pre>
 <div id="decontaminate-with-bowtie2" class="section level2">
 <h2>Decontaminate with <code>BowTie2</code></h2>
 <p>We need reference genomes relevant to our experiment. For this
@@ -2377,12 +2378,6 @@ microbiome</li>
 
 # make a variable for this
 BT_DB=/data/Food/analysis/R0936_redcheese/ref
-
-# set this as appropriate
-BT_threads=2
-
-# if not already:
-module load bowtie2
 
 
 echo &#39;#!/bin/bash
@@ -2491,7 +2486,7 @@ $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
 $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
 $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
 $INOUT/hs37d5ss.fna.gz \
-$INOUT/mult_ref.bt2 #&gt; $INOUT/mult_ref.buildlog # 2&gt;&amp;1
+$INOUT/mult_ref #&gt; $INOUT/mult_ref.buildlog # 2&gt;&amp;1
 
 &#39; &gt; $MAT/slurm_bt2db.sh
 
@@ -2513,9 +2508,11 @@ note of what reads matched between the input (dataset) and reference
 reference (hosts) as we are looking at the microbiome specifically.
 However, in other studies, we might be interested in the host sequences
 only, and would throw away everything else (all the microbes).</p>
+<p><strong>NB</strong>: bowtie2 output interpretation</p>
+<p><strong>NB</strong>: ths SAM tools spec</p>
 <pre class="bash"><code>
 ## firstly, align our sequences to ref using bt2.
-bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${SAMPLE}_R1.fastq.gz -2 $FILT/${SAMPLE}_R2.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
+bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
 ## feel free to look at the output
 less $KDOUT/${TEST}_bt2_refmapped.sam
 </code></pre>
@@ -2529,16 +2526,15 @@ can use the <code>samtools</code> program below.</p>
 <pre class="bash"><code>## next with samtools, 
 samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam &gt; $KDOUT/${TEST}_bt2_refmapped.bam
 
-
 # F 256 : exclude those mapping to ref
 # f 12 : F and R *both* unmapped
 samtools view -b -f 12 -F 256 $KDOUT/${TEST}_bt2_refmapped.bam &gt; $KDOUT/${TEST}_bt2_decontamd.bam
 
 # ensure reads are in a sensible order 
-samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam
+samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam &gt; ${TEST}_bam_sort.out
 
 # stream outputs of non-interest to /dev/null
-samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${TEST}_bt2decon_R1.fastq.gz -2 ${TEST}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 
 
 ## opt
