@@ -1,3 +1,9 @@
+## `<!> this document is not finished </!>`
+
+This guide to metagenomic analysis is still being written (0ct '22). 
+All (+/-)feedback is welcome: simply throw objects/comments directly at me, or drop us a line [at the related repo](https://github.com/handibles/climber/issues) .
+
+
 # `CLI`, `M`icro`b`ial `E`cology, and `R`
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
