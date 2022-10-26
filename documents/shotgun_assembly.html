@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 11:15</h4>
+<h4 class="date">26 Oct 2022, 11:27</h4>
 
 </div>
 
@@ -1862,7 +1862,6 @@ echo &#39;#!/bin/bash
 
 SBATCH --job-name=knead_fastq
 SBATCH --output=knead_fastq.txt
-
 SBATCH --ntasks=15
 SBATCH --time=15:00
 
@@ -2218,7 +2217,6 @@ $MAT etc - it could be anything you choose).</p>
 
 #SBATCH --job-name=trimmoRaw
 #SBATCH --output=trimmoRaw.txt
-
 #SBATCH --ntasks=6
 #SBATCH --time=18:00
 
@@ -2480,7 +2478,6 @@ echo &#39;#!/bin/bash
 
 #SBATCH --job-name=bt2DB
 #SBATCH --output=bt2DB.txt
-
 #SBATCH --ntasks=10
 #SBATCH --time=179:00
 
@@ -2555,13 +2552,16 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 <code>slurm</code> script for the <code>BowTie2</code> alignment,
 <code>samtools</code> filtering, and <code>samtools</code>
 processing.</p>
+<p><strong>NB</strong> : <code>time</code> flag is totally spurious ;
+lots of large intermediate files being created - we’ll need to delete
+these as we go.</p>
 <pre class="bash"><code># build our BT2 database in slurm:
 echo &#39;#!/bin/bash
 
 #SBATCH --job-name=bt_deco
 #SBATCH --output=bt_deco.txt
-#SBATCH --ntasks=10
-#SBATCH --time=179:00
+
+# note no time, mem, tasks specified
 
 SAMPLE=$1
 IN=$2
@@ -2570,23 +2570,36 @@ REF=$4
 THREADS=$5
 
 ## find the contaminants in our sequences, using bt2 + DB
-bowtie2 -p $THREADS \
+time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1.fastq.gz \
 -2 $FILT/${SAMPLE}_R2.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 ## change format
-samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
 
 # samtools removes reads which match (contaminant) reference genome
-samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
 
 # samtools re-roganises reads 
-samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+time samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
 
 # stream outputs of non-interest to /dev/null
-samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+time samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+## opt rm intermediates
+
+&#39; &gt; $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
+</code></pre>
+<p>As before, we can then send these jobs to the
+<code>slurm queue</code> for processing when resources become
+available.</p>
+<pre class="bash"><code>for i in $(cat $MAT/samples | head -1 );
+
+  do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+
+done
 </code></pre>
 </div>
 </div>
@@ -2751,6 +2764,10 @@ command line for beginners</a> - quite quite good!</p>
 <blockquote>
 <p><a href="https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs"><code>slurm</code>
 and variables</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://confluence.ecmwf.int/display/UDOC/Writing+SLURM+jobs">more
+<code>slurm</code> formatting</a></p>
 </blockquote>
 <blockquote>
 <p><a href="https://linuxhint.com/bash_globbing_tutorial/"><code>glomming</code></a></p>

@@ -280,7 +280,6 @@ echo '#!/bin/bash
 
 SBATCH --job-name=knead_fastq
 SBATCH --output=knead_fastq.txt
-
 SBATCH --ntasks=15
 SBATCH --time=15:00
 
@@ -481,7 +480,6 @@ echo '#!/bin/bash
 
 #SBATCH --job-name=trimmoRaw
 #SBATCH --output=trimmoRaw.txt
-
 #SBATCH --ntasks=6
 #SBATCH --time=18:00
 
@@ -690,7 +688,6 @@ echo '#!/bin/bash
 
 #SBATCH --job-name=bt2DB
 #SBATCH --output=bt2DB.txt
-
 #SBATCH --ntasks=10
 #SBATCH --time=179:00
 
@@ -760,14 +757,16 @@ samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_
 
 We can apply the same technique to all of our samples using `slurm`. THe database is already present, so we write a `slurm` script for the `BowTie2` alignment, `samtools` filtering, and `samtools` processing.
 
+**NB** : `time` flag is totally spurious ; lots of large intermediate files being created - we'll need to delete these as we go.
+
 ```{bash, eval=FALSE}
 # build our BT2 database in slurm:
 echo '#!/bin/bash
 
 #SBATCH --job-name=bt_deco
 #SBATCH --output=bt_deco.txt
-#SBATCH --ntasks=10
-#SBATCH --time=179:00
+
+# note no time, mem, tasks specified
 
 SAMPLE=$1
 IN=$2
@@ -776,30 +775,41 @@ REF=$4
 THREADS=$5
 
 ## find the contaminants in our sequences, using bt2 + DB
-bowtie2 -p $THREADS \
+time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1.fastq.gz \
 -2 $FILT/${SAMPLE}_R2.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 ## change format
-samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
 
 # samtools removes reads which match (contaminant) reference genome
-samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
 
 # samtools re-roganises reads 
-samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+time samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
 
 # stream outputs of non-interest to /dev/null
-samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+time samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 
+## opt rm intermediates
 
-
-
-
+' > $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
 
 ```
+
+As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
+
+```{bash,eval=FALSE}
+for i in $(cat $MAT/samples | head -1 );
+
+  do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+
+done
+
+```
+
 
 
 ## Decontaminate with `KneadData`
@@ -1013,6 +1023,8 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 > [Linux command line for beginners](https://ubuntu.com/tutorials/command-line-for-beginners) - quite quite good!
 
 > [`slurm` and variables](https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs)
+
+> [more `slurm` formatting](https://confluence.ecmwf.int/display/UDOC/Writing+SLURM+jobs)
 
 > [`glomming`](https://linuxhint.com/bash_globbing_tutorial/)
 
