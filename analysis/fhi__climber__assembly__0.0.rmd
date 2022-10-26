@@ -806,6 +806,8 @@ rm $OUT/${SAMPLE}_*.[bam,sam] &&
 As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
 
 ```{bash,eval=FALSE}
+cat $MAT/samples | head -1
+
 for i in $(cat $MAT/samples | head -1 );
 
   do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
