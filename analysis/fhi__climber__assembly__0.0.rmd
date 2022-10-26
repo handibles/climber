@@ -808,6 +808,8 @@ for i in $(cat $MAT/samples | head -1 );
 
 done
 
+# should just show your stuff
+squeue -u $USER
 ```
 
 
