@@ -298,8 +298,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -307,16 +307,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -363,7 +356,7 @@ pre code {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Communities (raw
 code, unifinished version)</h1>
-<h4 class="date">24 Oct 2022, 16:38</h4>
+<h4 class="date">26 Oct 2022, 14:02</h4>
 
 </div>
 
@@ -382,10 +375,10 @@ K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k
 
 # our overall data structure
 RAW=/data/Food/primary/R0936_redcheese/
-  WRK=/data/Food/analysis/R0936_redcheese/
-  
-  # scripts, and slurms for queueing up jobs
-  MAT=$WRK/Materials
+WRK=/data/Food/analysis/R0936_redcheese/
+
+# scripts, and slurms for queueing up jobs
+MAT=$WRK/Materials
 SLURM=$WRK/slurms
 
 # outputs etc
@@ -533,17 +526,19 @@ multiqc $FQC/fhi_redch_filt -o $FQC/multi_filt
 
 ##   3.  d e c o n t a m   =======================================
 
+# download to our raw data folder!
+
 # make a variable for this
-BT_DB=~/data/ref/bt2_indices
-mkdir BT_DB
+BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # set this as appropriate
-BT_threads=6
+BT_threads=2
 
-# if not already: (not sure if curl is a module..)
-module load bowtie2 curl
+# if not already:
+module load bowtie2
 
 
+## make sure you want all of these genomes, or replace with your own! 
 echo &#39;#!/bin/bash
 
 cd $1
@@ -572,27 +567,123 @@ curl -h
 
 # give &quot;run&quot; permission for script to be run
 chmod +x /data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh
+# make a dir for files - just in case RAW isn&#39;t added as a variable
+mkdir /data/Food/primary/R0936_redcheese/ref
 # run the script while pointing at those files
-/data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh $BT_DB/ 
+/data/Food/analysis/R0936_redcheese/trimmo_genomes_dl.sh /data/Food/primary/R0936_redcheese/ref 
+
+
+  ##
+  ##  you will need to extract the genome files (.....fna) all by yourself!
+  ##
 
 
 # compress downloads
-parallel gzip {} &gt; $BT_DB/mult_ref.fasta.gz ::: $BT_DB/*fna
+parallel gzip {} ::: $RAW/ref/*fna
+
+mkdir $BT_DB
 
 # bowtie2-build [options]* &lt;reference_in&gt; &lt;bt2_base&gt;
-# test, 19 secs or thereabouts....
-time bowtie2-build --t $BT_threads ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
+time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
 
-  ## individual builds:
-  # decoy.9MB.fna.gz; 19 seconds for decoy, 9 threads, 15GB RAM
-  # chicken.340MB.fna.gz; 10min, 9 threads, 15GB RAM
-  # cow.853MB.fna.gz; 28m, 9 threads, 15GB RAM
+## individual builds:
+# decoy.9MB.fna.gz; 19 seconds for decoy, 9 threads, 15GB RAM
+# chicken.340MB.fna.gz; 10min, 9 threads, 15GB RAM
+# cow.853MB.fna.gz; 28m, 9 threads, 15GB RAM
 
-# overall:
-time bowtie2-build --large-index --t $BT_threads \
-  $INOUT/mult_ref.fasta.gz \
-  $INOUT/mult_ref.bt2 &gt; \
-  $INOUT/mult_ref.buildlog
+# build our BT2 database in slurm:
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=bt2DB
+#SBATCH --output=bt2DB.txt
+#SBATCH --ntasks=10
+#SBATCH --time=179:00
+
+INOUT=$1
+
+# do check the names before you run!
+time bowtie2-build --large-index --threads 10 \
+$INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+$INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+$INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+$INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+$INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
+$INOUT/hs37d5ss.fna.gz \
+$INOUT/mult_ref.bt2 #&gt; $INOUT/mult_ref.buildlog # 2&gt;&amp;1
+
+&#39; &gt; $MAT/slurm_bt2db.sh
+
+# and then run
+$MAT/slurm_bt2db.sh $BT_DB
+
+
+## for one sample:
+
+  ## bowtie2 - align our sequences to ref using bt2.
+  #bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${SAMPLE}_R1.fastq.gz -2 $FILT/${SAMPLE}_R2.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
+  ## feel free to look at the output
+  #less $KDOUT/${TEST}_bt2_refmapped.sam
+  
+  
+  ## next with samtools,
+  #samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam &gt; $KDOUT/${TEST}_bt2_refmapped.bam
+  
+  # F 256 : exclude those mapping to ref
+  # f 12 : F and R *both* unmapped
+  #samtools view -b -f 12 -F 256 $KDOUT/${TEST}_bt2_refmapped.bam &gt; $KDOUT/${TEST}_bt2_decontamd.bam
+  
+  # ensure reads are in a sensible order
+  #samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam
+  
+  # stream outputs of non-interest to /dev/null
+  #samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+# build our BT2 database in slurm:
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=bt_deco
+#SBATCH --output=bt_deco.txt
+
+# note no time, mem, tasks specified
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+## find the contaminants in our sequences, using bt2 + DB
+time bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1.fastq.gz \
+-2 $FILT/${SAMPLE}_R2.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+## change format
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+
+# samtools removes reads which match (contaminant) reference genome
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+
+# samtools re-roganises reads 
+time samtools sort -n -m 5G -@ 2 $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+# stream outputs of non-interest to /dev/null
+time samtools fastq -@ 8 $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 ${SAMPLE}_bt2decon_R1.fastq.gz -2 ${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+## opt rm intermediates
+
+&#39; &gt; $MAT/slurm_bt2deco.sh # SAMPLE  IN  OUT REF THREADS
+
+for i in $(cat $MAT/samples | head -1 );
+
+  do sbatch $MAT/slurm_bt2deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+
+done
+
+# should just show your stuff
+squeue -u $USER
 </code></pre>
 
 

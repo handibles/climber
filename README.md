@@ -1,7 +1,7 @@
 ## `<!> this document is not finished </!>`
 
 This guide to metagenomic analysis is still being written (0ct '22). 
-All (+/-)feedback is welcome: simply throw objects/comments directly at me, or drop us a line [at the related repo](https://github.com/handibles/climber/issues) .
+All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
 
 
 # `CLI`, `M`icro`b`ial `E`cology, and `R`
@@ -20,9 +20,9 @@ Metagenomic shotgun assembly covers the following steps:
   0. <a href="/documents/shotgun_assembly.html#setup-your-environment">Setting up your analysis</a>
   1. <a href="/documents/shotgun_assembly.html#get-the-sequence-data-check.html">Checking your sequence data</a>
   2. <a href="/documents/shotgun_assembly.html#quality-control-check.html">Sequencing QC - filtering and trimming your sequences</a>
-  3. <a href="/documents/shotgun_assembly.html#decontaminate-data-check">Sequencing QC - purifying your sequences - **not finished**</a>
-  4. Kraken2 (not yet written)
-  5. Bracken (not yet written)
+  3. <a href="/documents/shotgun_assembly.html#decontaminate-data-check">Sequencing QC - purifying your sequences - **not yet finished**</a>
+  4. Kraken2 (**not yet finished**)
+  5. Bracken (**not yet finished**)
 
 A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 
