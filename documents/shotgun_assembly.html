@@ -1373,8 +1373,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "\e259";
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -1382,9 +1382,16 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "\e258";
-  font-family: 'Glyphicons Halflings';
+  content: "";
   border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -1505,7 +1512,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">26 Oct 2022, 18:09</h4>
+<h4 class="date">28 Oct 2022, 11:49</h4>
 
 </div>
 
@@ -1758,7 +1765,7 @@ reconstruction</li>
 parallel.</li>
 </ul>
 <pre class="bash"><code># this is a list of all programs explicitly required in this workflow
-module load parallel fastqc multiqc trimmomtic bowtie2 kraken2 bracken</code></pre>
+module load parallel fastqc multiqc trimmomatic bowtie2 kraken2 bracken</code></pre>
 </div>
 <div id="are-we-ready" class="section level4">
 <h4>are we ready?</h4>

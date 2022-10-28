@@ -195,7 +195,7 @@ Next, we tell the HPC which programs we'll need for this work, which the HPC has
 
 ```{bash, eval = FALSE}
 # this is a list of all programs explicitly required in this workflow
-module load parallel fastqc multiqc trimmomtic bowtie2 kraken2 bracken
+module load parallel fastqc multiqc trimmomatic bowtie2 kraken2 bracken
 ```
 
 
