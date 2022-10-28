@@ -13,7 +13,7 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
 ### Metagenomic data (i.e. shotgun)
 
-  * <a href="documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
+  * <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
 
 Metagenomic shotgun assembly covers the following steps:
 
