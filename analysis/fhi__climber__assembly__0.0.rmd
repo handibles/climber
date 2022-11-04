@@ -829,7 +829,7 @@ time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
 -2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
--S $OUT/${SAMPLE}_bt2_refmapped.sam  #>> $OUT/${SAMPLE}_decont_out.log
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 ' > $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -847,13 +847,13 @@ REF=$4
 THREADS=$5
 
 ## change format
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam #>> $OUT/${SAMPLE}_decont_out.log
-rm $OUT/${SAMPLE}_bt2_refmapped.sam &&
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+rm $OUT/${SAMPLE}_bt2_refmapped.sam &
 
 ' > $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
 
 
-# filter contaminants from BAM
+# filter contaminants from BAM -  5m on sample Q4T8
 echo '#!/bin/bash
 
 #SBATCH --job-name=deco_bamfilt
@@ -866,8 +866,8 @@ REF=$4
 THREADS=$5
 
 # samtools removes reads which match (contaminant) reference genome
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam #>> $OUT/${SAMPLE}_decont_out.log
-rm $OUT/${SAMPLE}_bt2_refmapped.bam &&
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+rm $OUT/${SAMPLE}_bt2_refmapped.bam &
 
 ' > $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -885,8 +885,8 @@ REF=$4
 THREADS=$5
 
 # samtools re-roganises reads 
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam #>> $OUT/${SAMPLE}_decont_out.log
-rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam &&
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+rm $OUT/${SAMPLE}_bt2_decontamd.bam &
 
 ' > $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -904,10 +904,14 @@ REF=$4
 THREADS=$5
 
 # stream outputs of non-interest to /dev/null
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n #>> $OUT/${SAMPLE}_decont_out.log
-rm $OUT/${SAMPLE}_*.[bam,sam] &&
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+rm $OUT/${SAMPLE}_*.[bam,sam] &
 
 ' > $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
+
+## arguably, all the rm of sam/bam files should take place afte rthe steps are completed. Also, purge your logfiles.
+
+> ./deco_*.txt
 
 ```
 
@@ -941,12 +945,39 @@ ls -lsh $KDOUT/${TEST}*
 cat $MAT/samples | head -1
 
 
-# many slurms require many for-loops - this is only the first one...
+# many slurms require many for-loops - 
+# run each for loop in turn
+
+
+#  align sequences
 for i in $(cat $MAT/samples | head -1 );
-
-  do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ;
-
+    do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ;
 done
+
+
+# convert SAM to BAM
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
+
+# filter out contaminant reads from BAM
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
+
+# re-sort the reads in the correct order
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
+
+# make it fastq again
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
 
 # should just show your stuff
 squeue -u $USER
