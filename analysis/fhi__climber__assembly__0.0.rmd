@@ -916,6 +916,61 @@ rm $OUT/${SAMPLE}_*.[bam,sam] &
 ```
 
 
+Alt: one big job, now that we've improved the small jobs, slightly.
+
+```{bash, eval=TRUE}
+
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bt_deco
+#SBATCH --output=slurm_bt2_deco.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+
+# Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz)
+time bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+
+# samtools: convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+
+
+# samtools: removes reads which match (contaminant) reference genome - 5m on Q4T8
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+
+
+# samtools: re-roganises reads 
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+
+# samtools: stream outputs of non-interest to /dev/null
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+# delete all the things in one go, and then put job in background (&) so you dont have to wait
+rm $OUT/${SAMPLE}_*.[bam,sam] &
+
+' > $MAT/slurm_deco_bt2_deco.sh # SAMPLE  IN  OUT REF THREADS
+
+
+## and then: 
+
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
+
+```
+
 As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
 
 <!-- sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1 -->
