@@ -654,7 +654,13 @@ parallel gzip {} ::: $RAW/ref/*fna
 We then need use `bowtie2` to build a reference database for all of these genomes in one place. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
 
 ```{bash, eval=FALSE}
+
+# your reference genomes went here:
+ls $RAW/ref
+
+# your new bowtie2 databases wiull go here:
 mkdir $BT_DB
+$BT_DB
 
 # bowtie2-build [options]* <reference_in> <bt2_base>
 time bowtie2-build --t 9 $RAW/ref/hs37d5ss.fa.gz BT_DB/decoy_hs37d5ss.bt2 > $BT_DB/decoy_hs37d5ss.bt2.buildlog
@@ -689,7 +695,9 @@ echo '#!/bin/bash
 
 INOUT=$1
 
-# do check the names before you run!
+# feel free to add / remove genomes that are relevant to you
+
+# do check the names before you run! 
 time bowtie2-build --large-index --threads 10 \
 $INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
 $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
