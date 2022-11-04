@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">04 Nov 2022, 14:52</h4>
+<h4 class="date">04 Nov 2022, 15:07</h4>
 
 </div>
 
@@ -2612,8 +2612,8 @@ THREADS=$5
 time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
--2 $FILT/${SAMPLE}_R2_trimm.fastq.gz \
--S $OUT/${SAMPLE}_bt2_refmapped.sam  &gt;&gt; $MAT/${SAMPLE}_decont_out.log
+-2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam  &gt;&gt; $OUT/${SAMPLE}_decont_out.log
 
 &#39; &gt; $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -2631,7 +2631,7 @@ REF=$4
 THREADS=$5
 
 ## change format
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam &gt;&gt; $OUT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.sam &amp;&amp;
 
 &#39; &gt; $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
@@ -2650,7 +2650,7 @@ REF=$4
 THREADS=$5
 
 # samtools removes reads which match (contaminant) reference genome
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam &gt;&gt; $OUT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_refmapped.bam &amp;&amp;
 
 &#39; &gt; $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
@@ -2669,7 +2669,7 @@ REF=$4
 THREADS=$5
 
 # samtools re-roganises reads 
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam &gt;&gt; $MAT/${SAMPLE}_decont_out.log
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam &gt;&gt; $OUT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_bt2_decontamd_sort.bam &amp;&amp;
 
 &#39; &gt; $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
@@ -2688,7 +2688,7 @@ REF=$4
 THREADS=$5
 
 # stream outputs of non-interest to /dev/null
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n &gt;&gt; $MAT/${SAMPLE}_decont_out.log
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n &gt;&gt; $OUT/${SAMPLE}_decont_out.log
 rm $OUT/${SAMPLE}_*.[bam,sam] &amp;&amp;
 
 &#39; &gt; $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
