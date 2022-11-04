@@ -1373,8 +1373,8 @@ pre code {
   border-radius: 4px;
 }
 
-.tabset-dropdown > .nav-tabs > li.active:before {
-  content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
   font-family: 'Glyphicons Halflings';
   display: inline-block;
   padding: 10px;
@@ -1382,16 +1382,9 @@ pre code {
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-  content: "";
-  border: none;
-}
-
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-  content: "";
+  content: "\e258";
   font-family: 'Glyphicons Halflings';
-  display: inline-block;
-  padding: 10px;
-  border-right: 1px solid #ddd;
+  border: none;
 }
 
 .tabset-dropdown > .nav-tabs > li.active {
@@ -1512,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">28 Oct 2022, 11:49</h4>
+<h4 class="date">04 Nov 2022, 12:35</h4>
 
 </div>
 
@@ -1725,8 +1718,8 @@ K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k                 # HPC only
 BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # our overall data structure
-RAW=/data/Food/primary/R0936_redcheese/
-WRK=/data/Food/analysis/R0936_redcheese/
+RAW=/data/Food/primary/R0936_redcheese
+WRK=/data/Food/analysis/R0936_redcheese
 
 # scripts, and slurms for queueing up jobs
 MAT=$WRK/Materials
@@ -2246,8 +2239,8 @@ HEADCROP:25 \
 CROP:125 \
 ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
 SLIDINGWINDOW:6:15 \
-MINLEN:80 
--threads 6 &gt; $OUT/trimmo_${SAMPLE}.out #2&gt;&amp;1&#39; &gt; $MAT/slurm_trimmo.sh
+MINLEN:80 \
+-threads 6 &gt; $OUT/trimmo_${SAMPLE}.out 2&gt;&amp;1&#39; &gt; $MAT/slurm_trimmo.sh
 </code></pre>
 <blockquote>
 <p><strong>NB:</strong> increased time from 6min to 18min to avoid job

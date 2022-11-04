@@ -162,8 +162,8 @@ K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k                 # HPC only
 BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # our overall data structure
-RAW=/data/Food/primary/R0936_redcheese/
-WRK=/data/Food/analysis/R0936_redcheese/
+RAW=/data/Food/primary/R0936_redcheese
+WRK=/data/Food/analysis/R0936_redcheese
 
 # scripts, and slurms for queueing up jobs
 MAT=$WRK/Materials
@@ -502,8 +502,8 @@ HEADCROP:25 \
 CROP:125 \
 ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
 SLIDINGWINDOW:6:15 \
-MINLEN:80 
--threads 6 > $OUT/trimmo_${SAMPLE}.out #2>&1' > $MAT/slurm_trimmo.sh
+MINLEN:80 \
+-threads 6 > $OUT/trimmo_${SAMPLE}.out 2>&1' > $MAT/slurm_trimmo.sh
 
 ```
 
