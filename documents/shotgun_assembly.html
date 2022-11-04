@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">04 Nov 2022, 16:55</h4>
+<h4 class="date">04 Nov 2022, 17:07</h4>
 
 </div>
 
@@ -2613,7 +2613,7 @@ time bowtie2 -p $THREADS \
 -x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
 -2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
--S $OUT/${SAMPLE}_bt2_refmapped.sam  #&gt;&gt; $OUT/${SAMPLE}_decont_out.log
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
 
 &#39; &gt; $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -2631,7 +2631,7 @@ REF=$4
 THREADS=$5
 
 ## change format
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam #&gt;&gt; $OUT/${SAMPLE}_decont_out.log
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
 rm $OUT/${SAMPLE}_bt2_refmapped.sam &amp;
 
 &#39; &gt; $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
@@ -2650,7 +2650,7 @@ REF=$4
 THREADS=$5
 
 # samtools removes reads which match (contaminant) reference genome
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam #&gt;&gt; $OUT/${SAMPLE}_decont_out.log
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
 rm $OUT/${SAMPLE}_bt2_refmapped.bam &amp;
 
 &#39; &gt; $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
@@ -2669,7 +2669,7 @@ REF=$4
 THREADS=$5
 
 # samtools re-roganises reads 
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam #&gt;&gt; $OUT/${SAMPLE}_decont_out.log
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
 rm $OUT/${SAMPLE}_bt2_decontamd.bam &amp;
 
 &#39; &gt; $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
@@ -2688,11 +2688,68 @@ REF=$4
 THREADS=$5
 
 # stream outputs of non-interest to /dev/null
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n #&gt;&gt; $OUT/${SAMPLE}_decont_out.log
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 rm $OUT/${SAMPLE}_*.[bam,sam] &amp;
 
 &#39; &gt; $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
+
+## arguably, all the rm of sam/bam files should take place afte rthe steps are completed. Also, purge your logfiles.
+
+&gt; ./deco_*.txt
 </code></pre>
+<p>Alt: one big job, now that we’ve improved the small jobs,
+slightly.</p>
+<pre class="bash"><code>
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=deco_bt_deco
+#SBATCH --output=slurm_bt2_deco.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+
+# Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz)
+time bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+
+# samtools: convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+
+
+# samtools: removes reads which match (contaminant) reference genome - 5m on Q4T8
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+
+
+# samtools: re-roganises reads 
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+
+# samtools: stream outputs of non-interest to /dev/null
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+# delete all the things in one go, and then put job in background (&amp;) so you dont have to wait
+rm $OUT/${SAMPLE}_*.[bam,sam] &amp;
+
+&#39; &gt; $MAT/slurm_deco_bt2_deco.sh # SAMPLE  IN  OUT REF THREADS
+
+
+## and then: 
+
+for i in $(cat $MAT/samples | head -1 );
+    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+</code></pre>
+<pre><code>## bash: line 40: /slurm_deco_bt2_deco.sh: Permission denied
+## cat: /samples: No such file or directory</code></pre>
 <p>As before, we can then send these jobs to the
 <code>slurm queue</code> for processing when resources become
 available.</p>

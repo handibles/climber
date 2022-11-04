@@ -971,9 +971,8 @@ done
 
 ```
 
-As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
 
-<!-- sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1 -->
+As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
 
 ```{bash,eval=FALSE}
 
@@ -986,12 +985,6 @@ sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10
 
 # overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
 less $MAT/${TEST}_decont_out.log
-# intermediate
-less deco_bt2align.txt
-less deco_sambam.txt
-less deco_bamfilt.txt
-less deco_bamsort.txt
-less deco_bamfq.txt
 
 # check for outputs
 ls -lsh $KDOUT/${TEST}*
@@ -999,44 +992,52 @@ ls -lsh $KDOUT/${TEST}*
 # this will list just one sample
 cat $MAT/samples | head -1
 
-
-# many slurms require many for-loops - 
-# run each for loop in turn
-
-
-#  align sequences
-for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ;
-done
-
-
-# convert SAM to BAM
-for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ;
-done
-
-
-# filter out contaminant reads from BAM
-for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ;
-done
-
-
-# re-sort the reads in the correct order
-for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ;
-done
-
-
-# make it fastq again
-for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ;
-done
-
-
 # should just show your stuff
 squeue -u $USER
 ```
+
+
+
+
+<!-- # many slurms require many for-loops -  -->
+<!-- # run each for loop in turn -->
+
+
+<!-- #  align sequences -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # convert SAM to BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # filter out contaminant reads from BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # re-sort the reads in the correct order -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # make it fastq again -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+<!-- # intermediate -->
+<!-- less deco_bt2align.txt -->
+<!-- less deco_sambam.txt -->
+<!-- less deco_bamfilt.txt -->
+<!-- less deco_bamsort.txt -->
+<!-- less deco_bamfq.txt -->
 
 
 <!-- for i in $( cat $MAT/samples | head -1): -->
