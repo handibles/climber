@@ -657,7 +657,7 @@ We then need use `bowtie2` to build a reference database for all of these genome
 mkdir $BT_DB
 
 # bowtie2-build [options]* <reference_in> <bt2_base>
-time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 > ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
+time bowtie2-build --t 9 $RAW/ref/hs37d5ss.fa.gz BT_DB/decoy_hs37d5ss.bt2 > $BT_DB/decoy_hs37d5ss.bt2.buildlog
 
 ## individual builds:
 # decoy.9MB.fna.gz; 19 seconds for decoy, 9 threads, 15GB RAM
