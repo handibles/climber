@@ -961,7 +961,7 @@ if [ -f $OUT/${SAMPLE}_bt2decon_R2.fastq.gz & -f $OUT/${SAMPLE}_bt2decon_R2.fast
 ## note this for loop is set to only send one sample to the queue - remove " | head -1" to send them all
 
 for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB $BT_threads ;
 done
 
 
