@@ -813,7 +813,7 @@ We can apply the same technique to all of our samples using `slurm`. The databas
 ```{bash, eval=FALSE}
 ## multiple small jobs
 
-# Bowtie2 align sequences - 13m on sample Q4T8 (1.2/1.3GB fastq.gz)
+# Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz)
 echo '#!/bin/bash
 
 #SBATCH --job-name=deco_bt2align
@@ -834,7 +834,7 @@ time bowtie2 -p $THREADS \
 ' > $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
 
 
-# convert bowtie2 SAM output to BAM
+# convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output
 echo '#!/bin/bash
 
 #SBATCH --job-name=deco_sambam
