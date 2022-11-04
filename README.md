@@ -20,9 +20,8 @@ Metagenomic shotgun assembly covers the following steps:
   0. Setting up your analysis
   1. Checking your sequence data
   2. Sequencing QC - filtering and trimming your sequences
-  3. Sequencing QC - purifying your sequences - **not yet finished**
-  4. Kraken2 (**not yet started**)
-  5. Bracken (**not yet started**)
+  3. Sequencing QC - purifying your sequences - **not yet debugged**
+  4. Kraken2 & Bracken - **not yet finished**
 
 A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 

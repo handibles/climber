@@ -72,7 +72,7 @@ We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. S
 
 #### what this document is **not**:
 
-This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Oct 2022: not yet written**).
+This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Nov 2022: not yet written**).
 
 ---
 
@@ -758,7 +758,7 @@ rm $KDOUT/${TEST}*[sam,bam]
 
 ### decontaminate multiple samples
 
-We can apply the same technique to all of our samples using `slurm`. THe database is already present, so we write `slurm` scripts for the `BowTie2` alignment, `samtools` filtering, and `samtools` processing. Separating out the jobs allows us to troubleshoot issues more easily..hopefully...
+We can apply the same technique to all of our samples using `slurm`. The database is already present, so we write `slurm` scripts for the `BowTie2` alignment, `samtools` filtering, and `samtools` processing. Separating out the jobs allows us to troubleshoot issues more easily..hopefully...
 
 **NB** : `time` flag is totally spurious ; lots of large intermediate files being created - we'll need to delete these as we go;  **see the `bt_deco.txt` for output**, which should be in the `~` directory... Problems may be recorded there ; also check name formats in bt2 align step
 
@@ -972,12 +972,181 @@ squeue -u $USER
 
 If we wanted to achieve the same things with `KneadData`, we could provide similar arguments to those above (often, its the _exact_ same argument, we're just asking `KneadData` to tell `Trimmomatic`/`BowTie2`). Note that we would still have had to download our reference genomes and build a database from them using `bowtie-build`. 
 
+
+# 4 - Microbiome Community Estimation: `Kraken2` & `Bracken`
+
+Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). 
+
+
+## identify reads with `Kracken2`
+
+[`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
+
+We will use the default `Kraken2` database, built from the NCBI non-redundant refseq database. We could alternatively use the GTDB, which is a brave, fresh attempt at rationalising how taxonomy is applied (a much bigger topic, but a very good database, though it doesn't always match the NCBI one). Both databases are present on the HPC, and mean we don't have to build or own dataabases (though we definitely [could](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases)).
+
+First we test and try the K2 on our `$TEST` sample:
+
+```{bash, eval=FALSE}
+
+# test
+
+time kraken2 --db $K2REFDIR  $KDOUT/${TEST}/${TEST}_R1_kneaddata_paired_1.fastq.gz $KDOUT/${TEST}/${TEST}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $KROUT/${TEST}_test_kraken_report# --unclassified-out $KROUT/${TEST}_test_kraken_unclass# --output $KROUT/${TEST}_test_kraken_output#
+
+# need to specify id cutoff
+```
+
+<!-- Also: -->
+<!-- First run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
+<!-- # for ROUND 1, paired-mode only is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
+<!-- # can remember why we included the zero counts...but we did, intentionally -->
+
+If that works, we scale it for `slurm`:
+
+```{bash, eval=FALSE}
+echo '#!/bin/bash
+
+#SBATCH ---job-name=krak2_filt
+#SBATCH ---output=krak2_filt.txt
+
+#SBATCH ---ntasks=5
+#SBATCH ---time=40:00
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+DB=$4
+
+time kraken2 --db $DB  $KDOUT/${SAMPLE}/${SAMPLE}_R1_kneaddata_paired_1.fastq.gz $KDOUT/${SAMPLE}/${SAMPLE}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --use-mpa-style --report $KROUT/${SAMPLE}_kraken_report# --unclassified-out $KROUT/${SAMPLE}_kraken_unclass# --output $KROUT/${SAMPLE}_kraken_output#
+
+## send seqs to /dev/null ? ... 
+
+' > $MAT/slurm_krak2.sh
+
+```
+
+
+Again, we use a little `for-loop` to give each sample to `slurm` (`$i`), making sure to pass it the dir for the filtered input data (`$KDOUT`), the output folder for `Kraken2` (`$KROUT`), and the location of the Kraken2 DB (`$K2REFDIR`):
+
+```{bash, eval=FALSE}
+
+for i in $(cat $MAT/samples);
+
+  # and it will repeat this command for all the different values of $i, below:
+  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR;
+
+# close the for-loop
+done
+ 
+```
+
+
+## estimate abundances with `Bracken`
+
+`Kraken2` tried to assign an identity to each read, as best possible. If we knew that we had `1M` reads in our `$TEST` sample, we could count how many reads are for (e.g.) _Escherichia coli_, and decide that the relative abundance of _E. coli_ in the sample is simply `n_reads_E_coli / n_total_sample_reads`. This might work in some cases, but it would only count reads that were specifically assigned to _E. coli_, and would miss all the reads _E. coli_ reads that could only be assigned to (e.g.) _Escherichia_, or Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn't what you want. 
+
+[`Bracken`](https://github.com/jenniferlu717/Bracken) [solves this problem](https://www.nature.com/articles/s41596-022-00738-y) by using [Bayesian re-estimation](https://peerj.com/articles/cs-104/) to guess from the distribution of all reads in the reference phylogenetic tree, what the relative abundances are for all (e.g.) _species_ across the overall sample. This uses all the reads in the sample, and tends to give a more accurate representation of what the community looks like at a compositional level, for species-level taxa. 
+
+Here, because `Bracken` is fast and relatively lightweight, `slurm` would be unnecessarily complicating things. We will:
+
+  0. generate a database - this step will be done for us on the HPC, but it's shown below anyway.
+  1. generate a report for each sample processed by `Kraken2`
+  2. combine these reports into one document - this is our community table!
+  
+Bioinformaticians use *two weird tricks* to make their microbial dreams come true. First, we must set the taxonomic level we want to combine reads to: in our case we are probably interested in taxa at a _species_ level, but 
+
+
+```{bash, eval=FALSE}
+
+## build data base first, using length 80bp 35kmers
+
+## takes an hour on 25 threads
+
+
+```
+
+
+<!-- We then use that database, and process our `Kraken2` outputs -->
+
+<!-- ```{bash, eval=FALSE} -->
+
+<!-- ## fast as immediate  -  run bracken on the kraken_report  -  note no threads arg! -->
+<!-- # -r = read lengths (taken as the starting read length, we're at about 125 by now...) -->
+<!-- # -l = Level, def=S ; (K, P, C, O, F, G, S ) -->
+<!-- # -t = threshold, def = 10 ; level below which a taxo-branch on the kraken tree will be dropped from further assignment of abundances -->
+<!-- ls $K2OUT/* | sed -r 's/.*\/(.*)_kraken.*/\1/g' | sort | uniq | \ -->
+<!-- parallel -j 3  \ -->
+<!-- python ~/BioApps/Bracken/src/est_abundance.py -i $K2OUT/*{}*report -k $K2REFDIR/database80mers.kmer_distrib -l S -t 10 -o $BRK/{}.bracken \ -->
+<!-- > $BRK/bracken_output_82.stout -->
+<!-- # bracken -d $DB/kraken2_stnd -i $KRK/*{}_*report -o $b/{}_bracken_report.txt -r 150 -l S -t 10 > $b/bracken.stout -->
+
+<!-- ## combine reports to one monolith.tsv -->
+<!-- python2 ~/BioApps/Bracken/analysis_scripts/combine_bracken_outputs.py --files $BRK/*bracken -o fhi_redch_krakenStnd_bracken_combo -->
+
+<!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
+<!-- parallel python2 ~/BioApps/Bracken/src/kreport2mpa.py -r {} -o $BRK/{.}.mpa ::: $K2OUT/*report* > $BRK/fhi_redch_bragglers -->
+
+<!-- ``` -->
+
+
+<!-- ```{bash, eval=FALSE} -->
+
+<!-- ##   T A X O N O M Y   -   glom from mpa output!   ## ======================================== -->
+
+<!-- ## own funciton gettax_kraken : hacky, ++slow, and only gets species name. Avoid. -->
+
+<!-- ## get all the S level assignments; trim counts ; sort; uniq -->
+<!-- grep -h '|s_' $BRK/*mpa | cut -f 1 > $BRK/bracken_82_taxa.temp -->
+<!-- sort $BRK/bracken_82_taxa.temp | uniq > $BRK/bracken_82_taxa.temp2 -->
+<!-- sed 's/|/\t/g' $BRK/bracken_82_taxa.temp2 > $BRK/fhi_redch_krakenStnd_bracken_combo_taxa_82 -->
+
+<!-- ## send home -->
+<!-- scp ./bracken_545_*[combo,taxa] $DSK -->
+
+<!-- # consider total taxonomy, but prob doesn't tell us anything re: missing levels -->
+<!-- cat $b/bracken_reports_545/*mpa | cut -f 1 > $b/bracken_545_total_tax.temp -->
+<!-- sort  $b/bracken_545_total_tax.temp | uniq > $b/bracken_545_total_tax.temp2 -->
+
+<!-- ``` -->
+
+
+
+
+
+<!-- usearch -fastq_join $KDOUT/$TEST/${TEST}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$TEST/${TEST}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${TEST}_kneaddata_R1R2.fastq.gz -->
+
+
+<!-- ## k2-check filtered data -->
+<!-- cat $K2IN/${TEST}/${TEST}_R1_kneaddata_Homo*.fastq.gz > $K2IN/${TEST}/${TEST}_contam.fastq.gz & -->
+<!-- cat $K2IN/${TEST}/${TEST}_R1_kneaddata_unmatched_[12].fastq.gz > $K2IN/${TEST}/${TEST}_orphan.fastq.gz & -->
+<!-- ## -->
+<!-- # TWO-POINT-FIVE MINUTES! 27% identified  | conf 0.5: 1m30, 2% identifiedi | 3 MIN 30 - 15% classified -->
+<!-- time kraken2 --db $K2REFDIR  $K2IN/${TEST}/${TEST}_orphan.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${TEST}_test_orphan_kraken_report --unclassified-out $K2OUT/${TEST}_test_orphan_kraken_unclass --output $K2OUT/${TEST}_test_orphan_kraken_output -->
+<!-- ## -->
+<!-- # THREE MIN FORTY! 12% sequences identified, highly worrying. -->
+<!-- time kraken2 --db $K2REFDIR  $K2IN/${TEST}/${TEST}_contam.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${TEST}_test_contam_kraken_report --unclassified-out $K2OUT/${TEST}_test_contam_kraken_unclass --output $K2OUT/${TEST}_test_contam_kraken_output -->
+
+
+<!-- # lifeboat protocol -->
+<!-- # K2SAMPLE=SC145C1-NS_S86 -->
+<!-- K2IN=/claesson/jamie/fhi_redch -->
+<!-- K2OUT=/claesson/jamie/fhi_redch/krak2 -->
+<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
+<!-- # << < < < need to add step here to start with one sample, removing --mem-map, and updating dirs/ -->
+<!-- ## remove --mpa-style as interferes with Bracken -->
+<!-- ls /claesson/jamie/fhi_redch/*[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 time kraken2 --db $K2REFDIR  $K2IN/{}_R1_kneaddata_paired_1.fastq.gz $K2IN/{}_R1_kneaddata_paired_2.fastq.gz --memory-mapping --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $K2OUT/{}_kraken_report# --unclassified-out $K2OUT/{}_kraken_unclass# --output $K2OUT/{}_kraken_output# >> ~/para_krak_fhi_redch.stout 2>&1 -->
+<!-- # this'll put out all the seq too. if you only want the report, send your output/unclassified ..away -->
+<!-- # try catch output, or anything else - because where does it go? -->
+<!-- ## pre-run very possibly not necessary with --memorymapping opt -->
+
+
+
+
 <!-- ```{bash, eval = FALSE} -->
 <!-- # re-run trimmomatic disabled using --bypass-trim -->
 <!-- module load kneaddata trimmomatic   # needs trimmo, even if you don't -->
 
 <!-- # trial -->
-<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic  -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic -->
 
 <!-- ## is the output compressed?... -->
 <!-- # ; gzip $KDOUT/$TEST/*fastq # 2>&1 -->
@@ -1029,137 +1198,8 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 
 
-<!-- # 4 microbial community profiling -->
-<!-- ```{bash, eval = FALSE} -->
-
-<!-- usearch -fastq_join $KDOUT/$SAMPLE/${SAMPLE}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$SAMPLE/${SAMPLE}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${SAMPLE}_kneaddata_R1R2.fastq.gz -->
-
-<!-- # --------- -->
-
-<!-- # test -->
-<!-- K2SAMPLE=SC145C1-NS_S86 -->
-<!-- K2IN=$KDOUT -->
-<!-- K2OUT=$KROUT -->
-<!-- K2REFDIR=/data/databases/Kraken2_GTDB_r89_54k -->
-
-<!-- # recall - first run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
-<!-- cat $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_Homo*.fastq.gz > $K2IN/${K2SAMPLE}/${K2SAMPLE}_contam.fastq.gz & -->
-<!-- cat $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_unmatched_[12].fastq.gz > $K2IN/${K2SAMPLE}/${K2SAMPLE}_orphan.fastq.gz & -->
-<!-- # THREE MINUTES! only 18% classified though.  | 0.5 conf: 2m, 2% class | 0.15 cutoff - 3m, 13% ID'd -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_1.fastq.gz $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_kraken_report# --unclassified-out $K2OUT/${K2SAMPLE}_test_kraken_unclass# --output $K2OUT/${K2SAMPLE}_test_kraken_output# -->
-<!-- # TWO-POINT-FIVE MINUTES! 27% identified  | conf 0.5: 1m30, 2% identifiedi | 3 MIN 30 - 15% classified -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_orphan.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_orphan_kraken_report --unclassified-out $K2OUT/${K2SAMPLE}_test_orphan_kraken_unclass --output $K2OUT/${K2SAMPLE}_test_orphan_kraken_output -->
-<!-- # THREE MIN FORTY! 12% sequences identified, highly worrying. -->
-<!-- time kraken2 --db $K2REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_contam.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $K2OUT/${K2SAMPLE}_test_contam_kraken_report --unclassified-out $K2OUT/${K2SAMPLE}_test_contam_kraken_unclass --output $K2OUT/${K2SAMPLE}_test_contam_kraken_output -->
-
-<!-- # need to specify id cutoff -->
-
-<!-- # for ROUND 1, paired-mode only is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
-<!-- # can remember why we included the zero counts...but we did, intentionally -->
-
-<!-- echo '#!/bin/bash -->
-
-<!-- #SBATCH ---job-name=knead_fastq -->
-<!-- #SBATCH ---output=knead_fastq.txt -->
-
-<!-- #SBATCH ---ntasks=5 -->
-<!-- #SBATCH ---time=40:00 -->
-
-<!-- SAMPLE=$1 -->
-<!-- IN=$2 -->
-<!-- OUT=$3 -->
-<!-- REFDIR=$4 -->
-
-<!-- time kraken2 --db $REFDIR  $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_1.fastq.gz $K2IN/${K2SAMPLE}/${K2SAMPLE}_R1_kneaddata_paired_2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --use-mpa-style --report $K2OUT/${K2SAMPLE}_kraken_report# --unclassified-out $K2OUT/${K2SAMPLE}_kraken_unclass# --output $K2OUT/${K2SAMPLE}_kraken_output# -->
-
-<!-- ## -->
-<!-- ## here, should cat and grab the orphan output -->
-<!-- ## -->
-
-<!-- scp $OUT/${SAMPLE}* jamie@143.239.204.169:/mnt/yabba/yoda_backup/home/ClaessonFTP/jamie/ -->
-
-<!-- ## within dir, do fastqc -o $QCDIR/ -t 4 $OUT/${SAMPLE}/*.fastq.gz -->
 
 
-<!-- ' > $MAT/slurm_krak2.sh -->
-
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 sbatch $MAT/slurm_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
-<!-- ls $FILT/*R[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | head -20 | tail -1 | parallel -j 8 $MAT/bash_krak2.sh {} $KDOUT $KROUT $K2REFDIR -->
-
-
-<!-- # lifeboat protocol -->
-<!-- # K2SAMPLE=SC145C1-NS_S86 -->
-<!-- K2IN=/claesson/jamie/fhi_redch -->
-<!-- K2OUT=/claesson/jamie/fhi_redch/krak2 -->
-<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
-
-
-<!-- # << < < < need to add step here to start with one sample, removing --mem-map, and updating dirs/ -->
-<!-- ## remove --mpa-style as interferes with Bracken -->
-<!-- ls /claesson/jamie/fhi_redch/*[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 time kraken2 --db $K2REFDIR  $K2IN/{}_R1_kneaddata_paired_1.fastq.gz $K2IN/{}_R1_kneaddata_paired_2.fastq.gz --memory-mapping --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $K2OUT/{}_kraken_report# --unclassified-out $K2OUT/{}_kraken_unclass# --output $K2OUT/{}_kraken_output# >> ~/para_krak_fhi_redch.stout 2>&1 -->
-
-<!-- # this'll put out all the seq too. if you only want the report, send your output/unclassified ..away -->
-<!-- # try catch output, or anything else - because where does it go? -->
-
-<!-- ## pre-run very possibly not necessary with --memorymapping opt -->
-
-
-
-<!-- ##   B R A C K E N   B E A T I N G       ## =================== -->
-
-<!-- brthreads=10 -->
-<!-- b=$DAN/3_b2  ; mkdir $b -->
-<!-- binst=~/BioApps -->
-
-<!-- # K2SAMPLE=SC145C1-NS_S86 -->
-<!-- WRK=/claesson/jamie/fhi_redch -->
-<!-- K2IN=/claesson/jamie/fhi_redch/knead -->
-<!-- K2OUT=/claesson/jamie/fhi_redch/krak2 -->
-<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
-
-<!-- BRK=$WRK/brack ; mkdir $BRK -->
-
-<!-- ## build data base first, using length 80bp 35kmers, takes an hour on 25 threads -->
-
-<!-- ## fast as immediate  -  run bracken on the kraken_report  -  note no threads arg! -->
-<!-- # -r = read lengths (taken as the starting read length, we're at about 125 by now...) -->
-<!-- # -l = Level, def=S ; (K, P, C, O, F, G, S ) -->
-<!-- # -t = threshold, def = 10 ; level below which a taxo-branch on the kraken tree will be dropped from further assignment of abundances -->
-<!-- ls $K2OUT/* | sed -r 's/.*\/(.*)_kraken.*/\1/g' | sort | uniq | \ -->
-<!-- parallel -j 3  \ -->
-<!-- python ~/BioApps/Bracken/src/est_abundance.py -i $K2OUT/*{}*report -k $K2REFDIR/database80mers.kmer_distrib -l S -t 10 -o $BRK/{}.bracken \ -->
-<!-- > $BRK/bracken_output_82.stout -->
-<!-- # bracken -d $DB/kraken2_stnd -i $KRK/*{}_*report -o $b/{}_bracken_report.txt -r 150 -l S -t 10 > $b/bracken.stout -->
-
-<!-- ## combine reports to one monolith.tsv -->
-<!-- python2 ~/BioApps/Bracken/analysis_scripts/combine_bracken_outputs.py --files $BRK/*bracken -o fhi_redch_krakenStnd_bracken_combo -->
-
-<!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
-<!-- parallel python2 ~/BioApps/Bracken/src/kreport2mpa.py -r {} -o $BRK/{.}.mpa ::: $K2OUT/*report* > $BRK/fhi_redch_bragglers -->
-
-
-<!-- # # catch done/undone -->
-<!-- #   find $KOUT/*gz | sed -r 's/.*[\/_]([0-9]{4}[AB]?)[\/_].*/\1/g' | sort | uniq > $DAN/Materials/temp2 -->
-<!-- #   find $KRK/*report | sed -r 's/.*[\/_]([0-9]{4}[AB]?)[\/_].*/\1/g' | sort | uniq > $DAN/Materials/temp3_k -->
-<!-- #   comm -23 $DAN/Materials/temp2 $DAN/Materials/temp3_k > $DAN/Materials/krk_offenders.txt -->
-<!-- #   # include switch for outputting zero-reads - for tabulation -->
-<!-- # -->
-
-<!-- ##   T A X O N O M Y   -   glom from mpa output!   ## ======================================== -->
-
-<!-- ## own funciton gettax_kraken : hacky, ++slow, and only gets species name. Avoid. -->
-
-<!-- ## get all the S level assignments; trim counts ; sort; uniq -->
-<!-- grep -h '|s_' $BRK/*mpa | cut -f 1 > $BRK/bracken_82_taxa.temp -->
-<!-- sort $BRK/bracken_82_taxa.temp | uniq > $BRK/bracken_82_taxa.temp2 -->
-<!-- sed 's/|/\t/g' $BRK/bracken_82_taxa.temp2 > $BRK/fhi_redch_krakenStnd_bracken_combo_taxa_82 -->
-
-<!-- ## send home -->
-<!-- scp ./bracken_545_*[combo,taxa] $DSK -->
-
-<!-- # consider total taxonomy, but prob doesn't tell us anything re: missing levels -->
-<!-- cat $b/bracken_reports_545/*mpa | cut -f 1 > $b/bracken_545_total_tax.temp -->
-<!-- sort  $b/bracken_545_total_tax.temp | uniq > $b/bracken_545_total_tax.temp2 -->
 
 
 <!-- ``` -->
@@ -1173,6 +1213,8 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 ---
 
 # Reading / Reference
+
+> [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/) - extremely good and thorough guide.
 
 > [Linux command line for beginners](https://ubuntu.com/tutorials/command-line-for-beginners) - quite quite good!
 
@@ -1194,7 +1236,7 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 > [`bowtie2 / samtools` filtering](https://www.metagenomics.wiki/tools/short-read/remove-host-sequences)
 
-> [The `Kraken` Suite ](http://ccb.jhu.edu/data/kraken2_protocol/) - **recent nature [paper](https://doi.org/10.1038/s41596-022-00738-y)** from the developers of Kraken, KrakenUniq, & Bracken etc. 
+> [The `Kraken` **Suite** ](http://ccb.jhu.edu/data/kraken2_protocol/) - **Sept 2022** nature [paper](https://doi.org/10.1038/s41596-022-00738-y) from the developers of Kraken, KrakenUniq, & Bracken etc. 
 
 > [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
 
