@@ -704,7 +704,7 @@ $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
 $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
 $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
 $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
-$INOUT/hs37d5ss.fna.gz \
+$INOUT/hs37d5ss.fa.gz \
 $INOUT/mult_ref #> $INOUT/mult_ref.buildlog # 2>&1
 
 ' > $MAT/slurm_bt2db.sh
@@ -919,11 +919,11 @@ As before, we can then send these jobs to the `slurm queue` for processing when 
 ```{bash,eval=FALSE}
 
 # ultimate test
-sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
-sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
-sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
-sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
-sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1
+sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10
 
 # overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
 less $MAT/${TEST}_decont_out.log

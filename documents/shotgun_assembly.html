@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">04 Nov 2022, 14:15</h4>
+<h4 class="date">04 Nov 2022, 14:52</h4>
 
 </div>
 
@@ -2430,10 +2430,16 @@ size.</p>
 for all of these genomes in one place. <code>BT_threads=9</code> because
 available locally - feel free to increase to something appropriate to
 your setup, as we check the <code>decoy genome</code> first.</p>
-<pre class="bash"><code>mkdir $BT_DB
+<pre class="bash"><code>
+# your reference genomes went here:
+ls $RAW/ref
+
+# your new bowtie2 databases wiull go here:
+mkdir $BT_DB
+$BT_DB
 
 # bowtie2-build [options]* &lt;reference_in&gt; &lt;bt2_base&gt;
-time bowtie2-build --t 9 ~/data/ref/bt2_indices/hs37d5ss.fa.gz ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2 &gt; ~/data/ref/bt2_indices/decoy_hs37d5ss.bt2.buildlog
+time bowtie2-build --t 9 $RAW/ref/hs37d5ss.fa.gz BT_DB/decoy_hs37d5ss.bt2 &gt; $BT_DB/decoy_hs37d5ss.bt2.buildlog
 
 ## individual builds:
 # decoy.9MB.fna.gz; 19 seconds for decoy, 9 threads, 15GB RAM
@@ -2479,14 +2485,16 @@ echo &#39;#!/bin/bash
 
 INOUT=$1
 
-# do check the names before you run!
+# feel free to add / remove genomes that are relevant to you
+
+# do check the names before you run! 
 time bowtie2-build --large-index --threads 10 \
 $INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
 $INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
 $INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
 $INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
 $INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
-$INOUT/hs37d5ss.fna.gz \
+$INOUT/hs37d5ss.fa.gz \
 $INOUT/mult_ref #&gt; $INOUT/mult_ref.buildlog # 2&gt;&amp;1
 
 &#39; &gt; $MAT/slurm_bt2db.sh
@@ -2691,11 +2699,11 @@ available.</p>
 <!-- sbatch $MAT/slurm_bt2deco.sh $TEST $FILT $KDOUT $BT_DB 10 >> $MAT/${TEST}_decont_out.log 2>&1 -->
 <pre class="bash"><code>
 # ultimate test
-sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
-sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
-sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
-sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
-sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10 &gt;&gt; $MAT/${TEST}_decont_out.log 2&gt;&amp;1
+sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10
+sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10
 
 # overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
 less $MAT/${TEST}_decont_out.log
