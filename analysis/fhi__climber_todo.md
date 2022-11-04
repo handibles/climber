@@ -7,6 +7,14 @@ output:
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/climber_todo.html') })
 ---
 
+
+## things 
+
+  - batching samples
+  - if, else, error handling...
+  
+  
+
 ## `<!> this document is not finished </!>`
 
 This guide to metagenomic analysis is still being written (0ct '22). 
