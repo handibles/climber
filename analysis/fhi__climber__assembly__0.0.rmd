@@ -915,7 +915,10 @@ However, it would be more efficient, and possibly easier to supervise if each sa
 echo '#!/bin/bash
 
 #SBATCH --job-name=deco_bt_deco
-#SBATCH --output=slurm_bt2_deco.txt
+#SBATCH --output=%x.%j.out
+#SBATCH --error=%x.%j.out
+#SBATCH --out-mode=append
+
 
 SAMPLE=$1
 IN=$2

@@ -1505,7 +1505,7 @@ div.tocify {
 <h1 class="title toc-ignore">Assembling Metagenomic Communities
 (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">04 Nov 2022, 18:30</h4>
+<h4 class="date">05 Nov 2022, 09:05</h4>
 
 </div>
 
@@ -2710,7 +2710,10 @@ the intermediate <code>bam</code> and <code>sam</code> files.</p>
 echo &#39;#!/bin/bash
 
 #SBATCH --job-name=deco_bt_deco
-#SBATCH --output=slurm_bt2_deco.txt
+#SBATCH --output=%x.%j.out
+#SBATCH --error=%x.%j.out
+#SBATCH --out-mode=append
+
 
 SAMPLE=$1
 IN=$2
@@ -2756,10 +2759,10 @@ if [ -f $OUT/${SAMPLE}_bt2decon_R2.fastq.gz &amp; -f $OUT/${SAMPLE}_bt2decon_R2.
 ## note this for loop is set to only send one sample to the queue - remove &quot; | head -1&quot; to send them all
 
 for i in $(cat $MAT/samples | head -1 );
-    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB 10 ;
+    do sbatch $MAT/slurm_deco_bt2_deco.sh $i $FILT $KDOUT $BT_DB $BT_threads ;
 done
 </code></pre>
-<pre><code>## bash: line 44: /slurm_deco_bt2_deco.sh: Permission denied
+<pre><code>## bash: line 47: /slurm_deco_bt2_deco.sh: Permission denied
 ## cat: /samples: No such file or directory</code></pre>
 <!-- # many slurms require many for-loops -  -->
 <!-- # run each for loop in turn -->
