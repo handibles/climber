@@ -1491,7 +1491,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Communities (unifinished version)</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">09 Nov 2022, 12:55</h4>
+<h4 class="date">09 Nov 2022, 15:12</h4>
 
 </div>
 
@@ -1627,7 +1627,9 @@ BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # our overall data structure
 RAW=/data/Food/primary/R0936_redcheese
-WRK=/data/Food/analysis/R0936_redcheese
+# WRK=/data/Food/analysis/R0936_redcheese   # real
+INES=/data/Food/analysis/R0936_redcheese
+WRK=/data/Food/analysis/R0602_microsupport/r0936
 
 # scripts, and slurms for queueing up jobs
 MAT=$WRK/Materials
@@ -2479,24 +2481,29 @@ done
 <li>additional options: enter <code>kraken2</code> into the terminal to see the full list</li>
 </ul>
 <p><strong>For our purposes</strong>, we are most interested in the <code>--report</code> that <code>Kraken2</code> creates - this is what we’ll use to create out communtiy profile with <code>Bracken</code>. However, the other parts (the output, the unclassified) are still very informative - have a look using <code>less</code>. Later, we’ll simply send these to `<code>/dev/null</code>.</p>
-<p>First we test and try our <code>$TEST</code> sample:</p>
+<p>First we test and try our <code>$TEST</code> sample, but feel free to play with <code>hit groups</code>, <code>base qualtiy</code>, and <code>*confidence*</code>, to see how that changes assignments (It’s very fast!).</p>
 <pre class="bash"><code># set how many jobs we plan on using
-K2_threads=5
+KR_threads=5
+module load kraken2/2.1.1
 
 # test
 time kraken2 --db $K2REFDIR \
 $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
 $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.15 \
+--confidence 0.5 \
 --minimum-hit-groups 5 \
 --minimum-base-quality 20 \
 --gzip-compressed \
---threads $K2_threads \
+--threads $KR_threads \
 --report-zero-counts \
 --report $KROUT/${TEST}_test_kraken_report \
 --unclassified-out $KROUT/${TEST}_test_kraken_unclass# \
 --output $KROUT/${TEST}_test_kraken_output
+
+# changing --cnf from 0.15 to 0.5: 3.6% drop in assignment (7.3-10.7%)
+# changing --mhg from 2 to 5: no difference in assignment (10.7%)
+# changing --qual: not checked
 </code></pre>
 <!-- [Output format for kraken2](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#output-formats) -->
 <!-- NEED TO EXPLAIN THE OUTPUT -->
@@ -2514,7 +2521,7 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 #SBATCH --job-name=krak2_filt
 #SBATCH --output=krak2_filt.%j.txt
 
-#SBATCH --time=40:00
+#SBATCH --time=10:00
 
 SAMPLE=$1
 IN=$2
@@ -2522,24 +2529,20 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-time kraken2 --db $DB   $IN/${SAMPLE}_bt2decon_R1.fastq.gz $IN/${SAMPLE}_bt2decon_R2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads $THREADS --report-zero-counts --use-mpa-style --report $OUT/${SAMPLE}_kraken_report# --unclassified-out $OUT/${SAMPLE}_kraken_unclass# --output $OUT/${SAMPLE}_kraken_output#
-
-
-
-## send seqs to /dev/null ? ... 
+time kraken2 --db $DB   $IN/${SAMPLE}_bt2decon_R1.fastq.gz $IN/${SAMPLE}_bt2decon_R2.fastq.gz --paired --confidence 0.15 --gzip-compressed --threads $THREADS --report-zero-counts --use-mpa-style --report $OUT/${SAMPLE}_kraken_report --unclassified-out /dev/null/${SAMPLE}_kraken_unclass# --output /dev/null/${SAMPLE}_kraken_output
 
 &#39; &gt; $MAT/slurm_krak2.sh  # SAMPLE IN OUT DB THREADS
 </code></pre>
-<p>Again, we use a little <code>for-loop</code> to give each sample to <code>slurm</code> (<code>$i</code>), making sure to pass it the dir for the filtered input data (<code>$KDOUT</code>), the output folder for <code>Kraken2</code> (<code>$KROUT</code>), and the location of the Kraken2 DB (<code>$K2REFDIR</code>). While we’re testing, we use the additional <code>head -1</code> so only one sample is sent:</p>
+<p>Again, we use a little <code>for-loop</code> to give each sample to <code>slurm</code> (<code>$i</code>), making sure to pass it the dir for the filtered input data (<code>$KDOUT</code>), the output folder for <code>Kraken2</code> (<code>$KROUT</code>), and the location of the Kraken2 DB (<code>$K2REFDIR</code>).</p>
 <pre class="bash"><code># check first using $TEST
-sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $K2_threads 
+sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
 
 
-# for loop of limited outputs with head -1
-for i in $(cat $MAT/samples | head -1);
+# then, for loop of limited outputs
+for i in $( cat $INES/Materials/samples );
 
   # and it will repeat this command for all the different values of $i, below:
-  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $K2_threads ;
+  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
 
 # close the for-loop
 done
@@ -2562,26 +2565,56 @@ done
 <li><code>-l = Level, def=S</code> - among the options <code>K, P, C, O, F, G, S</code>. We must set the taxonomic level we want to pool our reads to: usually we are interested in taxa at a <em>species</em> level, but this can be changed using the <code>-l</code> parameter when we run Bracken to get a better idea of composition at different taxonomic groupings</li>
 <li><code>-r = read lengths</code> - taken as the starting read length, refer to your FastQC output for this!</li>
 </ul>
-<p>There are several databases on the HPC for Bracken, but if there is not one for our read-length, we will ahve to make one.</p>
-<pre class="bash"><code>## build data base first, using length 80bp 35kmers
+<p>There are several databases on the HPC for Bracken, but if there is not one for our read-length (<strong>130bp?</strong>), we will have to make one!</p>
+<pre class="bash"><code>## build data base first
+BR_kmer=35    # this is the default kmer length of the Kraken2 DB on the HPC
+BR_leng=130   # length post-trimm
 
+# need to make a bit of a hack here
+mkdir ~/bin ; cd ~/bin &amp;&amp;
+wget https://github.com/jenniferlu717/Bracken/archive/refs/heads/master.zip ; unzip master.zip &amp;&amp; rm master.zip
+cd ~/bin/Bracken-master
+chmod +x install_bracken.sh ; ./install_bracken.sh
 
-## takes an hour on 25 threads
+# next, *symlink* to the K2 DB as not sure can write out to main ref dir / $INES
+module load kraken2/2.1.1 
+module unload braken
+ln -s $K2REFDIR/opts.k2d $WRK/ref/opts.k2d  
+ln -s $K2REFDIR/hash.k2d $WRK/ref/hash.k2d  
+ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d  
+ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
+ln -s $K2REFDIR/library $WRK/ref/library  
+ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
+time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &amp;
+cd ~
 </code></pre>
-<p>We then use that database, and process our <code>Kraken2</code> outputs. This step is very fast, as we simply run bracken on the <code>kraken_report</code> file.</p>
-<pre class="bash"><code>for i in $(cat $MAT/samples | head -1 );
-  do est_abundance.py \
-  -i $KROUT/${i}report \
-  -k $K2REFDIR/database80mers.kmer_distrib \
-  -l S \
-  -t 10 \
-  -o $KROUT/{}.bracken \
-  &gt; $KROUT/bracken_output_82.stout ;
-done
+<p>We then use that database, and process our <code>Kraken2</code> outputs. This step is very fast, as we simply run bracken on the <code>kraken_report</code> file. Try it first on our test file!</p>
+<pre class="bash"><code>module load braken
 
-# you&#39;ll have to rename the DB after your own one, and decide what -t is appropriate
+# crucial parameters! fee free to adapt these
+BR_r=$BR_leng
+BR_l=S
+BR_t=10   # counts! not threads
+
+# run bracken
+bracken -d $WRK/ref/ -i $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}.bracken -r $BR_r -l $BR_l -t $BR_t
+
+# note the header for the different columns:
+head -1 $KROUT/${TEST}.bracken
+
+less -S $KROUT/${TEST}.bracken
+</code></pre>
+<p>Then try it on all samples. It won’t take much more time than doing one, but this time we combine all the samples to one large table.</p>
+<pre class="bash"><code># rename the DB after your own one, and decide what -t/-s is appropriate
 for i in $(cat $MAT/samples | head -1 );
-  do est_abundance.py -i $KROUT/${i}*report -k $K2REFDIR/database____mers.kmer_distrib -l S -t 10 -o $KROUT/${i}.bracken &gt; $KROUT/bracken_output.stout ;
+#  do est_abundance.py \
+  do bracken \
+  -i $KROUT/${i}_kraken_report \
+  -k $K2REFDIR/database130mers.kmer_distrib \
+  -l $BR_l \
+  -t $BR_t \
+  -r $BR_r \
+  -o $KROUT/${i}_kraken_report_bracken &gt; $KROUT/bracken_output.stout ;
 done
 
 
@@ -2593,6 +2626,67 @@ for i in $(cat $MAT/samples | head -1 );
   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* &gt; $KROUT/fhi_redch_bragglers ;
 done
 </code></pre>
+<hr />
+</div>
+</div>
+<div id="reading-reference" class="section level1">
+<h1>Reading / Reference</h1>
+<div id="linux-101" class="section level3">
+<h3>- linux <code>101</code></h3>
+<blockquote>
+<p><a href="https://ubuntu.com/tutorials/command-line-for-beginners">Linux command line for beginners</a> - quite quite good!</p>
+</blockquote>
+<blockquote>
+<p><a href="https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs"><code>slurm</code> and variables</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://confluence.ecmwf.int/display/UDOC/Writing+SLURM+jobs">more <code>slurm</code> formatting</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://linuxhint.com/bash_globbing_tutorial/"><code>glomming</code></a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://robinwinslow.uk/regex">regular expressions (<code>regex</code>)</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s - first step in <code>bash</code> superpowers</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://www.baeldung.com/linux/bash-errors">How to read an error</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://ostechnix.com/bash-variables-shell-scripting/">info on variables</a></p>
+</blockquote>
+</div>
+<div id="dna-sequencing-co" class="section level3">
+<h3>- DNA sequencing &amp; co</h3>
+<blockquote>
+<p><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"><code>FastQC</code></a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://multiqc.info"><code>MultiQC</code> site + support</a></p>
+</blockquote>
+<blockquote>
+<p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic"><code>Trimmomatic</code> site</a></p>
+</blockquote>
+<blockquote>
+<p><a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf"><code>Trimmomatic</code> manual</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://www.metagenomics.wiki/tools/short-read/remove-host-sequences"><code>bowtie2 / samtools</code> filtering</a></p>
+</blockquote>
+</div>
+<div id="metagenomics" class="section level3">
+<h3>- metagenomics</h3>
+<blockquote>
+<p><a href="https://astrobiomike.github.io/">AstroBioMike - Bioinformatics for beginners</a> - extremely good and thorough guide.</p>
+</blockquote>
+<blockquote>
+<p><a href="http://ccb.jhu.edu/data/kraken2_protocol/">The <code>Kraken</code> <strong>Suite</strong></a> - <strong>Sept 2022</strong> nature <a href="https://doi.org/10.1038/s41596-022-00738-y">paper</a> from the developers of Kraken, KrakenUniq, &amp; Bracken etc.</p>
+</blockquote>
+<blockquote>
+<p><a href="http://metagenome.cs.umn.edu/microbiomecodebrowser">microbiome code browser</a> - look v good also - Dan Knights &amp; co., 2016</p>
+</blockquote>
 <!-- ```{bash, eval=FALSE} -->
 <!-- ##   T A X O N O M Y   -   glom from mpa output!   ## ======================================== -->
 <!-- ## own funciton gettax_kraken : hacky, ++slow, and only gets species name. Avoid. -->
@@ -2659,64 +2753,7 @@ done
 <!-- ```{bash, eval = FALSE} -->
 <!-- mkdir $FQC/fhi_redch_knead -->
 <!-- ``` -->
-<hr />
-<!-- ``` -->
-<!-- # Checking your output -->
-<!-- ```{bash, eval = FALSE} -->
-<!-- ``` -->
-<hr />
 </div>
-</div>
-<div id="reading-reference" class="section level1">
-<h1>Reading / Reference</h1>
-<blockquote>
-<p><a href="https://astrobiomike.github.io/">AstroBioMike - Bioinformatics for beginners</a> - extremely good and thorough guide.</p>
-</blockquote>
-<blockquote>
-<p><a href="https://ubuntu.com/tutorials/command-line-for-beginners">Linux command line for beginners</a> - quite quite good!</p>
-</blockquote>
-<blockquote>
-<p><a href="https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs"><code>slurm</code> and variables</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://confluence.ecmwf.int/display/UDOC/Writing+SLURM+jobs">more <code>slurm</code> formatting</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://linuxhint.com/bash_globbing_tutorial/"><code>glomming</code></a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://robinwinslow.uk/regex">regular expressions (<code>regex</code>)</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/"><code>FastQC</code></a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://multiqc.info"><code>MultiQC</code> site + support</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/index.php?page=trimmomatic"><code>Trimmomatic</code> site</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf"><code>Trimmomatic</code> manual</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://www.metagenomics.wiki/tools/short-read/remove-host-sequences"><code>bowtie2 / samtools</code> filtering</a></p>
-</blockquote>
-<blockquote>
-<p><a href="http://ccb.jhu.edu/data/kraken2_protocol/">The <code>Kraken</code> <strong>Suite</strong></a> - <strong>Sept 2022</strong> nature <a href="https://doi.org/10.1038/s41596-022-00738-y">paper</a> from the developers of Kraken, KrakenUniq, &amp; Bracken etc.</p>
-</blockquote>
-<blockquote>
-<p><a href="http://metagenome.cs.umn.edu/microbiomecodebrowser">microbiome code browser</a> - look v good also - Dan Knights &amp; co., 2016</p>
-</blockquote>
-<blockquote>
-<p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s - first step in <code>bash</code> superpowers</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://www.baeldung.com/linux/bash-errors">How to read an error</a></p>
-</blockquote>
-<blockquote>
-<p><a href="https://ostechnix.com/bash-variables-shell-scripting/">info on variables</a></p>
-</blockquote>
 </div>
 
 
