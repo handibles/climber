@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 ---
-title: 'Assembling Metagenomic Communities (unifinished version)'
+title: 'Assembling Metagenomic Sequence Data'
 author: 'IC / NPV / JFG'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
   html_document:
-    output_file: "shotgun_assembly.html"
     toc: TRUE
     toc_depth: 3
     toc_float: TRUE
@@ -19,33 +17,25 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-# `r #emo::ji("construction")` this document is not finished `r #emo::ji("construction")`
+# `r emo::ji("construction")` this document is not finished `r emo::ji("construction")`
 
-Please note this page is still being written If something is missing, unclear, or flaming wrong, please point it out! 
+Please note this page is still being written. If something is missing, unclear, or flaming wrong, please point it out! 
 
-In addition, the following steps are still missing:
+In addition, the following steps are incomplete:
 
   * feed clean sequences to `Kraken2`
   * sanitise the `Kraken2` output using `Bracken`
-  * start doing the microbial ecology in `R`! But that's a story for another day...
+  * pass output to `R` for analysis
+
+Analysis of communities in `R` will need its own document.
 
 ```
 # todo for jfg
-
- - how to catch fails
- - slurm quirks
- 
- - utility 
- - intro document
- - reference material
- - bibliography
- - unify materials and analysis dirs in setup
- 
+ - issue with samsort
  - can we add a sandbox?...
- - persistent issue with C&P in putty
- - demo bt2 outdir
- - enumerate sections better
- ``` 
+ - text folding (~simplify)
+
+```
 
 
 ---
@@ -73,16 +63,17 @@ We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. S
 
 #### what this document is **not**:
 
-This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Nov 2022: not yet written**).
+This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page
+<!-- , and the intro document (**Nov 2022: not yet written**). -->
 
 ---
 
 
 #### when something goes **wrong**:
 
-Mistakes, and trial-and-error, are part of learning any skill. Bioinformatics involves a particularly large and constant amount of trialing, as well as lots of errors (web search: [**how to read an error**](https://www.baeldung.com/linux/bash-errors)).
+Mistakes, and trial-and-error, are part of learning any skill. Bioinformatics involves a particularly large and constant amount of trialing, as well as lots of errors (see: [**how to read an error**](https://www.baeldung.com/linux/bash-errors)).
 
-Also, one of the best ways to learn quickly (and hopefully make different, exciting mistakes rather than the same ones) is to keep notes of what you do, just like in a lab:
+One of the best ways to learn quickly (and hopefully make different, exciting mistakes rather than the same ones) is to keep notes of what you do, just like in a lab:
 
   * write out your objectives
   * date your notes
@@ -107,9 +98,9 @@ Also, one of the best ways to learn quickly (and hopefully make different, excit
 
 > Finally, please remember:
 
->  * when you login to the HPC, you must **always** change to a `node` before you do any work 
+>  * when you login to the HPC, you must **always** change to a `node` (eg `ssh compute05`) before you do any work 
 
->  * you **must** be connected to the Teagasc network/VPN in order to access the  HPC.
+<!-- >  * you **must** be connected to the Teagasc network/VPN in order to access the  HPC. -->
 
 >  * take notes, save your data, make backups, brush your teeth.
 
@@ -188,7 +179,7 @@ TEST=Q4T8
 
 #### what tools do we need?
 
-We will want to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client (`putty`).
+We will want to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client ([`putty`](https://putty.org)).
 
 Next, we tell the HPC which programs we'll need for this work, which the HPC has parcelled into "modules". If we don't load the modules, our session won't be able to "see" these programs in the `$PATH` (list of places the computer looks to find programs) Some programs are always visible (e.g. commands like `ls`), others are loaded through e.g. `conda` (e.g. `R`...), and don't need to be mentioned here. 
 
@@ -566,7 +557,7 @@ Sometimes, it might be necessary to use `Trimmomatic` more than once before the 
 
 # 3 - decontaminate data (& check)
 
-Filtering and trimming in the previous steps should have removed nearly all (`r #emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
+Filtering and trimming in the previous steps should have removed nearly all (`r emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
 
 Next, it is a very good idea to consider what _real sequences_ have been included in our dataset, but do not belong in our analysis. Contaminants could come from: 
 
@@ -1481,7 +1472,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-# `r #emo::ji("construction")` this document is not finished `r #emo::ji("construction")`
+# `r emo::ji("construction")` this document is not finished `r emo::ji("construction")`
 
 Please note this page is still being written If something is missing, unclear, or flaming wrong, please point it out! 
 
@@ -2028,7 +2019,7 @@ Sometimes, it might be necessary to use `Trimmomatic` more than once before the 
 
 # 3 - decontaminate data (& check)
 
-Filtering and trimming in the previous steps should have removed nearly all (`r #emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
+Filtering and trimming in the previous steps should have removed nearly all (`r emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
 
 Next, it is a very good idea to consider what _real sequences_ have been included in our dataset, but do not belong in our analysis. Contaminants could come from: 
 
