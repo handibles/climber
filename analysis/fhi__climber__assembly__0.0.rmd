@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
 title: 'Assembling Metagenomic Communities (unifinished version)'
 author: 'IC / NPV / JFG'
@@ -1459,3 +1460,1460 @@ done
 
 <!-- ``` -->
 
+=======
+---
+title: 'Assembling Metagenomic Communities (unifinished version)'
+author: 'IC / NPV / JFG'
+date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
+output:
+  html_document:
+    output_file: "shotgun_assembly.html"
+    toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+    number_sections: FALSE
+  pdf_document: 
+    toc: TRUE
+    toc_depth: 3
+    number_sections: FALSE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/shotgun_assembly.html') })
+---
+
+---
+
+# `r #emo::ji("construction")` this document is not finished `r #emo::ji("construction")`
+
+Please note this page is still being written If something is missing, unclear, or flaming wrong, please point it out! 
+
+In addition, the following steps are still missing:
+
+  * feed clean sequences to `Kraken2`
+  * sanitise the `Kraken2` output using `Bracken`
+  * start doing the microbial ecology in `R`! But that's a story for another day...
+
+```
+# todo for jfg
+
+ - how to catch fails
+ - slurm quirks
+ 
+ - utility 
+ - intro document
+ - reference material
+ - bibliography
+ - unify materials and analysis dirs in setup
+ 
+ - can we add a sandbox?...
+ - persistent issue with C&P in putty
+ - demo bt2 outdir
+ - enumerate sections better
+ ``` 
+
+
+---
+
+
+# Introduction
+
+#### what this **is**, and **who** it is for:
+
+This document covers how to do the following:
+
+  0. connect through `ssh` and set up a `bash`-based bioinformatics project
+  1. collect and check a project's illumina short-read dataset (QC - `FastQC+MultiQC`)
+  2. improve the overall quality of their sequencing dataset (QC - `trimmomatic`)
+  3. remove contaminant and/or host sequences from the dataset (QC - `kneaddata`)
+  4. generate a simple but effective community profile of the microbial community in that dataset (Microbial ecology - `Kraken2+Bracken`)
+
+We provide _minimal_ guidance on how to adapt the different steps to the workflow (different parameters, different options or tools). 
+
+This document was originally put together by Ines Calvete (IPLA/CSIC), Nuria Peǹa Vidal (UCM), and Jamie FitzGerald (Teagasc/UCD) as a roadmap for analysing microbiomes from cheese, and chicken GI tract respectively. It uses material sourced from well-written reference manuals, online communities, and our own mistakes (see *References* section).
+
+We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. See the **Intro document which is not written yet**.  
+
+---
+
+#### what this document is **not**:
+
+This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page, and the intro document (**Nov 2022: not yet written**).
+
+---
+
+
+#### when something goes **wrong**:
+
+Mistakes, and trial-and-error, are part of learning any skill. Bioinformatics involves a particularly large and constant amount of trialing, as well as lots of errors (web search: [**how to read an error**](https://www.baeldung.com/linux/bash-errors)).
+
+Also, one of the best ways to learn quickly (and hopefully make different, exciting mistakes rather than the same ones) is to keep notes of what you do, just like in a lab:
+
+  * write out your objectives
+  * date your notes
+  * write out what you try to do
+  * note down the outcomes
+  * write down what goes wrong
+  * include the images if you can
+  
+---
+
+
+#### if you need **help**:
+
+  * in `bash`: for some e.g. `program`, try entering `program --help`, `program -h`, or `man program`..
+  * in `R`: for a `function()`, enter `?function` to see that function's help page, or try pressing `tab` after a comma to see other options that `function()` understands.
+  * in `R`: for some e.g. `object` (dataframe, matrix, list, etc.) you can try using the `str(object)` function to see its structure, use `head(object)` to see the top 6 lines or rows, `class(object)` to see what sort of thing it is, `dim(object)` to see it's dimensions (`row x columns`; this will be null if it's a list or vector etc., as these only have 1 row and 0 columns, and `1*0 = 0`)
+  * try searching for your `error message` online (web search, stackoverflow, biostars, bioconductor, github, huttenhower-biobakery, etc.) - the issue might be simple! If that doesn't work, or you're not sure: 
+  * _**Ask someone**_. This is not easy work, and we all know it. People are glad to help, and to show others what they have found out.
+
+---
+
+
+> Finally, please remember:
+
+>  * when you login to the HPC, you must **always** change to a `node` before you do any work 
+
+>  * you **must** be connected to the Teagasc network/VPN in order to access the  HPC.
+
+>  * take notes, save your data, make backups, brush your teeth.
+
+
+---  
+  
+# 0 - setup your environment
+
+It can be helpful to define any frequently used paths / values / variables at the start of your workflow, based on what you want to do. This keeps your workspace visible, easy to refer to, and allows you to reliably change the value throughout your work (e.g. a new project, a new database, etc.). 
+
+
+#### organising your workspace
+
+A good way to keep track of all your folders/files/values is to use **`$environmental_variables`** - these are temporary shortcuts added to `bash`'s working environment that tell the computer to replace the `$variable` with the file, folder, or value we have linked it to. For example, entering `PLAY=/home/user/Music/playlists` would create a new variable, `$PLAY`: when `$PLAY` is entered, the computer will spot the `$` character, understand that it's a shortcut, and replace that variable (`$PLAY`) with the value assigned to it (`/home/user/Music/playlists`) wherever that variable is found.
+
+We will assign variables to the _folders_ you will use regularly, and for a _sample_ to use for testing things on. Feel free to change these to locations and/or names that make sense to you. Here `$CAPITALLETTERS` help keep these short words visible, but it's not necessary if you don't like shouting. Variables can use letters, numbers, and underscores (more [info on variables](https://ostechnix.com/bash-variables-shell-scripting/)).
+
+We actually use these variables all time! Those created by the user ("user" variables) only last until you close the terminal window, or until a program or `for-loop` finishes (see `$i` in the for-loop section below!) - after this, they will be forgotten. Note that this means you have to enter these variables at each new session (there are clever ways of doing this too). A lot of other variables are created by the system ("system" variables) every time you open a new terminal window: 
+
+
+```{bash, eval= FALSE}
+# $PATH tells the computer all the folders that have programs in them (multiple folder paths)
+echo $PATH
+
+# $HOME tells the computer where the user's home directory is (folder paths)
+echo $HOME
+
+# $TERM tells the computer what the default command-line interface is  (a value called by other programs)
+echo $TERM
+
+# $HISTSIZE tells the computer how many commands to remember (a value)
+echo $HISTSIZE
+
+# blah blah blah
+```
+
+
+#### where does **my** data go?
+
+Thank you for asking! **Remember, on the HPC:**
+
+  * **raw data** goes into the `primary` data directory (under your project name on the `hpc`) - here we give it the shortcut variable `$RAW`. This is your 'primary' data source, so do not edit it
+  * **output** data goes in the `analysis` folder. We set this variable shortcuts as `$WRK`, and all our output goes inside this dir. 
+
+
+
+```{bash, eval = FALSE}
+# databases for different tools
+DB=/data/databases                                            # HPC only
+HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2     # HPC only
+K2REFDIR=/data/databases/kraken2                              # HPC only
+BT_DB=/data/Food/analysis/R0936_redcheese/ref
+
+# our overall data structure
+RAW=/data/Food/primary/R0936_redcheese
+# WRK=/data/Food/analysis/R0936_redcheese   # real
+INES=/data/Food/analysis/R0936_redcheese
+WRK=/data/Food/analysis/R0602_microsupport/r0936
+
+# scripts, and slurms for queueing up jobs
+MAT=$WRK/Materials
+SLURM=$WRK/slurms
+
+# outputs etc
+QC=$WRK/1__qc
+FQC=$QC/fastqc
+FILT=$WRK/2__filt
+KDOUT=$WRK/3__knead
+KROUT=$WRK/4__krak2
+
+#!# set a filename to test things on
+TEST=Q4T8
+
+```
+
+
+#### what tools do we need?
+
+We will want to have [`FileZilla`](https://filezilla-project.org/download.php?type=client) (or similar) installed, as well as our `ssh` client (`putty`).
+
+Next, we tell the HPC which programs we'll need for this work, which the HPC has parcelled into "modules". If we don't load the modules, our session won't be able to "see" these programs in the `$PATH` (list of places the computer looks to find programs) Some programs are always visible (e.g. commands like `ls`), others are loaded through e.g. `conda` (e.g. `R`...), and don't need to be mentioned here. 
+
+  * `FastQC` and `MultiQC` for quality control
+  * `Kraken2` for metagenomic community reconstruction
+  * `Kaiju`, also for metagenomic community reconstruction
+  * `GNU-parallel` for case where we can run many jobs in parallel.
+
+```{bash, eval = FALSE}
+# this is a list of all programs explicitly required in this workflow
+module load parallel fastqc multiqc trimmomatic bowtie2 kraken2/2.1.1 braken
+```
+
+
+#### are we ready? 
+
+Finally, we make sure that all the locations for the work we're doing exist! When we start, they won't exist yet (but note how the command looks up the full location for the directory): if `$QC` has not been defined, it will show you the contents of your current directory; if `$QC` _is_ defined, but hasn't been _created_ yet, it will tell you that the folder doesn't exist (which should be true!).
+```{bash, eval = FALSE}
+ls $QC
+```
+
+
+In our unified data (`$RAW`) and work folders (`$WRK`), we create different folders for each output, using the variables above. It's not a problem if the folder already exists.
+
+```{bash, eval = FALSE}
+# make analysis dirs
+mkdir $BT_DB $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
+
+# make script dirs etc.
+mkdir $MAT $SLURM
+
+# make dirs for qc outputs
+mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/fhi_redch_raw_multi $FQC/fhi_redch_filt_multi
+```
+
+
+# 1 - get the sequence data (& check)
+
+We copied the data from IPLA-CSIC (or elsewhere!) manually, into the `$RAW` dir, using `FileZilla`. Sometimes we will have to use `scp`, `sFTP`, or `rsync` instead - a web search should show how to do this, and these programs should all be available on the HPC.
+
+For checking the sequence quality, we'll need the programs `FastQC` (quality profiling), and `MulltiQC` (unifying `FastQC` reports):
+
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+module load fastqc multiqc
+
+```
+
+
+Next, for our own information, we look at just the `fastq.gz` files, count the number of files, and run `FastQC` and `MultiQC` on them. 
+
+```{bash, eval = FALSE}
+# use ls arguments "-lsh" to output it as an informative list
+ls -lsh $RAW
+
+# How many files? - use "|" charater to pipe the ls output to wc (wordcount), and count the n of lines (-l or --lines)
+ls -lsh $RAW/*fastq.gz | wc -l
+
+# can also easily check a fastq file
+ls -lsh $RAW/$TEST*            # file details
+zcat $RAW/$TEST* | head -10    # decompress, read and print top 10 lines
+less -S $RAW/$TEST*            # read through file, press q to quit
+```
+
+
+### `FastQC` and `MultiQC`
+
+[`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) is an amazingly useful tool, for profiling the quality, consistency, and content of your sequence data. It takes samples of each file it is shown (compressed or uncompressed), checks the sequences and returns a `HTML` & `zip` file for each `FASTQ`: the `HTML` is a report, and the `zip` is all the data from that report. Next, `MultiQC` combines all the `FastQC` outputs into one report, summarising all that info in one place. Always check this!
+
+`FastQC` will process all `fastq(.qz)` files that it is passed. [`MultiQC`](multiqc.info/) will process all the `FastQC` outputs it finds in a directory, combine them, and place output in the dir specified (`multiqc_report.html` in `-o`). Keep in mind that `FastQC` and `MultiQC` outputs also contain text files of all this data (see the `multiqc_data` dir), if you want to use them for other graphics/reports etc.
+
+#### Check sequence quality, with `FastQC`, on one sample:
+
+```{bash, eval = FALSE}
+# then run a fastqc for F and R files, output in the dirs we made above
+fastqc -t 4 $RAW/${TEST}* -o $FQC/fhi_redch_raw
+
+# make a report that includes both F and R reads for this sample
+multiqc $FQC/fhi_redch_raw -o $FQC/fhi_redch_raw_multi
+```
+
+Copy the output `multiqc` files to your local computer, and doubleclick to open in your browser. For help reading `FastQC/MultiQC`, there's an [introductory tutorial video](https://www.youtube.com/watch?v=qPbIlO_KWN0) in the top of the `MultiQC` report.
+
+
+#### Check sequence quality, with `FastQC`, on multiple sample:
+
+We need to be responsible with our use of the HPC. Here we write a script in `slurm`(see the [HPC website](http://hcux400.teagasc.net/) for more info on `slurm`!!) format to queue all these jobs politely into one `FastQC` task, and then summarise using `MultiQC` again. 
+
+We also found out that some `fasstq` files are compressed as `.gz`, and some are compressed at `.bz2`. This means that we need to specify both type fo `fastq` if we want it to work. Best way is to change our command to match both! We show the computer the two different compression types using the curly brackets: `{gz,bz2}`. This allows the computer to accept `*fastq.gz` and `fastq.bz2`:
+
+```{bash, eval = FALSE}
+# write a slurm script first
+echo '#!/bin/bash
+
+SBATCH --job-name=knead_fastq
+SBATCH --output=knead_fastq.txt
+SBATCH --ntasks=15
+SBATCH --time=15:00
+
+IN=$1
+OUT=$2
+
+# time just tells us how long this takes, so we know for next time
+# -t is the number of threads (tasks) to use
+# curly brackets {} allow us to match either gz or bz2 file extensions
+time fastqc -t 15 $IN/*fastq.{bz2,gz} -o $OUT
+' > $SLURM/slurm_fqc.sh
+
+# review:
+cat $SLURM/slurm_fqc.sh
+```
+
+This `slurm` script will give a name, output-log, runtime, and number of threads needed to the `slurm manager`, and use the input and output dirs we give to find `fastq.gz\bz2` files, start FastQC, and place outputs in the $OUT dir. We need to 'give' this `slurm` to `sbatch`:
+
+> **NB**: we have noticed that the `{}` brackets do not solve the problem of missing the `bz2` samples. We simply resubmitted the samples as `fastqc -t 4 $RAW/*fastq.bz2 -o $FQC/fhi_redch_raw` - this is not solving the problem!
+
+```{bash, eval = FALSE}
+# trust slurm
+sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
+
+# combine outputs
+time multiqc $FQC/fhi_redch_raw -o $FQC/fhi_redch_raw_multi
+
+# then copy to local computer (try FileZilla), and open in your browser! 
+```
+
+Again, open the HTML report in your browser to see what the overall quality is like, and how much cleaning you will need to do.
+
+
+#### choosing your sample trimming parameters
+
+With information on all the samples, it is possible (but not necessarily easy) to pick appropriate trimming and quality parameters. 
+
+  * Trimming of the `5'` end removes "artificial" bases at the start of `F+R` reads : check the FastQC or MultiQC outputs to see how long it takes for `Per-Base Sequence Content` to become homogeneous/balanced
+  * Trimming of the `3'` end removes bases where the sequencing quality declines gradually (especially the `R` reads)
+  * removing adapters removes synthetic sequences that were used to construct the sequencing library, but are not biological
+
+Consider: How do the sequences look? Is quality uniform throughout, or does it vary? What other warnings (in red) do `FQC+MQC` detect?
+
+# 2 - quality control (& check)
+
+## first pass with `Trimmomatic`
+
+Hopefully, there are not too many problems with the data! Nevertheless, we _always_ do a little cleaning of the sequences before we analyse them. There are several things that can go wrong, and we can make the overall dataset better by removing reads or trimming off: 
+
+  * bases with low quality scores (Q score, for illumina: < ~20), meaning that you cannot be sure a base is correct / accurate
+  * even if the Q score is good, the start (`5'`) and end (`3'`) of a read are often best removed
+  * "adapter", "artefact", or "technical" sequences (the bits of DNA that attach the DNA sample to the machine) can get included by accident
+  * "read-through" sequences, where the sequencing gets all the way to the opposite end, and starts reading adapter sequences, or making sequences up
+  * other strange problems with operation
+
+We use the program [`Trimmomatic`](http://www.usadellab.org/cms/index.php?page=trimmomatic) to do all of this. This java-based program can do many things to check your quality, but we will focus on:
+
+  * removing adapter sequences
+  * trimming the start and ends of reads, based on the `MultiQC` profile we made in section 1.
+
+For quality control, we'll need the programs `Trimmomatic` (trimming and filtering), `FastQC` (quality profiling), and `MulltiQC` (unifying `FastQC` reports):
+
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+module load fastqc multiqc trimmomatic
+```
+
+
+First, we will use `echo '...' > file.fa` to make a `fasta` file of the known adapter sequences, using references available on the Teagsc HPC, as well as the sequences provided by `Trimmomatic.`
+
+```{bash, eval = FALSE}
+echo '>adapter_seq
+CTGTCTCTTATACACATCT
+>adapter_mate_seq
+AGATGTGTATAAGAGACAG
+>Transposase_Adap__for_tagmentation_1
+TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+>Transposase_Adap__for_tagmentation_2
+GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+>PCR_primer_index_1
+CAAGCAGAAGACGGCATACGAGATNNNNNNNGTCTCGTGGGCTCGG
+>PCR_primer_index_2
+AATGATACGGCGACCACCGAGATCTACACNNNNNTCGTCGGCAGCGTC
+>PCR_primer_index_2_rc
+GACGCTGCCGACGANNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT
+>PCR_primer_index_1_rc
+CCGAGCCCACGAGACNNNNNNNATCTCGTATGCCGTCTTCTGCTTG
+>Transposase_Adap__for_tagmentation_2_rc
+CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
+>Transposase_Adap__for_tagmentation_1_rc
+CTGTCTCTTATACACATCTGACGCTGCCGACGA
+>adapter_mate_seq_rc
+CTGTCTCTTATACACATCT
+>adapter_seq_rc
+AGATGTGTATAAGAGACAG' > $MAT/fqc_trimmo_ill_ref.fa
+
+# have a look!
+less $MAT/fqc_trimmo_ill_ref.fa   # press q to exit
+
+```
+
+
+#### first pass, with `Trimmomatic`, on one sample:
+
+To clean the `$TEST` sample, we use these variables:
+
+  * `$RAW` : this was input dir assigned as `/data/Food/primary/../././` 
+  * `$FILT` : this was the output dir assigned as `/data/Food/analysis/../././` 
+  * `$TEST` :  this was the 'test' sample, assigned as `XXXXXXX`
+  * `$MAT` :  this was where we stored scripts, logs, and the `fasta` above assigned as `./././Materials`
+    + *note* paths above not completed without reference to Teagasc HPC...  
+  
+These variables help us to tell `Trimmomatic` the following:
+
+option                            | effect
+----------------------------- | --------------------------------------
+`PE`                              | paired-end mode, so examine them together
+`$RAW/${TEST}_R1_001.fastq.gz`    | input `F`  reads
+`$RAW/${TEST}_R2_001.fastq.gz`    | input `R` reads
+`$FILT/${TEST}_R1_trimm.fastq.gz` | output for trimmed `F` reads
+`$FILT/${TEST}_R1_trimm_unpaired.fastq.gz` | output for trimmed `F` reads that have lost their `R` mate (see below)
+`$FILT/${TEST}_R2_trimm.fastq.gz` | output for trimmed `R` reads
+`$FILT/${TEST}_R2_trimm_unpaired.fastq.gz` | output for trimmed `R` reads that have lost their `F` mate (see below) 
+`HEADCROP:20`                     | trim the first 25bp from 5' ends  
+`CROP:130`                        | trim everything*after** 125bp from 3' ends
+`ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5` | using the reference `fasta` above, we trim reads with **check parameters on trimming**
+`SLIDINGWINDOW:6:15`              | **check parameters on trimming**
+`MINLEN:80`                       | after cropping & trimming, sequences must be at least 80bp long to be kept (otherwise delete them)
+`-threads 6`                      | use 6 threads (tasks/jobs) in parallel
+`> $FILT/trimmo_${TEST}.out`      | use `>` to send error or system messages to a `logfile` so you can check for errors afterwards. 
+
+
+`Trimmomatic` checks the quality of our sequences, trimming off "bad" sequence bases, and discarding "bad" reads. Most reads will still be paired (have a matching `F` and `R` read). In some cases, the `F` read is discarded (thrown away) but we keep the matching `R` read because it is good quality (or keep `F` and discard `R`). As a result of this, `Trimmomatic` will sort each _sample_ into 4 files:
+
+  1. paired F reads that have a matching R read: `$FILT/${TEST}_R1_trimm.fastq.gz`
+  2. paired R reads that have a matching F read: `$FILT/${TEST}_R2_trimm.fastq.gz`
+  3. unpaired F reads that don't have a matching R read: `$FILT/${TEST}_R1_trimm_unpaired.fastq.gz`
+  4. unpaired R reads that don't have a matching F read: `$FILT/${TEST}_R2_trimm_unpaired.fastq.gz`
+
+  **For now**, we will **not** use the unpaired reads (we ignore them!), as it can lead to complications elsewhere (because of the mix of paired and unpaired reads, which is a problem for some programs). Note also that there are _many_ other options available, to tackle different problems - see the [Trimmomatic manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf) for more.  
+
+<!-- ...but here's the code for it: -->
+<!-- ```{bash, eval = FALSE} -->
+<!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R1_trimm.fastq.gz > $FILT/{}_R1.fastq.gz" -->
+<!-- ls $FILT/*trimm.fastq.gz | sed -e 's/.*\/\(.*\)_L00._.*/\1/g' | sort | uniq | parallel -j 10 "cat $FILT/{}*_R2_trimm.fastq.gz > $FILT/{}_R2.fastq.gz" -->
+<!-- ``` -->
+
+When it is all put together, it looks like this (the `\` character allows us to start a newline without interrupting the command):
+
+```{bash, eval = FALSE}
+trimmomatic PE \
+  $RAW/${TEST}_R1_001.fastq.gz $RAW/${TEST}_R2_001.fastq.gz \
+  $FILT/${TEST}_R1_trimm.fastq.gz $FILT/${TEST}_R1_trimm_unpaired.fastq.gz \
+  $FILT/${TEST}_R2_trimm.fastq.gz $FILT/${TEST}_R2_trimm_unpaired.fastq.gz \
+  HEADCROP:20 \
+  CROP:130 \
+  ILLUMINACLIP:$MAT/fqc_trimmo_ill_ref.fa:2:30:10:5 \
+  SLIDINGWINDOW:6:15 MINLEN:80 \
+  -threads 6 > $FILT/trimmo_${TEST}.out
+
+# when finished, look at the output:
+less $FILT/trimmo_${TEST}.out
+```
+
+  
+  
+#### first pass, with `Trimmomatic`, on multiple samples:
+
+Because these reads are paired-end, we need to set up a `slurm` script to process each **sample name**, find the `F` and `R` `fastq.gz` files, process them together, and output them to the correct folders. There are a few ways to get the sample names, but because we will need to process each sample name several times, we are going to use a simple, re-usable method:
+
+  * copy the sample names (not the full file names) to a text file, with one sample name per line
+  * to process each sample, we then go through the text file, using each sample name in turn.
+  
+If you are very careful and have a lot of time, you can type all the sample names into a text file by hand. You can also do it quickly using a chain of bash commands joined together by the ['`|`' or `pipe` character](https://ubuntu.com/tutorials/command-line-for-beginners#6-a-bit-of-plumbing):
+
+command | output
+-- | -----------
+`ls $RAW/*fastq.gz` | list all filenames in `$RAW` ending in `fastq.gz`
+`sed -e ...` | simplifies the filename using `regex` (`-e` flag; `sed` & `regex` are complex but ++useful - see [intro here](https://www.codesmith.io/blog/understanding-regex))
+`s/a/b/g` | `sed`: `s`ubstitute `a` for `b`, everywhere its found (i.e. `g`lobally)
+`.*\/\(.*\)_R._001.*` | `sed` - our `a` to be replaced: find text matching `/(...)_R._001`, where '`.`' can be anything, and _keep the bit in brackets_
+`\1` | `sed` - our `b` to replace `a`: just paste in the bit found in brackets
+`sort` | sorts filenames alphabetically - this is necessary for `uniq`
+`uniq` | gives each unique name
+`> $MAT/samples` | send filenames to a file in `$MAT` called `samples`
+
+```{bash, eval=FALSE}
+# combine all those different parts!
+ls $RAW/*fastq.gz | sed -e 's/.*\/\(.*\)_R._001.*/\1/g' | sort | uniq > $MAT/samples
+```
+
+We can then use `cat $MAT/samples` or `less $MAT/samples` to print out all the sample names. We can also feed all these sample names into a `for-loop`, which takes each row (sample name) and places it inside the `for-loop` wherever it finds (e.g.) `$i`  (`$i` is what everyone uses, but it's just a variable like $MAT etc - it could be anything you choose).
+
+First, we make a `slurm` script for running `Trimmomatic`:
+
+```{bash, eval = FALSE}
+echo '#!/bin/bash
+
+#SBATCH --job-name=trimmoRaw
+#SBATCH --output=trimmoRaw.txt
+#SBATCH --ntasks=6
+#SBATCH --time=18:00
+
+# these take the terms given after the scriptname, i.e. "... $i $RAW $FILT $MAT"
+SAMPLE=$1
+IN=$2
+OUT=$3
+REFDIR=$4
+
+# trimmomatic - use backslash to separate rows
+trimmomatic PE \
+$IN/${SAMPLE}_R1.fastq.gz \
+$IN/${SAMPLE}_R2.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm.fastq.gz \
+$OUT/${SAMPLE}_R1_trimm_unpaired.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm.fastq.gz \
+$OUT/${SAMPLE}_R2_trimm_unpaired.fastq.gz \
+HEADCROP:25 \
+CROP:125 \
+ILLUMINACLIP:$REFDIR/fqc_trimmo_ill_ref.fa:2:30:10:5 \
+SLIDINGWINDOW:6:15 \
+MINLEN:80 \
+-threads 6 > $OUT/trimmo_${SAMPLE}.out 2>&1' > $MAT/slurm_trimmo.sh
+
+```
+
+> **NB:** increased time from 6min to 18min to avoid job being terminated; had to replace bad `-` with `--`
+
+Then we make a simple [`for-loop` (see this link)](https://linuxize.com/post/bash-for-loop/) that repeats the command `sbatch $MAT/slurm_trimmo.sh $i $RAW $FILT $MAT` for every possible value of `$i` (all the sample names). In this way, we can use 6 threads to process _one sample after another_, with the job using 6 threads as we specified above (i.e. process samples *in serial* rather than *in parallel*).
+
+```{bash, eval=FALSE}
+# this command lists all the sample names
+cat $MAT/samples
+
+# we can put that command $(in backets);, and feed it into the for-loop like this:
+for i in $(cat $MAT/samples);
+
+  # and it will repeat this command for all the different values of $i, below:
+  do sbatch $MAT/slurm_trimmo.sh $i $RAW $FILT $MAT;
+
+# close the for-loop
+done
+ 
+```
+
+Alternatively, there might be a sample we need to re-run. We do not need to use for-loops etc. to pass jobs to slurm: we can simply tell it what job to do, on what sample name:
+
+```{bash, eval=FALSE}
+# replace th $i in the for loop with the sample name (e.g. P2620), and delete the starting "do" and the end ";"
+sbatch $MAT/slurm_trimmo.sh P2620 $RAW $FILT $MAT
+sbatch $MAT/slurm_trimmo.sh P2233 $RAW $FILT $MAT
+sbatch $MAT/slurm_trimmo.sh P2312 $RAW $FILT $MAT
+sbatch $MAT/slurm_trimmo.sh etc... $RAW $FILT $MAT
+```
+
+
+#### fastqc and multiqc
+
+Again, we check the `Trimmomatic` output with `FastQC/MultiQC`, copying the multiqc_report to our computer, and seeing if there's much improvement.
+
+```{bash, eval = FALSE}
+fastqc -t 4 $FILT/*fastq.gz -o $FQC/fhi_redch_filt
+
+# move unpaired reports away - avoid clogging up multiqc vis
+mkdir $FQC/fhi_redch_filt_unpaired
+mv $FQC/fhi_redch_filt/*unpaired* $FQC/fhi_redch_filt_unpaired
+
+# look at just the trimmed, paired data (no unpaired reads)
+multiqc $FQC/fhi_redch_filt/ -o $FQC/fhi_redch_filt_multi
+```
+
+
+## second pass etc.
+
+It is hard to know when the quality is 'good enough'. In general, we should keep above `Q30`, but this is not an indicator of other things like adapter contamination. Often, a later step will not work, and it can be necessary to be stricter in our cleaning, or try different approaches etc. Be clear with yourself, and with other people, about what pre-processing steps you are taking.  
+
+Sometimes, it might be necessary to use `Trimmomatic` more than once before the sequence is 'clean'. In general it is easier to program, easier to organise, and easier to reproduce a metagenomics analysis when all sequence cleaning steps are carried out in one go. Again, **keep notes of what you have done** - this makes remembering what happened much easier.  
+
+
+# 3 - decontaminate data (& check)
+
+Filtering and trimming in the previous steps should have removed nearly all (`r #emo::ji("crossed_fingers")`) of the _fake sequences_: low-quality bases that can not be trusted (trimming), as well as artificial sequences introduced by library-preparation and sequencing (filtering).
+
+Next, it is a very good idea to consider what _real sequences_ have been included in our dataset, but do not belong in our analysis. Contaminants could come from: 
+
+  * the experimental environment: host DNA, DNA from surfaces or substrates (foods?) in the environment
+  * the method used: i.e. sampling methodology, lab equipment
+  * the researcher: sneezing, dribbling, rhinotillexis, colds, coughs, sneezes, or deep PhD-related sighs
+  
+In some environments (e.g. faeces, sludge, soil), contaminating sequences might only comprise a small proportion of the total sequences, and are unlikely to change the "big picture" of the dataset, but could interfere with analysis of specific microbes, or metabolic functions in ways we cannot predict. In other environments (e.g. microbiomes from biopsy, the aeolian microbiome), contaminants can make up the majority of a sample, altering the "big picture" significantly, and making it difficult to draw meaningful conclusions - and you won't know why.
+
+To address this as best we can, we remove contaminants based on a database of reference sequences **appropriate to our study**. We collect these sequences (search for the host, known contaminants, artificial sequences, foodstuffs, etc.), compile them into a database (i.e. a big file that's formatted so that it's easy for computers to search through it quickly), and then ask a program (e.g. the DNA-DNA alignment program, `bowtie2`) to look for, and remove, any sequences that match those contaminants.
+
+For decontamination, we'll need the programs `BowTie2` (database-building & aligning) and `samtools` (filtering files in `sam` and `bam` formats), as well as FastQC & MultiQC for profiling the sequences output.
+
+```{bash,eval=FALSE}
+# make sure you're on a compute node!
+# note the samtools version.. for the teagasc HPC at any rate.
+module load bowtie2 samtools/1.10 parallel fastqc multiqc
+```
+
+
+## Decontaminate with `BowTie2`
+
+We need reference genomes relevant to our experiment. For this tutorial, we consider several possible sources of host contamination:
+
+  * [human genome, assembly `GRCh38.p14, GenBank GCF_000001405.40`](https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001405.40/) - contamination from the preparation, extraction, & sampling
+  * [the "decoy genome", `hs37d5ss` ('11)](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/README_human_reference_20110707) - a bundle of synthetic, virus-associated, and other miscellaneous sequences that don't map well from/to the human genome ([see more jhere](http://www.cureffi.org/2013/02/01/the-decoy-genome/))
+  * [the cow genome, GenBank `GCA_021234555.1` ('21, contig/scaffold N50s: 50M/104M)](https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCA_021234555.1/) - from the source milk
+  * [the sheep genome, GenBank `GCA_016772045.1` ('21, contig/scaffold N50s: 43M/101M)](https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_016772045.1/) - from the source milk
+  * [the goat genome, GenBank `GCA_001704415.2` ('16,  contig/scaffold N50s: 26M/87M)](https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_001704415.2/) - from the source milk
+  * [the chicken genome, genBank `GCA_016699485.1` ('21, contig/scaffold N50s: 19M/91M)](https://www.ncbi.nlm.nih.gov/labs/data-hub/genome/GCF_016699485.2/) - host for the chicken gut microbiome
+
+We will first obtain all of these sequences from the NCBI (should/could use ENA...)
+
+```{bash, eval = FALSE}
+echo '#!/bin/bash
+
+cd $1
+
+# download your own genome (more or less) - 1.2 GB, 12min :: from the NCBI browser https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001405.40/
+curl -OJX GET "https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_000001405.40/download?filename=GCF_000001405.40.zip" -H "Accept: application/zip"
+
+# decoy genome - 9 MB
+wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5ss.fa.gz
+
+# cow genome - 825 MB, 5min
+curl -OJX GET "https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCA_021234555.1/download?filename=GCA_021234555.1.zip" -H "Accept: application/zip"
+
+# sheep genome - 890 MB, 4min
+curl -OJX GET "https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_016772045.1/download?filename=GCF_016772045.1.zip" -H "Accept: application/zip"
+
+# goat genome - 930 MB, 3min
+curl -OJX GET "https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_001704415.2/download?filename=GCF_001704415.2.zip" -H "Accept: application/zip"
+
+# chicken genome - 440 MB, 1min
+curl -OJX GET "https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_016699485.2/download?filename=GCF_016699485.2.zip" -H "Accept: application/zip"' > $MAT/trimmo_genomes_dl.sh
+
+# do check that curl is installed!
+# if not, try activating it: "module load curl"
+curl -h
+
+# give "run" permission for script to be run, for the user only
+chmod u+x $MAT/trimmo_genomes_dl.sh
+# make a dir for genomes in our RAW folder
+mkdir $RAW/ref
+# run the script while pointing at those files
+$MAT/trimmo_genomes_dl.sh $RAW/ref 
+
+
+```
+
+
+Our genomes should be inside the downloaded `.zip` files, under the directory `/ncbi_dataset/data/<genbank-accession>/`, and will be the largest `file.fna` in there. Extract them to your `$RAW/ref` folder, and then compress the `.fna` to `.fna.gz` with `gzip` to save space. Genome data is fairly dense, so this will/might only compress to about 1/3 the raw size.
+
+**NB**: check here that you have the genomes relevant to _you_, and make sure that the filenames above match the filenames used in the following step (e.g., does a file end in `.fna` or `.fa`?...)
+
+```{bash, eval=FALSE}
+parallel gzip {} ::: $RAW/ref/*fna
+
+```
+
+
+###  `BowTie2` : make database
+
+We then need use `bowtie2` to build a reference database for all of these genomes in one place. `BT_threads=9` because available locally - feel free to increase to something appropriate to your setup, as we check the `decoy genome` first. 
+
+```{bash, eval=FALSE}
+# number of processes/threads to use for jobs
+BT_threads=10
+
+# the reference genomes (above) were downloaded here:
+ls $RAW/ref
+
+# the new bowtie2 databases will go here:
+BT_DB=/data/Food/analysis/R0936_redcheese/ref
+mkdir $BT_DB
+
+# bowtie2-build [options]* <reference_in> <bt2_base>
+time bowtie2-build --t $BT_threads $RAW/ref/hs37d5ss.fa.gz BT_DB/decoy_hs37d5ss.bt2 > $BT_DB/decoy_hs37d5ss.bt2.buildlog
+
+
+## individual builds:
+# decoy.9MB.fna.gz; 19 seconds for decoy, 9 threads, 15GB RAM
+# chicken.340MB.fna.gz; 10min, 9 threads, 15GB RAM
+# cow.853MB.fna.gz; 28m, 9 threads, 15GB RAM
+
+```
+
+
+That was quick! It was quick because the amount of data (`9MB`!) was small. Larger (real) genomes will require much longer to run, and likely require a `slurm` script.  
+
+Although `jfg` is not certain of the theory behind aligning to an index built from _multiple_ reference genomes (probably it uses the first match, even if there are several paralogous sequences), it should be possible by listing several `fasta` files as input to `bowtie2-build file1.fna.gz,file2.fna.gz,file3.fna.gz...` etc (as per the [`bowtie2` manual](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#main-arguments-1)). This avoids having to `cat` all the `fasta` files together to make one giant `fasta`. 
+
+We need to notify `slurm` of the requirements: 
+
+  * as the human genome takes about a half hour to build, and there are 5-and-a-half genomes, we notify `slurm` that the job should take `30min * 5.5 ~= 3hr` for the genomes used here, with 10 processors and loads of memory. Alternatively, remove the `--time`` line to avoid the job being killed if it runs over. 
+  * there are [suggestions](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/tuning-bowtie2-better-performance) that adding more and more threads to `bowtie2` doesn't make a huge difference, and it could mean we wait a long time for our job to be started. So we ask for only 10 threads. We don';'t use the `$BT_threads` variable this time, as `slurm` can't 'see' this variable when it starts.
+  * Some desktop-pc tests have shown that 15GB of RAM is not enough for this job (>3GB per genome, x5.5...). RAM parameter is not specified below as the requirement is unknown.
+
+
+```{bash, eval=FALSE}
+# build our BT2 database in slurm:
+echo '#!/bin/bash
+
+#SBATCH --job-name=bt2DB
+#SBATCH --output=bt2DB.txt
+#SBATCH --ntasks=10
+#SBATCH --time=179:00
+
+INOUT=$1
+
+# feel free to add / remove genomes that are relevant to you
+
+# do check the names before you run! 
+time bowtie2-build --large-index --threads 10 \
+$INOUT/GCA_021234555.1_ARS-LIC_NZ_Jersey_genomic.fna.gz,\
+$INOUT/GCF_000001405.40_GRCh38.p14_genomic.fna.gz,\
+$INOUT/GCF_001704415.2_ARS1.2_genomic.fna.gz,\
+$INOUT/GCF_016699485.2_bGalGal1.mat.broiler.GRCg7b_genomic.fna.gz,\
+$INOUT/GCF_016772045.1_ARS-UI_Ramb_v2.0_genomic.fna.gz,\
+$INOUT/hs37d5ss.fa.gz \
+$INOUT/mult_ref #> $INOUT/mult_ref.buildlog # 2>&1
+
+' > $MAT/slurm_bt2db.sh
+
+# and then run
+$MAT/slurm_bt2db.sh $BT_DB
+
+```
+
+This will give us a number of files ending in `.bt2` in our output dir. These are the reference files that `bowtie2` uses to check for contaminant sequences in the `fastq` data (if you want, you can now delete the reference `fna.gz` genomes!).
+
+
+### `BowTie2` : find contaminants 
+
+[`Bowtie2` will align our dataset](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#introduction) against these reference indices, and make a note of what reads matched between the input (dataset) and reference (host). For our study, we will be removing any reads that match the reference (hosts) as we are looking at the microbiome specifically. However, in other studies, we might be interested in the host sequences only, and would throw away everything else (all the microbes). 
+
+**NB**: bowtie2 output interpretation
+
+**NB**: ths SAM tools spec
+
+
+
+```{bash, eval=FALSE}
+## firstly, align $TEST sequences to ref using bt2.
+bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam
+
+## feel free to look at the output
+less $KDOUT/${TEST}_bt2_refmapped.sam
+```
+
+We _can_ use `BowTie2` directly for filtering out contaminant reads, but because there are paired (`F+R`) reads, it's not quite as specific as we'd like. For better control, we can use the `samtools` program below.
+
+
+### `samtools` : delete contaminants
+
+Now that `Bowtie2` has identified the contaminant sequences, we use `samtools` to:
+
+  1. convert the `sam` file to a `bam` file
+  2. filter out any reads assigned to the decontamination database
+  3. sort all the remaining reads, so that `F+R` are in the same order
+  4. convert the `bam` file to a fastq (throwing the extra sam info into the `/dev/null` bin)
+  
+
+```{bash, eval=FALSE}
+## 1 - view with samtools, and convert to bam (binary)
+samtools view -bS $KDOUT/${TEST}_bt2_refmapped.sam > $KDOUT/${TEST}_bt2_refmapped.bam
+
+## 2 - filter the contaminant sequences out
+# F 256 : exclude those mapping to ref
+# f 12 : F and R *both* unmapped
+samtools view -b -f 12 -F 256 $KDOUT/${TEST}_bt2_refmapped.bam > $KDOUT/${TEST}_bt2_decontamd.bam
+
+## 3 = ensure reads are in a sensible order 
+samtools sort -n -m 5G -@ 2 $KDOUT/${TEST}_bt2_decontamd.bam -o $KDOUT/${TEST}_bt2_decontamd_sort.bam > ${TEST}_bam_sort.out
+
+## 4 - stream outputs of non-interest to /dev/null
+samtools fastq -@ 8 $KDOUT/${TEST}_bt2_decontamd_sort.bam -1 $KDOUT/${TEST}_bt2decon_R1.fastq.gz -2 $KDOUT/${TEST}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+# look at the fastq! 
+ls -lsh $KDOUT/${TEST}*
+
+## removing intermediates: SAM and BAM files are huge! delete --WHEN FINISHED--
+rm $KDOUT/${TEST}*[sam,bam]
+
+```
+
+
+### decontaminate multiple samples
+
+We can apply the same technique to all of our samples using `slurm`. The database is already present, so we write `slurm` scripts for the `BowTie2` alignment, `samtools` filtering, and `samtools` processing. 
+
+Separating out the jobs allows us to troubleshoot issues more easily (hopefully) but complicates batch processing of samples.
+
+**NB** : `time` flag is totally spurious ; lots of large intermediate files being created - we'll need to delete these as we go;  **see the `bt_deco.txt` for output**, which should be in the `~` directory... Problems may be recorded there ; also check name formats in bt2 align step; issue with streaming applications sending binary to .out/.log files - logfile call deleted in repsonse ; need slurm individual name tag
+
+
+```{bash, eval=FALSE}
+## multiple small jobs
+
+# Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz)
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bt2align
+#SBATCH --output=deco_bt2align.txt
+#SBATCH --open-mode=append
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+time bowtie2 -p $THREADS \
+-x $REF/mult_ref \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+' > $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_sambam
+#SBATCH --output=deco_sambam.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+## change format
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+
+' > $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# filter contaminants from BAM -  5m on sample Q4T8
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bamfilt
+#SBATCH --output=deco_bamfilt.txt
+#SBATCH --open-mode=append
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+# samtools removes reads which match (contaminant) reference genome
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+
+' > $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# resort BAM to sensible order
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bamsort
+#SBATCH --output=deco_bamsort.txt
+#SBATCH --open-mode=append
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+# samtools re-roganises reads 
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+' > $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# convert decontaminated, sorted BAM, to FASTQ
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bamfq
+#SBATCH --output=deco_bamfq.txt
+#SBATCH --open-mode=append
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+# stream outputs of non-interest to /dev/null
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+
+' > $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
+
+
+```
+
+
+As before, we can then send these jobs to the `slurm queue` for processing when resources become available. 
+
+```{bash,eval=FALSE}
+# ultimate test
+sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10   # 0.04%, 12min
+sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10     # "no" STOUT, 5m
+sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10    # "no" STOUT, 6m
+sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10    # 5m  - works
+sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10      # 2m
+
+
+# overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
+less $MAT/${TEST}_decont_out.log
+
+# check for outputs
+ls -lsh $KDOUT/${TEST}*
+
+# should just show your stuff
+squeue -u $USER
+
+```
+
+
+However, it would be more efficient, and possibly easier to supervise if each sample was processed together. Here we use an `if` statement to check that the outputs are finished, before we delete all the intermediate `bam` and `sam` files.
+
+```{bash, eval=FALSE}
+
+echo '#!/bin/bash
+
+#SBATCH --job-name=deco_bt2.%j
+#SBATCH --output=deco_bt2.%j.txt
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+REF=$4
+THREADS=$5
+
+
+## stamp for the output
+DAT_TIM=$(date +"%T %F")
+echo "--------------------------------------------"
+echo $DAT_TIM 
+echo sampl: $SAMPLE 
+echo input: $IN
+echo outpt: $OUT
+echo "--------------------------------------------"
+
+
+echo "--   align   -------------------------------------"
+# -x $REF/mult_ref \
+time bowtie2 -p $THREADS \
+-x $REF/deco.bt2 \
+-1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
+-2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
+-S $OUT/${SAMPLE}_bt2_refmapped.sam
+
+if [ $?=0 && -s $OUT/${SAMPLE}_bt2_refmapped.sam] then
+echo "--   change format   -------------------------------------"
+time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam
+
+
+echo "--   remove matches   -------------------------------------"
+time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam
+
+
+echo "--   re-organise reads   -------------------------------------"
+time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+
+echo "--   to fastq, dump other   -------------------------------------"
+time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
+
+## shrink / delete
+#if [ -s $OUT/${SAMPLE}_bt2decon_R1.fastq.gz ] && [ -s $OUT/${SAMPLE}_bt2decon_R2.fastq.gz ] ;
+#        #echo "--   deleting *AM   --------------------" ;
+#        #then rm $OUT/${SAMPLE}_*.[bam,sam] & ;
+#        echo "--   shrinking *AM   --------------------" ;
+#        then gzip $OUT/${SAMPLE}_*.[bam,sam] & ;
+#fi
+
+
+' > $MAT/slurm_deco_full.sh # SAMPLE  IN  OUT REF THREADS
+
+
+# send just one sample to the script with "head -1"
+for i in $( cat $INES/Materials/samples | head -1 );
+    do sbatch $MAT/slurm_deco_full.sh $i $FILT $KDOUT $BT_DB 10 ;
+done
+
+```
+
+
+Some samples don't work, possibly due to our database being too big (`bowtie2` error code 11: SEGV). We make a file named `bad_samples` that lists the samples that didn't work, and re-submit them with fewer threads. This seems to work fine, but if not consider checking your error message against the `issues tracker` on the `BowTie2 github`. 
+
+```{bash,eval=FALSE}
+## feel free to make up some samples 
+echo -e "XXXX\nYYYY\nZZZ\nWWW" > $MAT/bad_samples
+
+
+# delete the broken pieces of samples that didnt finish
+for i in $( cat $MAT/bad_samples );
+    do rm $KDOUT/${i}* ;
+done
+
+
+## try fix bad_samples
+for i in $( cat $INES/Materials_jfg/bad_samples );
+    do sbatch $MAT/slurm_deco_full.sh $i $FILT $KDOUT $BT_DB 4 ;
+done
+
+
+# done!
+
+```
+
+
+
+<!-- # many slurms require many for-loops -  -->
+<!-- # run each for loop in turn -->
+
+
+<!-- #  align sequences -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # convert SAM to BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # filter out contaminant reads from BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # re-sort the reads in the correct order -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+
+<!-- # make it fastq again -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+
+<!-- # intermediate -->
+<!-- less deco_bt2align.txt -->
+<!-- less deco_sambam.txt -->
+<!-- less deco_bamfilt.txt -->
+<!-- less deco_bamsort.txt -->
+<!-- less deco_bamfq.txt -->
+
+
+<!-- for i in $( cat $MAT/samples | head -1): -->
+
+<!--     do bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam ; -->
+
+<!--     samtools view -bS $KDOUT/${i}_bt2_refmapped.sam > $KDOUT/${i}_bt2_refmapped.bam ; -->
+
+<!--     samtools view -b -f 12 -F 256 $KDOUT/${i}_bt2_refmapped.bam > $KDOUT/${i}_bt2_decontamd.bam ; -->
+
+<!--     samtools sort -n -m 5G -@ $BT_threads $KDOUT/${i}_bt2_decontamd.bam -o $KDOUT/${i}_bt2_decontamd_sort.bam > ${i}_bam_sort.out ; -->
+
+<!--     samtools fastq -@ $BT_threads $KDOUT/${i}_bt2_decontamd_sort.bam -1 $KDOUT/${i}_bt2decon_R1.fastq.gz -2 $KDOUT/${i}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n ; -->
+
+<!-- done  >> $MAT/${i}_decont_out.log 2&>1 ; -->
+
+
+<!-- ls -lsh $KDOUT/${i}* -->
+
+<!--   ## removing intermediates: SAM and BAM are huge! delete --WHEN FINISHED-- -->
+<!--   rm $KDOUT/${i}*[sam,bam] -->
+
+
+### Alternatively: decontaminate with `KneadData`
+
+`Kneaddata` is a quality control pipeline developed by the [Huttenhower group](https://huttenhower.sph.harvard.edu) (home of `HUMAnN*`, `MetaPhlan*`, `LEfSe`, etc.) to do all of the above steps: `trimmomatic`, `bowtie2`, and `samtools`, in one go, using the human genome as a default reference. It can be very useful if we're setting things up for the first time, as it will download the required programs and a human database for us. We did not use it here because it is incredibly useful to have some idea of how to use `trimmomatic` and `bowtie2` to refine & identify reads of interest, alongside the face that our host sequences were not limited to humans and our programs are already installed.
+
+If we wanted to achieve the same things with `KneadData`, we could provide similar arguments to those above (often, its the _exact_ same argument, we're just asking `KneadData` to tell `Trimmomatic`/`BowTie2`). Note that we would still have had to download our reference genomes and build a database from them using `bowtie-build`. 
+
+
+# 4 - Microbiome Community Estimation: `Kraken2` & `Bracken`
+
+Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). 
+
+
+## identify reads with `Kracken2`
+
+[`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
+
+We will use the default `Kraken2` database, built from the NCBI non-redundant refseq database. We could alternatively use the GTDB, which is a brave, fresh attempt at rationalising how taxonomy is applied (a much bigger topic, but a very good database, though it doesn't always match the NCBI one). Both databases are present on the HPC, and mean we don't have to build or own dataabases (though we definitely [could](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases)).
+
+### `Kraken2` parameters 
+
+Parameters have not been explored in this document, but it is worth doing so here. There a number of handy settings we can use to tune our assignments. [Often these are semi-sensible](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#output-formats), but we should always be aware of what they assume for our data, as it's easy to forget about later. 
+
+In particular, these values (as well as the composition of the database!) affect how and where your assignments are made:
+
+  - `--confidence (default 0)` : allows us to be more confident in the assignments. 0-1, higher values meaning more certain that a classification is correct. This is a slightly [newer](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#confidence-scoring) feature, and the _default is 0.0_.
+  - `--minimum-hit-groups (default: 2)` : how many 'hits' need to agree before an identity is decided
+  - `--minimum-base-quality (default: 0)` : how good a base needs to be in order to be used (for `fastq` only).
+  
+There are also some format options, the first of which is important for the `Bracken` step:
+
+  - `--use-mpa-style` : output data like `mpa` (metaphlan, another shotgun profiler) does (needed for Bracken)
+  - `--report-zero-counts` : include this to report all entries in the database, even if nothing was found. 
+  - `--report-minimizer-data` : additional info for where and how hits landed on the `minimizers` which correspond to the different taxa. 
+  - additional options: enter `kraken2` into the terminal to see the full list
+
+**For our purposes**, we are most interested in the `--report` that `Kraken2` creates - this is what we'll use to create out communtiy profile with `Bracken`. However, the other parts (the output, the unclassified) are still very informative - have a look using `less`. Later, we'll simply send these to ``/dev/null`.
+
+First we test and try our `$TEST` sample, but feel free to play with `hit groups`, `base qualtiy`, and `*confidence*`, to see how that changes assignments (It's very fast!). 
+
+```{bash, eval=FALSE}
+# set how many jobs we plan on using
+KR_threads=5
+module load kraken2/2.1.1
+
+# test
+time kraken2 --db $K2REFDIR \
+$KDOUT/${TEST}_bt2decon_R1.fastq.gz \
+$KDOUT/${TEST}_bt2decon_R2.fastq.gz \
+--paired \
+--confidence 0.5 \
+--minimum-hit-groups 5 \
+--minimum-base-quality 20 \
+--gzip-compressed \
+--threads $KR_threads \
+--report-zero-counts \
+--report $KROUT/${TEST}_test_kraken_report \
+--unclassified-out $KROUT/${TEST}_test_kraken_unclass# \
+--output $KROUT/${TEST}_test_kraken_output
+
+# changing --cnf from 0.15 to 0.5: 3.6% drop in assignment (7.3-10.7%)
+# changing --mhg from 2 to 5: no difference in assignment (10.7%)
+# changing --qual: not checked
+
+```
+
+
+<!-- [Output format for kraken2](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#output-formats) -->
+<!-- NEED TO EXPLAIN THE OUTPUT -->
+<!-- NEED TO EXPLAIN THE OUTPUT -->
+<!-- NEED TO EXPLAIN THE OUTPUT -->
+<!-- NEED TO EXPLAIN THE OUTPUT -->
+<!-- NEED TO EXPLAIN THE OUTPUT -->
+
+
+<!-- Also: -->
+<!-- First run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
+<!-- # for ROUND 1, paired-mode only is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
+<!-- # can remember why we included the zero counts...but we did, intentionally -->
+
+If that works, scale it for `slurm`:
+
+```{bash, eval=FALSE}
+echo '#!/bin/bash
+
+#SBATCH --job-name=krak2_filt
+#SBATCH --output=krak2_filt.%j.txt
+
+#SBATCH --time=15:00
+
+SAMPLE=$1
+IN=$2
+OUT=$3
+DB=$4
+THREADS=$5
+
+## we do NOT want to use this! Bracken wont read it
+#--use-mpa-style \
+
+time kraken2 --db $DB \
+$IN/${SAMPLE}_bt2decon_R1.fastq.gz \
+$IN/${SAMPLE}_bt2decon_R2.fastq.gz \
+--paired \
+--confidence 0.15 \
+--report-zero-counts \
+--threads $THREADS \
+--gzip-compressed \
+--report $OUT/${SAMPLE}_kraken_report \
+--unclassified-out /dev/null/${SAMPLE}_kraken_unclass# \
+--output /dev/null/${SAMPLE}_kraken_output
+
+' > $MAT/slurm_krak2.sh  # SAMPLE IN OUT DB THREADS
+
+```
+
+
+Again, we use a little `for-loop` to give each sample to `slurm` (`$i`), making sure to pass it the dir for the filtered input data (`$KDOUT`), the output folder for `Kraken2` (`$KROUT`), and the location of the Kraken2 DB (`$K2REFDIR`). 
+
+```{bash, eval=FALSE}
+# check first using $TEST
+sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $MSDAT/ref $KR_threads 
+
+
+#for i in $( cat $MAT/samples );
+for i in $( cat $INES/Materials/samples );
+
+  # do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
+  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ;
+
+done
+ 
+```
+
+
+## estimate abundances with `Bracken`
+
+`Kraken2` tried to assign an identity to each read, as best possible. If we knew that we had `1M` reads in our `$TEST` sample, we could count how many reads are for (e.g.) _Escherichia coli_, and decide that the relative abundance of _E. coli_ in the sample is simply `n_reads_E_coli / n_total_sample_reads`. This might work in some cases, but it would only count reads that were specifically assigned to _E. coli_, and would miss all the reads _E. coli_ reads that could only be assigned to (e.g.) _Escherichia_, or Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn't what you want. 
+
+[`Bracken`](https://github.com/jenniferlu717/Bracken) [solves this problem](https://www.nature.com/articles/s41596-022-00738-y) by using [Bayesian re-estimation](https://peerj.com/articles/cs-104/) to guess from the distribution of all reads in the reference phylogenetic tree, what the relative abundances are for all (e.g.) _species_ across the overall sample. This uses all the reads in the sample, and tends to give a more accurate representation of what the community looks like at a compositional level, for species-level taxa. 
+
+Here, because `Bracken` is fast and relatively lightweight, `slurm` would be unnecessarily complicating things. We will make:
+
+  0. a database - this step will be done for us on the HPC, but it's shown below anyway.
+  1. a report for each sample processed by `Kraken2`
+  2. combine these reports into one document - this is our community table!
+  
+Bioinformaticians use *three weird tricks* to make their microbial dreams come true: 
+
+  - `-t = threshold, def = 10` - number of reads below which a taxo-branch on the kraken2 tree will be dropped from further assignment of abundances
+  - `-l = Level, def=S` - among the options `K, P, C, O, F, G, S`. We must set the taxonomic level we want to pool our reads to: usually we are interested in taxa at a _species_ level, but this can be changed using the `-l` parameter when we run Bracken to get a better idea of composition at different taxonomic groupings
+  - `-r = read lengths` - taken as the starting read length, refer to your FastQC output for this!
+
+There are several databases on the HPC for Bracken, but if there is not one for our read-length (**130bp?**), we will have to make one!
+
+```{bash, eval=FALSE}
+## build data base first
+BR_kmer=35    # this is the default kmer length of the Kraken2 DB on the HPC
+BR_leng=130   # length post-trimm
+
+# need to make a bit of a hack here
+mkdir ~/bin ; cd ~/bin &&
+wget https://github.com/jenniferlu717/Bracken/archive/refs/heads/master.zip ; unzip master.zip && rm master.zip
+cd ~/bin/Bracken-master
+chmod +x install_bracken.sh ; ./install_bracken.sh
+
+# next, *symlink* to the K2 DB as not sure can write out to main ref dir / $INES
+module load kraken2/2.1.1 
+module unload braken
+ln -s $K2REFDIR/opts.k2d $WRK/ref/opts.k2d  
+ln -s $K2REFDIR/hash.k2d $WRK/ref/hash.k2d  
+ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d  
+ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
+ln -s $K2REFDIR/library $WRK/ref/library  
+ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
+time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &
+cd ~
+
+```
+
+
+We then use that database, and process our `Kraken2` outputs. This step is very fast, as we simply run bracken on the `kraken_report` file. Try it first on our test file!
+
+```{bash, eval=FALSE}
+module load braken
+
+# crucial parameters! fee free to adapt these
+BR_r=$BR_leng
+BR_l=S
+BR_t=10   # counts! not threads
+
+# run bracken
+bracken -d $WRK/ref/ -i $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}.bracken -r $BR_r -l $BR_l -t $BR_t
+
+# note the header for the different columns:
+head -1 $KROUT/${TEST}.bracken
+
+less -S $KROUT/${TEST}.bracken
+
+
+```
+
+
+Then try it on all samples. It won't take much more time than doing one, but this time we combine all the samples to one large table (`combine_bracken_outputs.py`, `kreport2mpa.py`). 
+  
+```{bash, eval=FALSE}
+# rename the DB after your own one, and decide what -t/-s is appropriate
+for i in $(cat $MAT/samples | head -1 );
+#  do est_abundance.py \
+  do est_abundance.py \
+  -i $KROUT/${i}_kraken_report \
+  -k $K2REFDIR/database130mers.kmer_distrib \
+  -l $BR_l \
+  -t $BR_t \
+  -r $BR_r \
+  -o $KROUT/${i}_kraken_report_bracken > $KROUT/${i}_bracken.stout ;
+done
+
+
+#  -k $MSDAT/ref/database130mers.kmer_distrib \
+for i in $(cat $INES/Materials/samples | head -1);
+
+  do bracken -d $MSDAT/ref/ -i $KROUT/${i}_kraken_report -o $KROUT/${i}.bracken -r $BR_r -l $BR_l -t $BR_t ;
+
+done                                                                                        
+
+## combine reports to one monolith.tsv
+combine_bracken_outputs.py --files $KROUT/*bracken -o fhi_redch_krakenStnd_bracken_combo
+
+## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this)
+for i in $(cat $MAT/samples | head -1 );
+  do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ;
+done
+
+```
+
+
+
+---
+
+# Reading / Reference
+
+### - linux `101`
+
+> [Linux command line for beginners](https://ubuntu.com/tutorials/command-line-for-beginners) - quite quite good!
+
+> [`slurm` and variables](https://help.rc.ufl.edu/doc/Using_Variables_in_SLURM_Jobs)
+
+> [more `slurm` formatting](https://confluence.ecmwf.int/display/UDOC/Writing+SLURM+jobs)
+
+> [`glomming`](https://linuxhint.com/bash_globbing_tutorial/)
+
+> [regular expressions (`regex`)](https://robinwinslow.uk/regex)
+
+> [`for-loop`s - first step in `bash` superpowers](https://linuxize.com/post/bash-for-loop/)
+
+> [How to read an error](https://www.baeldung.com/linux/bash-errors)
+
+> [info on variables](https://ostechnix.com/bash-variables-shell-scripting/)
+
+
+### - DNA sequencing & co
+
+> [`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) 
+
+> [`MultiQC` site + support](https://multiqc.info)
+
+> [`Trimmomatic` site](http://www.usadellab.org/cms/index.php?page=trimmomatic)
+
+> [`Trimmomatic` manual](http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf)
+
+> [`bowtie2 / samtools` filtering](https://www.metagenomics.wiki/tools/short-read/remove-host-sequences)
+
+
+### - metagenomics 
+
+> [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/) - extremely good and thorough guide.
+
+> [The `Kraken` **Suite** ](http://ccb.jhu.edu/data/kraken2_protocol/) - **Sept 2022** nature [paper](https://doi.org/10.1038/s41596-022-00738-y) from the developers of Kraken, KrakenUniq, & Bracken etc. 
+
+> [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser) - look v good also - Dan Knights & co., 2016
+
+
+
+<!-- ```{bash, eval=FALSE} -->
+
+<!-- ##   T A X O N O M Y   -   glom from mpa output!   ## ======================================== -->
+
+<!-- ## own funciton gettax_kraken : hacky, ++slow, and only gets species name. Avoid. -->
+
+<!-- ## get all the S level assignments; trim counts ; sort; uniq -->
+<!-- grep -h '|s_' $BRK/*mpa | cut -f 1 > $BRK/bracken_82_taxa.temp -->
+<!-- sort $BRK/bracken_82_taxa.temp | uniq > $BRK/bracken_82_taxa.temp2 -->
+<!-- sed 's/|/\t/g' $BRK/bracken_82_taxa.temp2 > $BRK/fhi_redch_krakenStnd_bracken_combo_taxa_82 -->
+
+<!-- ## send home -->
+<!-- scp ./bracken_545_*[combo,taxa] $DSK -->
+
+<!-- # consider total taxonomy, but prob doesn't tell us anything re: missing levels -->
+<!-- cat $b/bracken_reports_545/*mpa | cut -f 1 > $b/bracken_545_total_tax.temp -->
+<!-- sort  $b/bracken_545_total_tax.temp | uniq > $b/bracken_545_total_tax.temp2 -->
+
+<!-- ``` -->
+
+
+
+
+
+<!-- usearch -fastq_join $KDOUT/$TEST/${TEST}_R1_kneaddata_paired_R1.fastq.gz -reverse $KDOUT/$TEST/${TEST}_R1_paired_R2.fastq.gz -fastaout $KDOUT/${TEST}_kneaddata_R1R2.fastq.gz -->
+
+
+<!-- ## k2-check filtered data -->
+<!-- cat $K2IN/${TEST}/${TEST}_R1_kneaddata_Homo*.fastq.gz > $K2IN/${TEST}/${TEST}_contam.fastq.gz & -->
+<!-- cat $K2IN/${TEST}/${TEST}_R1_kneaddata_unmatched_[12].fastq.gz > $K2IN/${TEST}/${TEST}_orphan.fastq.gz & -->
+<!-- ## -->
+<!-- # TWO-POINT-FIVE MINUTES! 27% identified  | conf 0.5: 1m30, 2% identifiedi | 3 MIN 30 - 15% classified -->
+<!-- time kraken2 --db $K2REFDIR  $K2IN/${TEST}/${TEST}_orphan.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $KROUT/${TEST}_test_orphan_kraken_report --unclassified-out $KROUT/${TEST}_test_orphan_kraken_unclass --output $KROUT/${TEST}_test_orphan_kraken_output -->
+<!-- ## -->
+<!-- # THREE MIN FORTY! 12% sequences identified, highly worrying. -->
+<!-- time kraken2 --db $K2REFDIR  $K2IN/${TEST}/${TEST}_contam.fastq.gz --gzip-compressed --confidence 0.15 --threads 5 --report-zero-counts --report $KROUT/${TEST}_test_contam_kraken_report --unclassified-out $KROUT/${TEST}_test_contam_kraken_unclass --output $KROUT/${TEST}_test_contam_kraken_output -->
+
+
+<!-- # lifeboat protocol -->
+<!-- # K2SAMPLE=SC145C1-NS_S86 -->
+<!-- K2IN=/claesson/jamie/fhi_redch -->
+<!-- KROUT=/claesson/jamie/fhi_redch/krak2 -->
+<!-- K2REFDIR=/claesson/jamie/ref/kraken2_stnd -->
+<!-- # << < < < need to add step here to start with one sample, removing --mem-map, and updating dirs/ -->
+<!-- ## remove --mpa-style as interferes with Bracken -->
+<!-- ls /claesson/jamie/fhi_redch/*[12].fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 time kraken2 --db $K2REFDIR  $K2IN/{}_R1_kneaddata_paired_1.fastq.gz $K2IN/{}_R1_kneaddata_paired_2.fastq.gz --memory-mapping --paired --confidence 0.15 --gzip-compressed --threads 5 --report-zero-counts --report $KROUT/{}_kraken_report# --unclassified-out $KROUT/{}_kraken_unclass# --output $KROUT/{}_kraken_output# >> ~/para_krak_fhi_redch.stout 2>&1 -->
+<!-- # this'll put out all the seq too. if you only want the report, send your output/unclassified ..away -->
+<!-- # try catch output, or anything else - because where does it go? -->
+<!-- ## pre-run very possibly not necessary with --memorymapping opt -->
+
+
+
+
+<!-- ```{bash, eval = FALSE} -->
+<!-- # re-run trimmomatic disabled using --bypass-trim -->
+<!-- module load kneaddata trimmomatic   # needs trimmo, even if you don't -->
+
+<!-- # trial -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $FILT/${TEST}_R1.fastq.gz -i $FILT/${TEST}_R2.fastq.gz -o $KDOUT/${TEST}_2  -db $HGR38_BT --max-memory 45g  --remove-intermediate-output > $KDOUT/knead_${TEST}_2.stout --trimmomatic /install/software/anaconda2.7.a/share/trimmomatic -->
+
+<!-- ## is the output compressed?... -->
+<!-- # ; gzip $KDOUT/$TEST/*fastq # 2>&1 -->
+
+<!-- ``` -->
+
+
+<!-- Super `bash` `slurm` powers. **not finished** -->
+
+<!-- ```{bash, eval=FALSE} -->
+<!-- echo '#!/bin/bash -->
+
+<!-- #SBATCH ---job-name=knead_fastq -->
+<!-- #SBATCH ---output=knead_fastq.txt -->
+
+<!-- #SBATCH ---ntasks=4 -->
+<!-- #SBATCH ---time=40:00 -->
+
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REFDIR=$4 -->
+
+<!-- ##   K N E A D D A T A -->
+<!-- # if youre going to change the output names, change for STOUT< GZIP, and FASTQC also -->
+<!-- time kneaddata -t 4 -p 4 --bypass-trim -i $IN/${SAMPLE}_R1_trimm.fastq.gz -i $IN/${SAMPLE}_R2_trimm.fastq.gz -o $OUT/${SAMPLE} -db $REFDIR --max-memory 45g > $OUT/knead_${SAMPLE}.stout 2>&1 -->
+
+<!-- #gzip $OUT/$SAMPLE/*fastq -->
+
+<!-- ' > $MAT/slurm_kd.sh -->
+
+<!-- # actual kneads -->
+<!-- ls $FILT/*R[12]_trimm.fastq.gz | sed -e 's/.*\/\(.*\)_R..*/\1/g' | sort | uniq | parallel -j 6 sbatch $MAT/slurm_kd.sh {} $FILT $KDOUT $HGR38_BT -->
+
+<!-- ``` -->
+
+
+<!-- #### fastqc and multiqc -->
+
+<!-- As above, we check the output quality (and can check how many reads etc. make it through). -->
+
+<!-- ```{bash, eval = FALSE} -->
+<!-- mkdir $FQC/fhi_redch_knead -->
+
+<!-- ``` -->
+
+>>>>>>> 1b4872ecce70b6340565f8c33ad0a7bbe261cd0e
