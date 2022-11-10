@@ -146,6 +146,9 @@ Thank you for asking! **Remember, on the HPC:**
   * **output** data goes in the `analysis` folder. We set this variable shortcuts as `$WRK`, and all our output goes inside this dir. 
 
 
+<!-- INES=/data/Food/analysis/R0936_redcheese -->
+<!-- WRK=/data/Food/analysis/R0602_microsupport/r0936 -->
+
 
 ```{bash, eval = FALSE}
 # databases for different tools
@@ -156,9 +159,7 @@ BT_DB=/data/Food/analysis/R0936_redcheese/ref
 
 # our overall data structure
 RAW=/data/Food/primary/R0936_redcheese
-# WRK=/data/Food/analysis/R0936_redcheese   # real
-INES=/data/Food/analysis/R0936_redcheese
-WRK=/data/Food/analysis/R0602_microsupport/r0936
+WRK=/data/Food/analysis/R0936_redcheese
 
 # scripts, and slurms for queueing up jobs
 MAT=$WRK/Materials
@@ -171,7 +172,7 @@ FILT=$WRK/2__filt
 KDOUT=$WRK/3__knead
 KROUT=$WRK/4__krak2
 
-#!# set a filename to test things on
+#!# set a sample-name to test things on
 TEST=Q4T8
 
 ```
@@ -190,7 +191,7 @@ Next, we tell the HPC which programs we'll need for this work, which the HPC has
 
 ```{bash, eval = FALSE}
 # this is a list of all programs explicitly required in this workflow
-module load parallel fastqc multiqc trimmomatic bowtie2 kraken2/2.1.1 braken
+module load parallel fastqc multiqc trimmomatic bowtie2 samtools/1.10 kraken2/2.1.1 braken
 ```
 
 
@@ -1177,6 +1178,8 @@ $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
 
 Again, we use a little `for-loop` to give each sample to `slurm` (`$i`), making sure to pass it the dir for the filtered input data (`$KDOUT`), the output folder for `Kraken2` (`$KROUT`), and the location of the Kraken2 DB (`$K2REFDIR`). 
 
+  <!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; -->
+
 ```{bash, eval=FALSE}
 # check first using $TEST
 sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $MSDAT/ref $KR_threads 
@@ -1185,8 +1188,7 @@ sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $MSDAT/ref $KR_threads
 #for i in $( cat $MAT/samples );
 for i in $( cat $INES/Materials/samples );
 
-  # do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
-  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ;
+  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
 
 done
  
