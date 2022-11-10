@@ -8,6 +8,22 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 ---
 
 
+#### more `todo`
+ - how to catch fails
+ - slurm quirks
+
+ - utility
+ - intro document
+ - reference material
+ - bibliography
+ - unify materials and analysis dirs in setup
+
+ - can we add a sandbox?...
+ - persistent issue with C&P in putty
+ - demo bt2 outdir
+ - enumerate sections better
+
+
 ## things 
 
   - batching samples
