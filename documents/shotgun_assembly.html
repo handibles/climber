@@ -1511,7 +1511,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">10 Nov 2022, 13:56</h4>
+<h4 class="date">10 Nov 2022, 15:00</h4>
 
 </div>
 
@@ -3089,10 +3089,11 @@ cd ~
 <p>We then use that database, and process our <code>Kraken2</code>
 outputs. This step is very fast, as we simply run bracken on the
 <code>kraken_report</code> file. Try it first on our test file!</p>
-<pre class="bash"><code>module load braken
+<pre class="bash"><code># note name is wrong
+module load braken
 
-# crucial parameters! fee free to adapt these
-BR_r=$BR_leng
+# crucial parameters! fee free to adapt s and l. r probably more use fi read length differs from DB being used
+BR_r=130
 BR_l=S
 BR_t=10   # counts! not threads
 
@@ -3107,35 +3108,39 @@ less -S $KROUT/${TEST}.bracken
 <p>Then try it on all samples. It won’t take much more time than doing
 one, but this time we combine all the samples to one large table
 (<code>combine_bracken_outputs.py</code>,
-<code>kreport2mpa.py</code>).</p>
-<pre class="bash"><code># rename the DB after your own one, and decide what -t/-s is appropriate
-for i in $(cat $MAT/samples | head -1 );
-#  do est_abundance.py \
-  do est_abundance.py \
-  -i $KROUT/${i}_kraken_report \
-  -k $K2REFDIR/database130mers.kmer_distrib \
-  -l $BR_l \
-  -t $BR_t \
-  -r $BR_r \
-  -o $KROUT/${i}_kraken_report_bracken &gt; $KROUT/${i}_bracken.stout ;
-done
-
-
-#  -k $MSDAT/ref/database130mers.kmer_distrib \
-for i in $(cat $INES/Materials/samples | head -1);
-
-  do bracken -d $MSDAT/ref/ -i $KROUT/${i}_kraken_report -o $KROUT/${i}.bracken -r $BR_r -l $BR_l -t $BR_t ;
-
+<code>kreport2mpa.py</code>):</p>
+<pre class="bash"><code>for i in $(cat $MAT/samples | head -1);
+  do bracken -d $K2REFDIR/ -i $KROUT/${i}_kraken_report -o $KROUT/${i}.bracken -r $BR_r -l $BR_l -t $BR_t ;
 done                                                                                        
 
-## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*bracken -o fhi_redch_krakenStnd_bracken_combo
 
-## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this)
-for i in $(cat $MAT/samples | head -1 );
-  do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* &gt; $KROUT/fhi_redch_bragglers ;
-done
+### combine samples ------------------------------------------
+## ---   code not yet sane   ---------------------------------
+## -----------------------------------------------------------
+
+
+### export to R-----------------------------------------------
+## ---   code not yet sane   ---------------------------------
+## -----------------------------------------------------------
 </code></pre>
+<!-- # rename the DB after your own one, and decide what -t/-s is appropriate -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!-- #  do est_abundance.py \ -->
+<!--   do est_abundance.py \ -->
+<!--   -i $KROUT/${i}_kraken_report \ -->
+<!--   -k $K2REFDIR/database130mers.kmer_distrib \ -->
+<!--   -l $BR_l \ -->
+<!--   -t $BR_t \ -->
+<!--   -r $BR_r \ -->
+<!--   -o $KROUT/${i}_kraken_report_bracken > $KROUT/${i}_bracken.stout ; -->
+<!-- done -->
+<!-- #  -k $MSDAT/ref/database130mers.kmer_distrib \ -->
+<!-- ## combine reports to one monolith.tsv -->
+<!-- combine_bracken_outputs.py --files $KROUT/*bracken -o fhi_redch_krakenStnd_bracken_combo -->
+<!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ; -->
+<!-- done -->
 <hr />
 </div>
 </div>
