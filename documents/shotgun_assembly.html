@@ -1511,7 +1511,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">14 Nov 2022, 11:52</h4>
+<h4 class="date">14 Nov 2022, 15:06</h4>
 
 </div>
 
@@ -2625,10 +2625,12 @@ then
         echo &quot;--   to fastq, dump other   ------------------------------&quot;
         time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 
+        echo &quot;---   $SAMPLE completed  :)   ----------------------------------&quot;
+
 
 else
         echo &quot;&quot;
-        echo &quot;-----!-!-!---   align failed   ::   $SAMPLE   ---!-!-!-----&quot;
+        echo &quot;!!!---   align failed   ::   $SAMPLE   ---!!!&quot;
         echo &quot;&quot;
         echo &quot;&quot;
 
@@ -2639,9 +2641,8 @@ fi
 if [ -s $OUT/${SAMPLE}_bt2decon_R1.fastq.gz ] &amp;&amp; [ -s $OUT/${SAMPLE}_bt2decon_R2.fastq.gz ] ;
 then 
         echo &quot;--   shrinking *AMs   ----------------------------------&quot; ;
-        gzip $OUT/${SAMPLE}_*.[bam,sam] &amp;
+        gzip $OUT/${SAMPLE}_*.{bam,sam} &amp;
 fi
-
 
 &#39; &gt; $MAT/slurm_deco_full.sh # SAMPLE  IN  OUT REF THREADS
 
@@ -2651,12 +2652,12 @@ for i in $( cat $MAT/samples | head -1 );
     do sbatch $MAT/slurm_deco_full.sh $i $FILT $KDOUT $BT_DB 10 ;
 done
 </code></pre>
-<p>Some samples don’t work, possibly due to our database being too big
-(<code>bowtie2</code> error code 11: SEGV). We make a file named
+<p>Often some samples don’t work, e.g. due to our database being too big
+(<code>bowtie2</code> error code 11: SEGV). We can make a file named
 <code>bad_samples</code> that lists the samples that didn’t work, and
 re-submit them with fewer threads. This seems to work fine, but if not
-consider checking your error message against the
-<code>issues tracker</code> on the <code>BowTie2 github</code>.</p>
+consider checking your error messages in
+(<code>deco_bt2.####.txt</code>).</p>
 <pre class="bash"><code>## feel free to make up some samples 
 echo -e &quot;XXXX\nYYYY\nZZZ\nWWW&quot; &gt; $MAT/bad_samples
 
@@ -2673,7 +2674,7 @@ for i in $( cat $MAT/bad_samples );
 done
 
 
-# done!
+# check outputs, check error messages
 </code></pre>
 </div>
 <div id="alternatively-decontaminate-with-kneaddata" class="section level3">
@@ -2700,14 +2701,17 @@ database from them using <code>bowtie-build</code>.</p>
 </div>
 </div>
 </div>
-<div id="microbiome-community-estimation-kraken2-bracken" class="section level1">
-<h1>4 - Microbiome Community Estimation: <code>Kraken2</code> &amp;
-<code>Bracken</code></h1>
+<div id="microbiome-community-profiling" class="section level1">
+<h1>4 - Microbiome Community Profiling</h1>
 <p>Once we have our clean, host-free <code>F+R</code> reads, we assign
 identity to them as precisely as is reliable (<code>Kraken2</code>), and
 from the available identities of those reads, try to re-assemble the
 makeup of the microbial community they came from
 (<code>Bracken</code>).</p>
+<p>Note that there are many different programs for doing this job! Feel
+free to try alternate methods, but be wary of the small voice which
+suggests trying <em>everything</em>…</p>
+<!-- list of all possible ways and methods? -->
 <div id="identify-reads-with-kracken2" class="section level2">
 <h2>identify reads with <code>Kracken2</code></h2>
 <p><a href="https://github.com/DerrickWood/kraken2"><code>Kraken2</code></a>
@@ -2774,7 +2778,11 @@ send these to `<code>/dev/null</code>.</p>
 <p>First we try our <code>$TEST</code> sample, but feel free to change
 <code>hit groups</code>, <code>base quality</code>, and
 <code>*confidence*</code>, to see how that changes assignments (It’s
-very fast!).</p>
+very fast!). Note that we include <code>--report-zero-counts</code> here
+so we can use the entire taxonomic database to build a taxonomic table
+later - but feel free to remove this if it is getting in the way of
+reading the table. We also avoid using <code>--use-mpa-style</code> as
+it isn’t compatible with <code>Bracken</code>.</p>
 <pre class="bash"><code># module load kraken2/2.1.1
 
 # set how many jobs we plan on using
@@ -2788,14 +2796,12 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --confidence 0.5 \
 --minimum-hit-groups 5 \
 --minimum-base-quality 20 \
+--report-zero-counts \
 --gzip-compressed \
 --threads $KR_threads \
 --report $KROUT/${TEST}_test_kraken_report \
 --unclassified-out $KROUT/${TEST}_test_kraken_unclass# \
 --output $KROUT/${TEST}_test_kraken_output
-
-## if we wanted to see ALL the possible taxa, we would include:
-# --report-zero-counts \
 
 # changing --cnf from 0.15 to 0.5: 3.6% drop in assignment (7.3-10.7%)
 # changing --mhg from 2 to 5: no difference in assignment (10.7%)
@@ -2825,9 +2831,6 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-## we do NOT want to use this! Bracken wont read it
-#--use-mpa-style \
-
 time kraken2 --db $DB \
 $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
 $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
@@ -2835,7 +2838,6 @@ $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
 --confidence 0.5 \
 --minimum-hit-groups 5 \
 --minimum-base-quality 20 \
---report-zero-counts \
 --threads $THREADS \
 --gzip-compressed \
 --report $OUT/${SAMPLE}_kraken_report \
@@ -2853,7 +2855,7 @@ Kraken2 DB (<code>$K2REFDIR</code>).</p>
 <pre class="bash"><code># check first using $TEST
 sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
 
-
+# pass all to slurm
 for i in $( cat $MAT/samples );
 
   do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
@@ -2915,6 +2917,9 @@ composition at different taxonomic groupings</li>
 <li><code>-r = read lengths</code> - taken as the starting read length,
 refer to your FastQC output for this!</li>
 </ul>
+<div id="make-a-bracken-database-from-kraken2-database" class="section level3">
+<h3>make a <code>Bracken</code> database from <code>Kraken2</code>
+database</h3>
 <p>There are several databases on the HPC for Bracken, but if there is
 not one for our read-length (<strong>130bp?</strong>), we will have to
 make one!</p>
@@ -2940,6 +2945,9 @@ ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy
 time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &amp;
 cd ~
 </code></pre>
+</div>
+<div id="run-bracken" class="section level3">
+<h3>run <code>Bracken</code></h3>
 <p>We then use that database, and process our <code>Kraken2</code>
 outputs. This step is very fast, as we simply run bracken on the
 <code>kraken_report</code> file. Try it first on our test file!</p>
@@ -2968,18 +2976,104 @@ one, but this time we combine all the samples to one large table
 done                                                                                        
 
 ## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*.bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo
-
-
-### combine samples ------------------------------------------
-## ---   code not yet sane   ---------------------------------
-## -----------------------------------------------------------
-
-
-### export to R-----------------------------------------------
-## ---   code not yet sane   ---------------------------------
-## -----------------------------------------------------------
+combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/fhi_redch_krakenStnd_abundances.tsv
 </code></pre>
+</div>
+<div id="output-taxonomic-hierarchy" class="section level3">
+<h3>output taxonomic hierarchy</h3>
+<p><code>Kraken2+Bracken</code> will only give us the abundances at the
+level (<code>-l</code>) requested (we asked <code>Bracken</code> for
+<code>S</code>pecies, above). If interested in showing (e.g.) the
+<code>P</code>hylum level, we could redo this <code>Bracken</code> step,
+or could redo it for all levels, and have multiple versions of the
+community, at different taxonomic ranks. It wouldn’t take much, but it
+sounds complicated.</p>
+<p>Instead, here:</p>
+<ol start="0" style="list-style-type: decimal">
+<li>we install <code>KrakenTools</code>, a small folder of helper
+scripts by <code>Bracken</code>’s author</li>
+<li>we convert just one sample to <code>MPA</code> format (from ye olde
+<a href="https://huttenhower.sph.harvard.edu/metaphlan">metaphlan</a>)</li>
+<li>keep only the lines informative to the species-level</li>
+<li>replace the <code>&quot;|&quot;</code> characters with tabs, so that you can
+open it in excel etc.</li>
+</ol>
+<table>
+<colgroup>
+<col width="13%" />
+<col width="86%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>step</th>
+<th>effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>kreport2mpa.py</code></td>
+<td>change <code>Kraken2</code> output for <code>Metaphlan</code>
+compatability</td>
+</tr>
+<tr class="even">
+<td><code>grep -h &#39;|s_&#39;</code></td>
+<td>find lines with info to <code>S</code>pecies level, as they contain
+<code>&#39;|s_&#39;...</code></td>
+</tr>
+<tr class="odd">
+<td><code>cut -f 1</code></td>
+<td>chop line at spaces, and return the first part</td>
+</tr>
+<tr class="even">
+<td><code>sort ...</code></td>
+<td>sort the taxonomic table by name, could optionally call
+<code>uniq</code> on it also but not necessary really</td>
+</tr>
+<tr class="odd">
+<td><code>sed &#39;s/|/\t/g</code></td>
+<td>swap <code>&quot;|&quot;</code> for <code>&quot;\t&quot;</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>NB:</strong> because we use the
+<code>--report-zero-counts</code> option in <code>Kraken2</code>, this
+will have <em>all</em> the species-level taxa in the database, and we
+can use it with any of our samples (this taxonomic table will do for all
+our samples). As such, we only need to do this step <em>once</em> per
+project.</p>
+<p>Note also that some lifeforms, i.e. viri, don’t have the same
+taxonomic ranks as us, which can be problematic for the taxonomic table,
+as the columns will suddenly mean different things between types of life
+- this is simplified by sorting the data later but it can still be an
+issue. (if <code>--report-zero-counts</code> was omitted, just repeat a
+single <code>Kraken2</code> step above and convert the output.)</p>
+<pre class="bash"><code># have a luk at the Kraken2 output - note no one line has all the info on D/P/C/O/F/G/S...
+less -S $KROUT/${TEST}_kraken_report
+
+# download KrakenTools to your ~
+mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/KrakenTools.git ; cd $HOME
+
+# KrakenTools: convert to mpa stylee
+~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}_kraken_mpa
+
+# pipe mpa file to reformat
+grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+
+# a last look
+less -S $KROUT/${TEST}_kraken_taxonomy.tsv
+</code></pre>
+</div>
+</div>
+<div id="check-outputs-before-changing-to-r" class="section level2">
+<h2>check outputs before changing to <code>R</code></h2>
+<p>Finally! Most of the data management from here will take place in
+<code>R</code>, but we can check our outputs here &amp; now before
+moving over:</p>
+<pre class="bash"><code># sample abundances
+less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+
+# taxonomic hierarchy:
+less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv</code></pre>
 <!-- # rename the DB after your own one, and decide what -t/-s is appropriate -->
 <!-- for i in $(cat $MAT/samples | head -1 ); -->
 <!-- #  do est_abundance.py \ -->
@@ -2992,11 +3086,8 @@ combine_bracken_outputs.py --files $KROUT/*.bracken -o$KROUT/fhi_redch_krakenStn
 <!--   -o $KROUT/${i}_kraken_report_bracken > $KROUT/${i}_bracken.stout ; -->
 <!-- done -->
 <!-- #  -k $MSDAT/ref/database130mers.kmer_distrib \ -->
-</div>
-<div id="combine-reports-to-one-monolith.tsv" class="section level2">
-<h2>combine reports to one monolith.tsv</h2>
-<p>combine_bracken_outputs.py –files <span class="math inline">\(KROUT/*_bracken
--o\)</span>KROUT/fhi_redch_krakenStnd_bracken_combo_under</p>
+<!-- ## combine reports to one monolith.tsv -->
+<!-- combine_bracken_outputs.py --files $KROUT/*_bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo_under -->
 <!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
 <!-- for i in $(cat $INES/Materials/samples | head -1 ); -->
 <!--   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ; -->

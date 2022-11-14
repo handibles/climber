@@ -895,9 +895,13 @@ done
 If we wanted to achieve the same things with `KneadData`, we could provide similar arguments to those above (often, its the _exact_ same argument, we're just asking `KneadData` to tell `Trimmomatic`/`BowTie2`). Note that we would still have had to download our reference genomes and build a database from them using `bowtie-build`. 
 
 
-# 4 - Microbiome Community Estimation: `Kraken2` & `Bracken`
+# 4 - Microbiome Community Profiling
 
 Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). 
+
+Note that there are many different programs for doing this job! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_...
+
+<!-- list of all possible ways and methods? -->
 
 
 ## identify reads with `Kracken2`
@@ -926,7 +930,8 @@ There are also some format options, the first of which is important for the `Bra
 
 **For our purposes**, we are most interested in the `--report` that `Kraken2` creates - this is what we'll use to create out communtiy profile with `Bracken`. However, the other parts (the output, the unclassified) are still very informative - have a look using `less`. Later, we'll simply send these to ``/dev/null`.
 
-First we try our `$TEST` sample, but feel free to change `hit groups`, `base quality`, and `*confidence*`, to see how that changes assignments (It's very fast!). 
+First we try our `$TEST` sample, but feel free to change `hit groups`, `base quality`, and `*confidence*`, to see how that changes assignments (It's very fast!). Note that we include `--report-zero-counts` here so we can use the entire taxonomic database to build a taxonomic table later - but feel free to remove this if it is getting in the way of reading the table. We also avoid using `--use-mpa-style` as it isn't compatible with `Bracken`.
+
 
 ```{bash, eval=FALSE}
 # module load kraken2/2.1.1
@@ -942,14 +947,12 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --confidence 0.5 \
 --minimum-hit-groups 5 \
 --minimum-base-quality 20 \
+--report-zero-counts \
 --gzip-compressed \
 --threads $KR_threads \
 --report $KROUT/${TEST}_test_kraken_report \
 --unclassified-out $KROUT/${TEST}_test_kraken_unclass# \
 --output $KROUT/${TEST}_test_kraken_output
-
-## if we wanted to see ALL the possible taxa, we would include:
-# --report-zero-counts \
 
 # changing --cnf from 0.15 to 0.5: 3.6% drop in assignment (7.3-10.7%)
 # changing --mhg from 2 to 5: no difference in assignment (10.7%)
@@ -987,9 +990,6 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-## we do NOT want to use this! Bracken wont read it
-#--use-mpa-style \
-
 time kraken2 --db $DB \
 $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
 $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
@@ -997,7 +997,6 @@ $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
 --confidence 0.5 \
 --minimum-hit-groups 5 \
 --minimum-base-quality 20 \
---report-zero-counts \
 --threads $THREADS \
 --gzip-compressed \
 --report $OUT/${SAMPLE}_kraken_report \
@@ -1017,7 +1016,7 @@ Again, we use a little `for-loop` to give each sample to `slurm` (`$i`), making 
 # check first using $TEST
 sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
 
-
+# pass all to slurm
 for i in $( cat $MAT/samples );
 
   do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
@@ -1048,6 +1047,8 @@ Bioinformaticians use *three weird tricks* to make their microbial dreams come t
   - `-t = threshold, def = 10` - number of reads below which a taxo-branch on the kraken2 tree will be dropped from further assignment of abundances
   - `-l = Level, def=S` - among the options `K, P, C, O, F, G, S`. We must set the taxonomic level we want to pool our reads to: usually we are interested in taxa at a _species_ level, but this can be changed using the `-l` parameter when we run Bracken to get a better idea of composition at different taxonomic groupings
   - `-r = read lengths` - taken as the starting read length, refer to your FastQC output for this!
+  
+### make a `Bracken` database from `Kraken2` database
 
 There are several databases on the HPC for Bracken, but if there is not one for our read-length (**130bp?**), we will have to make one!
 
@@ -1076,6 +1077,8 @@ cd ~
 
 ```
 
+
+### run `Bracken`
 
 We then use that database, and process our `Kraken2` outputs. This step is very fast, as we simply run bracken on the `kraken_report` file. Try it first on our test file!
 
@@ -1108,19 +1111,67 @@ for i in $(cat $MAT/samples | head -1);
 done                                                                                        
 
 ## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*.bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo
+combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/fhi_redch_krakenStnd_abundances.tsv
+
+```
 
 
-### combine samples ------------------------------------------
-## ---   code not yet sane   ---------------------------------
-## -----------------------------------------------------------
+### output taxonomic hierarchy 
+
+`Kraken2+Bracken` will only give us the abundances at the level (`-l`) requested (we asked `Bracken` for `S`pecies, above). If interested in showing (e.g.) the `P`hylum level, we could redo this `Bracken` step, or could redo it for all levels, and have multiple versions of the community, at different taxonomic ranks. It wouldn't take much, but it sounds complicated.
+
+Instead, here:
+
+  0. we install `KrakenTools`, a small folder of helper scripts by `Bracken`'s author
+  1. we convert just one sample to `MPA` format (from ye olde [metaphlan](https://huttenhower.sph.harvard.edu/metaphlan)) 
+  2. keep only the lines informative to the species-level
+  3. replace the `"|"` characters with tabs, so that you can open it in excel etc. 
 
 
-### export to R-----------------------------------------------
-## ---   code not yet sane   ---------------------------------
-## -----------------------------------------------------------
+step    | effect
+-------- | -----------------------------------------------------
+`kreport2mpa.py`  |  change `Kraken2` output for `Metaphlan` compatability 
+`grep -h '|s_'`  |  find lines with info to `S`pecies level, as they contain `'|s_'...`
+`cut -f 1`  |  chop line at spaces, and return the first part
+`sort ...`  |  sort the taxonomic table by name, could optionally call `uniq` on it also but not necessary really
+`sed 's/|/\t/g`  |  swap `"|"` for `"\t"`
 
 
+**NB:** because we use the `--report-zero-counts` option in `Kraken2`, this will have _all_ the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step _once_ per project. 
+
+Note also that some lifeforms, i.e. viri, don't have the same taxonomic ranks as us, which can be problematic for the taxonomic table, as the columns will suddenly mean different things between types of life - this is simplified by sorting the data later but it can still be an issue. (if `--report-zero-counts` was omitted, just repeat a single `Kraken2` step above and convert the output.)
+
+
+
+```{bash, eval=FALSE}
+# have a luk at the Kraken2 output - note no one line has all the info on D/P/C/O/F/G/S...
+less -S $KROUT/${TEST}_kraken_report
+
+# download KrakenTools to your ~
+mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/KrakenTools.git ; cd $HOME
+
+# KrakenTools: convert to mpa stylee
+~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}_kraken_mpa
+
+# pipe mpa file to reformat
+grep -h '|s_' $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+
+# a last look
+less -S $KROUT/${TEST}_kraken_taxonomy.tsv
+
+```
+
+
+## check outputs before changing to `R`
+
+Finally! Most of the data management from here will take place in `R`, but we can check our outputs here & now before moving over:
+
+```{bash, eval=FALSE}
+# sample abundances
+less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+
+# taxonomic hierarchy:
+less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 ```
 
 
@@ -1136,11 +1187,9 @@ combine_bracken_outputs.py --files $KROUT/*.bracken -o$KROUT/fhi_redch_krakenStn
 <!--   -o $KROUT/${i}_kraken_report_bracken > $KROUT/${i}_bracken.stout ; -->
 <!-- done -->
 
-
 <!-- #  -k $MSDAT/ref/database130mers.kmer_distrib \ -->
-
-## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*_bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo_under
+<!-- ## combine reports to one monolith.tsv -->
+<!-- combine_bracken_outputs.py --files $KROUT/*_bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo_under -->
 
 <!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
 <!-- for i in $(cat $INES/Materials/samples | head -1 ); -->
