@@ -1511,7 +1511,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">10 Nov 2022, 15:00</h4>
+<h4 class="date">14 Nov 2022, 11:52</h4>
 
 </div>
 
@@ -1705,7 +1705,7 @@ folder. We set this variable shortcuts as <code>$WRK</code>, and all our
 output goes inside this dir.</li>
 </ul>
 <!-- INES=/data/Food/analysis/R0936_redcheese -->
-<!-- WRK=/data/Food/analysis/R0602_microsupport/r0936 -->
+<p>WRK=/data/Food/analysis/R0602_microsupport/r0936</p>
 <pre class="bash"><code># databases for different tools
 DB=/data/databases                                            # HPC only
 HGR38_BT=/data/databases/hostremoval/Homo_sapiens/Bowtie2     # HPC only
@@ -2566,143 +2566,19 @@ rm $KDOUT/${TEST}*[sam,bam]
 <code>samtools</code> filtering, and <code>samtools</code>
 processing.</p>
 <p>Separating out the jobs allows us to troubleshoot issues more easily
-(hopefully) but complicates batch processing of samples.</p>
-<p><strong>NB</strong> : <code>time</code> flag is totally spurious ;
-lots of large intermediate files being created - we’ll need to delete
-these as we go; <strong>see the <code>bt_deco.txt</code> for
-output</strong>, which should be in the <code>~</code> directory…
-Problems may be recorded there ; also check name formats in bt2 align
-step; issue with streaming applications sending binary to .out/.log
-files - logfile call deleted in repsonse ; need slurm individual name
-tag</p>
-<pre class="bash"><code>## multiple small jobs
-
-# Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz)
-echo &#39;#!/bin/bash
-
-#SBATCH --job-name=deco_bt2align
-#SBATCH --output=deco_bt2align.txt
-#SBATCH --open-mode=append
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REF=$4
-THREADS=$5
-
-time bowtie2 -p $THREADS \
--x $REF/mult_ref \
--1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
--2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
--S $OUT/${SAMPLE}_bt2_refmapped.sam
-
-&#39; &gt; $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS
-
-
-# convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output
-echo &#39;#!/bin/bash
-
-#SBATCH --job-name=deco_sambam
-#SBATCH --output=deco_sambam.txt
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REF=$4
-THREADS=$5
-
-## change format
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
-
-&#39; &gt; $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS
-
-
-# filter contaminants from BAM -  5m on sample Q4T8
-echo &#39;#!/bin/bash
-
-#SBATCH --job-name=deco_bamfilt
-#SBATCH --output=deco_bamfilt.txt
-#SBATCH --open-mode=append
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REF=$4
-THREADS=$5
-
-# samtools removes reads which match (contaminant) reference genome
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
-
-&#39; &gt; $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS
-
-
-# resort BAM to sensible order
-echo &#39;#!/bin/bash
-
-#SBATCH --job-name=deco_bamsort
-#SBATCH --output=deco_bamsort.txt
-#SBATCH --open-mode=append
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REF=$4
-THREADS=$5
-
-# samtools re-organises reads 
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
-
-&#39; &gt; $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS
-
-
-# convert decontaminated, sorted BAM, to FASTQ
-echo &#39;#!/bin/bash
-
-#SBATCH --job-name=deco_bamfq
-#SBATCH --output=deco_bamfq.txt
-#SBATCH --open-mode=append
-
-SAMPLE=$1
-IN=$2
-OUT=$3
-REF=$4
-THREADS=$5
-
-# stream outputs of non-interest to /dev/null
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
-
-
-&#39; &gt; $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS
-</code></pre>
-<p>As before, we can then send these jobs to the
-<code>slurm queue</code> for processing when resources become
-available.</p>
-<pre class="bash"><code># ultimate test
-sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10   # 0.04%, 12min
-sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10     # &quot;no&quot; STOUT, 5m
-sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10    # &quot;no&quot; STOUT, 6m
-sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10    # 5m  - works
-sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10      # 2m
-
-
-# overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~)
-less $MAT/${TEST}_decont_out.log
-
-# check for outputs
-ls -lsh $KDOUT/${TEST}*
-
-# should just show your stuff
-squeue -u $USER
-</code></pre>
-<p>However, it would be more efficient, and possibly easier to supervise
-if each sample was processed together. Here we use an <code>if</code>
-statement to check that the outputs are finished, before we delete all
-the intermediate <code>bam</code> and <code>sam</code> files.</p>
+(hopefully), but complicates batch processing of samples. It is more
+efficient, and possibly easier to supervise, if each sample was
+processed together, and errors produce a simple message that we can
+check. Here, we use <code>if</code> statements to check that the outputs
+are finished, before we delete all the intermediate <code>bam</code> and
+<code>sam</code> files (which get very large).</p>
+<pre><code>**NB-jfg** : `time` flag is totally spurious ; lots of large intermediate files being created - we&#39;ll need to delete these as we go;  **see the `bt_deco.txt` for output**, which should be in the `~` directory... Problems may be recorded there ; also check name formats in bt2 align step; issue with streaming applications sending binary to .out/.log files - logfile call deleted in repsonse ; need slurm individual name tag</code></pre>
 <pre class="bash"><code>
 echo &#39;#!/bin/bash
 
 #SBATCH --job-name=deco_bt2.%j
 #SBATCH --output=deco_bt2.%j.txt
+#SBATCH --ntasks=10
 
 SAMPLE=$1
 IN=$2
@@ -2711,11 +2587,15 @@ REF=$4
 THREADS=$5
 
 
+# load necess
+module load bowtie2 samtools/1.10
+
+
 ## stamp for the output
 DAT_TIM=$(date +&quot;%T %F&quot;)
 echo &quot;--------------------------------------------&quot;
-echo $DAT_TIM 
-echo sampl: $SAMPLE 
+echo $DAT_TIM
+echo sampl: $SAMPLE
 echo input: $IN
 echo outpt: $OUT
 echo &quot;--------------------------------------------&quot;
@@ -2724,41 +2604,50 @@ echo &quot;--------------------------------------------&quot;
 echo &quot;--   align   -------------------------------------&quot;
 # -x $REF/mult_ref \
 time bowtie2 -p $THREADS \
--x $REF/deco.bt2 \
+-x $REF/mult_ref \
 -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \
 -2 $IN/${SAMPLE}_R2_trimm.fastq.gz \
 -S $OUT/${SAMPLE}_bt2_refmapped.sam
 
-if [ $?=0 &amp;&amp; -s $OUT/${SAMPLE}_bt2_refmapped.sam] then
-echo &quot;--   change format   -------------------------------------&quot;
-time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+
+if [ $? = 0 ] &amp;&amp; [ -s $OUT/${SAMPLE}_bt2_refmapped.sam ]
+then
+        echo &quot;--   change format   -------------------------------------&quot;
+        time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam &gt; $OUT/${SAMPLE}_bt2_refmapped.bam
+
+        echo &quot;--   remove matches   ------------------------------------&quot;
+        time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+
+        ## obviate - not enough memory, and not essential for kraken &amp; co.
+        # echo &quot;--   re-organise reads   ---------------------------------&quot;
+        # time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
+
+        echo &quot;--   to fastq, dump other   ------------------------------&quot;
+        time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
 
 
-echo &quot;--   remove matches   -------------------------------------&quot;
-time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam &gt; $OUT/${SAMPLE}_bt2_decontamd.bam
+else
+        echo &quot;&quot;
+        echo &quot;-----!-!-!---   align failed   ::   $SAMPLE   ---!-!-!-----&quot;
+        echo &quot;&quot;
+        echo &quot;&quot;
+
+fi
 
 
-echo &quot;--   re-organise reads   -------------------------------------&quot;
-time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam
-
-
-echo &quot;--   to fastq, dump other   -------------------------------------&quot;
-time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n
-
-## shrink / delete
-#if [ -s $OUT/${SAMPLE}_bt2decon_R1.fastq.gz ] &amp;&amp; [ -s $OUT/${SAMPLE}_bt2decon_R2.fastq.gz ] ;
-#        #echo &quot;--   deleting *AM   --------------------&quot; ;
-#        #then rm $OUT/${SAMPLE}_*.[bam,sam] &amp; ;
-#        echo &quot;--   shrinking *AM   --------------------&quot; ;
-#        then gzip $OUT/${SAMPLE}_*.[bam,sam] &amp; ;
-#fi
+## shrink intermediates
+if [ -s $OUT/${SAMPLE}_bt2decon_R1.fastq.gz ] &amp;&amp; [ -s $OUT/${SAMPLE}_bt2decon_R2.fastq.gz ] ;
+then 
+        echo &quot;--   shrinking *AMs   ----------------------------------&quot; ;
+        gzip $OUT/${SAMPLE}_*.[bam,sam] &amp;
+fi
 
 
 &#39; &gt; $MAT/slurm_deco_full.sh # SAMPLE  IN  OUT REF THREADS
 
 
 # send just one sample to the script with &quot;head -1&quot;
-for i in $( cat $INES/Materials/samples | head -1 );
+for i in $( cat $MAT/samples | head -1 );
     do sbatch $MAT/slurm_deco_full.sh $i $FILT $KDOUT $BT_DB 10 ;
 done
 </code></pre>
@@ -2779,51 +2668,13 @@ done
 
 
 ## try fix bad_samples
-for i in $( cat $INES/Materials_jfg/bad_samples );
+for i in $( cat $MAT/bad_samples );
     do sbatch $MAT/slurm_deco_full.sh $i $FILT $KDOUT $BT_DB 4 ;
 done
 
 
 # done!
 </code></pre>
-<!-- # many slurms require many for-loops -  -->
-<!-- # run each for loop in turn -->
-<!-- #  align sequences -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
-<!--     do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ; -->
-<!-- done -->
-<!-- # convert SAM to BAM -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
-<!--     do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ; -->
-<!-- done -->
-<!-- # filter out contaminant reads from BAM -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
-<!--     do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ; -->
-<!-- done -->
-<!-- # re-sort the reads in the correct order -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
-<!--     do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ; -->
-<!-- done -->
-<!-- # make it fastq again -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
-<!--     do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ; -->
-<!-- done -->
-<!-- # intermediate -->
-<!-- less deco_bt2align.txt -->
-<!-- less deco_sambam.txt -->
-<!-- less deco_bamfilt.txt -->
-<!-- less deco_bamsort.txt -->
-<!-- less deco_bamfq.txt -->
-<!-- for i in $( cat $MAT/samples | head -1): -->
-<!--     do bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam ; -->
-<!--     samtools view -bS $KDOUT/${i}_bt2_refmapped.sam > $KDOUT/${i}_bt2_refmapped.bam ; -->
-<!--     samtools view -b -f 12 -F 256 $KDOUT/${i}_bt2_refmapped.bam > $KDOUT/${i}_bt2_decontamd.bam ; -->
-<!--     samtools sort -n -m 5G -@ $BT_threads $KDOUT/${i}_bt2_decontamd.bam -o $KDOUT/${i}_bt2_decontamd_sort.bam > ${i}_bam_sort.out ; -->
-<!--     samtools fastq -@ $BT_threads $KDOUT/${i}_bt2_decontamd_sort.bam -1 $KDOUT/${i}_bt2decon_R1.fastq.gz -2 $KDOUT/${i}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n ; -->
-<!-- done  >> $MAT/${i}_decont_out.log 2&>1 ; -->
-<!-- ls -lsh $KDOUT/${i}* -->
-<!--   ## removing intermediates: SAM and BAM are huge! delete --WHEN FINISHED-- -->
-<!--   rm $KDOUT/${i}*[sam,bam] -->
 </div>
 <div id="alternatively-decontaminate-with-kneaddata" class="section level3">
 <h3>Alternatively: decontaminate with <code>KneadData</code></h3>
@@ -2939,10 +2790,12 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --minimum-base-quality 20 \
 --gzip-compressed \
 --threads $KR_threads \
---report-zero-counts \
 --report $KROUT/${TEST}_test_kraken_report \
 --unclassified-out $KROUT/${TEST}_test_kraken_unclass# \
 --output $KROUT/${TEST}_test_kraken_output
+
+## if we wanted to see ALL the possible taxa, we would include:
+# --report-zero-counts \
 
 # changing --cnf from 0.15 to 0.5: 3.6% drop in assignment (7.3-10.7%)
 # changing --mhg from 2 to 5: no difference in assignment (10.7%)
@@ -2956,7 +2809,7 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 <!-- NEED TO EXPLAIN THE OUTPUT -->
 <!-- Also: -->
 <!-- First run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
-<!-- # for ROUND 1, paired-mode only is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
+<!-- # for ROUND 1, paired-mode onl y is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
 <!-- # can remember why we included the zero counts...but we did, intentionally -->
 <p>If that works, scale it for <code>slurm</code>:</p>
 <pre class="bash"><code>echo &#39;#!/bin/bash
@@ -2979,7 +2832,9 @@ time kraken2 --db $DB \
 $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
 $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.15 \
+--confidence 0.5 \
+--minimum-hit-groups 5 \
+--minimum-base-quality 20 \
 --report-zero-counts \
 --threads $THREADS \
 --gzip-compressed \
@@ -2996,11 +2851,10 @@ the filtered input data (<code>$KDOUT</code>), the output folder for
 Kraken2 DB (<code>$K2REFDIR</code>).</p>
 <p><!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; --></p>
 <pre class="bash"><code># check first using $TEST
-sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $MSDAT/ref $KR_threads 
+sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
 
 
-#for i in $( cat $MAT/samples );
-for i in $( cat $INES/Materials/samples );
+for i in $( cat $MAT/samples );
 
   do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
 
@@ -3074,7 +2928,7 @@ wget https://github.com/jenniferlu717/Bracken/archive/refs/heads/master.zip ; un
 cd ~/bin/Bracken-master
 chmod +x install_bracken.sh ; ./install_bracken.sh
 
-# next, *symlink* to the K2 DB as not sure can write out to main ref dir / $INES
+# next, *symlink* to the K2 DB as not sure can write out to main ref dir
 module load kraken2/2.1.1 
 module unload braken
 ln -s $K2REFDIR/opts.k2d $WRK/ref/opts.k2d  
@@ -3113,6 +2967,9 @@ one, but this time we combine all the samples to one large table
   do bracken -d $K2REFDIR/ -i $KROUT/${i}_kraken_report -o $KROUT/${i}.bracken -r $BR_r -l $BR_l -t $BR_t ;
 done                                                                                        
 
+## combine reports to one monolith.tsv
+combine_bracken_outputs.py --files $KROUT/*.bracken -o$KROUT/fhi_redch_krakenStnd_bracken_combo
+
 
 ### combine samples ------------------------------------------
 ## ---   code not yet sane   ---------------------------------
@@ -3135,10 +2992,13 @@ done
 <!--   -o $KROUT/${i}_kraken_report_bracken > $KROUT/${i}_bracken.stout ; -->
 <!-- done -->
 <!-- #  -k $MSDAT/ref/database130mers.kmer_distrib \ -->
-<!-- ## combine reports to one monolith.tsv -->
-<!-- combine_bracken_outputs.py --files $KROUT/*bracken -o fhi_redch_krakenStnd_bracken_combo -->
+</div>
+<div id="combine-reports-to-one-monolith.tsv" class="section level2">
+<h2>combine reports to one monolith.tsv</h2>
+<p>combine_bracken_outputs.py –files <span class="math inline">\(KROUT/*_bracken
+-o\)</span>KROUT/fhi_redch_krakenStnd_bracken_combo_under</p>
 <!-- ## convert to MPA-style report outputs, in order to get taxonomic tree (again, surely a better way than this) -->
-<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!-- for i in $(cat $INES/Materials/samples | head -1 ); -->
 <!--   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ; -->
 <!-- done -->
 <hr />
@@ -3285,6 +3145,133 @@ code browser</a> - look v good also - Dan Knights &amp; co., 2016</p>
 <!-- ```{bash, eval = FALSE} -->
 <!-- mkdir $FQC/fhi_redch_knead -->
 <!-- ``` -->
+<!--  ================================================================================== -->
+<!-- ```{bash, eval=FALSE} -->
+<!-- ## multiple small jobs -->
+<!-- # Bowtie2 align sequences - 13m on sample Q4T8 (1.1GB F, 1.1GB R fastq.gz) -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=deco_bt2align -->
+<!-- #SBATCH --output=deco_bt2align.txt -->
+<!-- #SBATCH --open-mode=append -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- time bowtie2 -p $THREADS \ -->
+<!-- -x $REF/mult_ref \ -->
+<!-- -1 $IN/${SAMPLE}_R1_trimm.fastq.gz \ -->
+<!-- -2 $IN/${SAMPLE}_R2_trimm.fastq.gz \ -->
+<!-- -S $OUT/${SAMPLE}_bt2_refmapped.sam -->
+<!-- ' > $MAT/slurm_deco_bt2align.sh # SAMPLE  IN  OUT REF THREADS -->
+<!-- # convert bowtie2 SAM output to BAM -  10m on sample Q4T8, 2GB output -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=deco_sambam -->
+<!-- #SBATCH --output=deco_sambam.txt -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- ## change format -->
+<!-- time samtools view -bS $OUT/${SAMPLE}_bt2_refmapped.sam > $OUT/${SAMPLE}_bt2_refmapped.bam -->
+<!-- ' > $MAT/slurm_deco_sambam.sh # SAMPLE  IN  OUT REF THREADS -->
+<!-- # filter contaminants from BAM -  5m on sample Q4T8 -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=deco_bamfilt -->
+<!-- #SBATCH --output=deco_bamfilt.txt -->
+<!-- #SBATCH --open-mode=append -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- # samtools removes reads which match (contaminant) reference genome -->
+<!-- time samtools view -b -f 12 -F 256 $OUT/${SAMPLE}_bt2_refmapped.bam > $OUT/${SAMPLE}_bt2_decontamd.bam -->
+<!-- ' > $MAT/slurm_deco_bamfilt.sh # SAMPLE  IN  OUT REF THREADS -->
+<!-- # resort BAM to sensible order -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=deco_bamsort -->
+<!-- #SBATCH --output=deco_bamsort.txt -->
+<!-- #SBATCH --open-mode=append -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- # samtools re-organises reads  -->
+<!-- time samtools sort -n -m 5G -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd.bam -o $OUT/${SAMPLE}_bt2_decontamd_sort.bam -->
+<!-- ' > $MAT/slurm_deco_bamsort.sh # SAMPLE  IN  OUT REF THREADS -->
+<!-- # convert decontaminated, sorted BAM, to FASTQ -->
+<!-- echo '#!/bin/bash -->
+<!-- #SBATCH --job-name=deco_bamfq -->
+<!-- #SBATCH --output=deco_bamfq.txt -->
+<!-- #SBATCH --open-mode=append -->
+<!-- SAMPLE=$1 -->
+<!-- IN=$2 -->
+<!-- OUT=$3 -->
+<!-- REF=$4 -->
+<!-- THREADS=$5 -->
+<!-- # stream outputs of non-interest to /dev/null -->
+<!-- time samtools fastq -@ $THREADS $OUT/${SAMPLE}_bt2_decontamd_sort.bam -1 $OUT/${SAMPLE}_bt2decon_R1.fastq.gz -2 $OUT/${SAMPLE}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n -->
+<!-- ' > $MAT/slurm_deco_bamfq.sh # SAMPLE  IN  OUT REF THREADS -->
+<!-- ``` -->
+<!-- As before, we can then send these jobs to the `slurm queue` for processing when resources become available.  -->
+<!-- ```{bash,eval=FALSE} -->
+<!-- # ultimate test -->
+<!-- sbatch $MAT/slurm_deco_bt2align.sh $TEST $FILT $KDOUT $BT_DB 10   # 0.04%, 12min -->
+<!-- sbatch $MAT/slurm_deco_sambam.sh $TEST $FILT $KDOUT $BT_DB 10     # "no" STOUT, 5m -->
+<!-- sbatch $MAT/slurm_deco_bamfilt.sh $TEST $FILT $KDOUT $BT_DB 10    # "no" STOUT, 6m -->
+<!-- sbatch $MAT/slurm_deco_bamsort.sh $TEST $FILT $KDOUT $BT_DB 10    # 5m  - works -->
+<!-- sbatch $MAT/slurm_deco_bamfq.sh $TEST $FILT $KDOUT $BT_DB 10      # 2m -->
+<!-- # overall outputs. note that this is in $MAT, and those below are in your current directory (probably ~) -->
+<!-- less $MAT/${TEST}_decont_out.log -->
+<!-- # check for outputs -->
+<!-- ls -lsh $KDOUT/${TEST}* -->
+<!-- # should just show your stuff -->
+<!-- squeue -u $USER -->
+<!-- ``` -->
+<!--  ================================================================================== -->
+<!-- # many slurms require many for-loops -  -->
+<!-- # run each for loop in turn -->
+<!-- #  align sequences -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bt2align.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+<!-- # convert SAM to BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_sambam.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+<!-- # filter out contaminant reads from BAM -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfilt.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+<!-- # re-sort the reads in the correct order -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamsort.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+<!-- # make it fastq again -->
+<!-- for i in $(cat $MAT/samples | head -1 ); -->
+<!--     do sbatch $MAT/slurm_deco_bamfq.sh $i $FILT $KDOUT $BT_DB 10 ; -->
+<!-- done -->
+<!-- # intermediate -->
+<!-- less deco_bt2align.txt -->
+<!-- less deco_sambam.txt -->
+<!-- less deco_bamfilt.txt -->
+<!-- less deco_bamsort.txt -->
+<!-- less deco_bamfq.txt -->
+<!-- for i in $( cat $MAT/samples | head -1): -->
+<!--     do bowtie2 -p $BT_threads -x $BT_DB/mult_ref -1 $FILT/${TEST}_R1_trimm.fastq.gz -2 $FILT/${TEST}_R2_trimm.fastq.gz -S $KDOUT/${TEST}_bt2_refmapped.sam ; -->
+<!--     samtools view -bS $KDOUT/${i}_bt2_refmapped.sam > $KDOUT/${i}_bt2_refmapped.bam ; -->
+<!--     samtools view -b -f 12 -F 256 $KDOUT/${i}_bt2_refmapped.bam > $KDOUT/${i}_bt2_decontamd.bam ; -->
+<!--     samtools sort -n -m 5G -@ $BT_threads $KDOUT/${i}_bt2_decontamd.bam -o $KDOUT/${i}_bt2_decontamd_sort.bam > ${i}_bam_sort.out ; -->
+<!--     samtools fastq -@ $BT_threads $KDOUT/${i}_bt2_decontamd_sort.bam -1 $KDOUT/${i}_bt2decon_R1.fastq.gz -2 $KDOUT/${i}_bt2decon_R2.fastq.gz -0 /dev/null -s /dev/null -n ; -->
+<!-- done  >> $MAT/${i}_decont_out.log 2&>1 ; -->
+<!-- ls -lsh $KDOUT/${i}* -->
+<!--   ## removing intermediates: SAM and BAM are huge! delete --WHEN FINISHED-- -->
+<!--   rm $KDOUT/${i}*[sam,bam] -->
+<!--  ================================================================================== -->
+<!--  ================================================================================== -->
 </div>
 </div>
 
