@@ -908,13 +908,13 @@ Note that there are many different programs for estimating community composition
 [`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
 
 
-### `Kraken2` database
+### `Kraken2` databases
 
 If setting up `Kracken2`, you'll be directed to build a "default" database based on a set of NCBI sequences, using the [`kraken2-build` command](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#kraken-2-databases). This will generate three files: `opts.k2d`,`hash.k2d`, and `taxo.k2d`. Other files/folders can be deleted, but note that Bracken needs the `library` and `taxonomy` folders to build its own database.
 
 We often use the default `Kraken2` database, built from the NCBI non-redundant `refseq` database. We could alternatively use the `GTDB`, which is a brave, fresh attempt at rationalising how taxonomy is applied (a much bigger topic, but a very good database, though it's identities don't always correspond to the NCBI one). Both databases are present on the HPC (see `ls /data/databases/{K,k}raken*`)
 
-But it is also possible to build a [custom](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases) database, based on a different set of sequences using `kraken2-build`. 
+It is possible to build a [custom](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases) database, based on a different set of sequences using `kraken2-build`. 
 
 We can also use someone else's database as long as you have access to `opts.k2d`,`hash.k2d`, and `taxo.k2d`. We will try use the "`maxikraken`" database from the [Loman Lab](https://lomanlab.github.io/mockcommunity/mc_databases.html):
 
@@ -1012,18 +1012,29 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-time kraken2 --db $DB \
-$IN/${SAMPLE}_bt2decon_R1.fastq.gz \
-$IN/${SAMPLE}_bt2decon_R2.fastq.gz \
---paired \
---confidence 0.5 \
---minimum-hit-groups 5 \
---minimum-base-quality 20 \
---threads $THREADS \
---gzip-compressed \
---report $OUT/${SAMPLE}_kraken_report \
---unclassified-out /dev/null/${SAMPLE}_kraken_unclass# \
---output /dev/null/${SAMPLE}_kraken_output
+if [ -s $OUT/${SAMPLE}*_kraken_report ]
+
+then
+  echo "## sample $SAMPLE in $OUT - stopping"
+
+
+else
+  echo "## firing krak2 on $SAMPLE"
+
+  time kraken2 --db $DB \
+  $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
+  $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
+  --paired \
+  --confidence 0.5 \
+  --minimum-hit-groups 5 \
+  --minimum-base-quality 20 \
+  --threads $THREADS \
+  --gzip-compressed \
+  --report $OUT/${SAMPLE}_kraken_report \
+  --unclassified-out /dev/null/${SAMPLE}_kraken_unclass# \
+  --output /dev/null/${SAMPLE}_kraken_output
+
+fi
 
 ' > $MAT/slurm_krak2.sh  # SAMPLE IN OUT DB THREADS
 
