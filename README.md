@@ -9,23 +9,21 @@ All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
 
-## guides so far:
-
 ### Metagenomic data (i.e. shotgun)
 
   * <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html">metagenomic shotgun assembly - cheese and/or chicken data </a> 
 
 Metagenomic shotgun assembly covers the following steps:
 
-  0. Setting up your analysis
-  1. Checking your sequence data
-  2. Sequencing QC - filtering and trimming your sequences
-  3. Sequencing QC - purifying your sequences - **not yet debugged**
-  4. Kraken2 & Bracken - **not yet finished**
+  0. Setting up your analysis - `bash` and friends
+  1. Checking your sequence data - `FastQC` & `MultiQC`
+  2. Sequencing QC - filtering and trimming your sequences - `Trimmomatic`
+  3. Sequencing QC - purifying your sequences - `BowTie2`
+  4. Metagenomic Community profiling - `Kraken2` & `Bracken`
 
 A similar workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished).
 
-  * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly`</a> - as above, but with less explanation 
+  * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly`</a> - as above, less explanation, **incomplete**
 
 
 
