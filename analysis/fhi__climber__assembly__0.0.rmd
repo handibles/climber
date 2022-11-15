@@ -950,7 +950,7 @@ There are also some format options, the first of which is important for the `Bra
   - `--unclassified-out` - Note `Kraken2` needs a `#` character for splitting `F` and `R` unclassified reads (in case we're curious) 
   - additional options: enter `Kraken2` into the terminal to see the full list. 
 
-**For our purposes**, we are most interested in the `--report` that `Kraken2` creates - this is what we'll use to create out communtiy profile with `Bracken`. However, the other parts (the output, the unclassified) are still very informative - have a look using `less`. Later, we'll simply send these to ``/dev/null`.
+**For our purposes**, we are most interested in the %>% `--report` that `Kraken2` creates - this is what we'll use to create out communtiy profile with `Bracken`. However, the other parts (the output, the unclassified) are still very informative - have a look using `less`. Later, we'll simply send these to ``/dev/null`.
 
 First we try our `$TEST` sample, but feel free to change `hit groups`, `base quality`, and `*confidence*`, to see how that changes assignments (It's very fast!). Note that we include `--report-zero-counts` here so we can use the entire taxonomic database to build a taxonomic table later - but feel free to remove this if it is getting in the way of reading the table. We also avoid using `--use-mpa-style` as it isn't compatible with `Bracken`.
 
