@@ -897,18 +897,40 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 # 4 - Microbiome Community Profiling
 
-Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). 
+Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). **Using `Kraken2` and `Bracken` together is the [recommended route](http://ccb.jhu.edu/data/kraken2_protocol/) by the developers of Kraken2 for community profiling**  
 
-Note that there are many different programs for doing this job! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_...
 
-<!-- list of all possible ways and methods? -->
+Note that there are many different programs for estimating community composition! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_... Instead, check [the literature](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=metagenomic+taxonomic+classifier+comparison&btnG=) for a comparison, have a look at a really nice comparison by [Walsh _et al._](https://link.springer.com/article/10.1186/s40168-018-0437-0) from 2018, or see similar articles from [2019 onwards](https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&linkname=pubmed_pubmed&from_uid=29554948).
 
 
 ## identify reads with `Kracken2`
 
 [`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
 
-We will use the default `Kraken2` database, built from the NCBI non-redundant refseq database. We could alternatively use the GTDB, which is a brave, fresh attempt at rationalising how taxonomy is applied (a much bigger topic, but a very good database, though it doesn't always match the NCBI one). Both databases are present on the HPC, and mean we don't have to build or own dataabases (though we definitely [could](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases)).
+
+### `Kraken2` database
+
+If setting up `Kracken2`, you'll be directed to build a "default" database based on a set of NCBI sequences, using the [`kraken2-build` command](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#kraken-2-databases). This will generate three files: `opts.k2d`,`hash.k2d`, and `taxo.k2d`. Other files/folders can be deleted, but note that Bracken needs the `library` and `taxonomy` folders to build its own database.
+
+We often use the default `Kraken2` database, built from the NCBI non-redundant `refseq` database. We could alternatively use the `GTDB`, which is a brave, fresh attempt at rationalising how taxonomy is applied (a much bigger topic, but a very good database, though it's identities don't always correspond to the NCBI one). Both databases are present on the HPC (see `ls /data/databases/{K,k}raken*`)
+
+But it is also possible to build a [custom](https://github.com/DerrickWood/kraken2/blob/master/docs/MANUAL.markdown#custom-databases) database, based on a different set of sequences using `kraken2-build`. 
+
+We can also use someone else's database as long as you have access to `opts.k2d`,`hash.k2d`, and `taxo.k2d`. We will try use the "`maxikraken`" database from the [Loman Lab](https://lomanlab.github.io/mockcommunity/mc_databases.html):
+
+```{bash, eval=FALSE}
+# same folder as the BT2 database
+cd $WRK/ref 
+mkdir maxikraken2_1903_140GB/ ; cd maxikraken2_1903_140GB/
+wget -c https://refdb.s3.climb.ac.uk/maxikraken2_1903_140GB/hash.k2d &
+wget https://refdb.s3.climb.ac.uk/maxikraken2_1903_140GB/opts.k2d &
+wget https://refdb.s3.climb.ac.uk/maxikraken2_1903_140GB/taxo.k2d &
+
+# for reference
+MAX=$WRK/ref/maxikraken2_1903_140GB
+# note there is no taxonomy / library dir - can't use this for Bracken
+
+```
 
 ### `Kraken2` parameters 
 
@@ -934,7 +956,7 @@ First we try our `$TEST` sample, but feel free to change `hit groups`, `base qua
 
 
 ```{bash, eval=FALSE}
-# module load kraken2/2.1.1
+# module load kraken2/2.1.1   # in case not already loaded!
 
 # set how many jobs we plan on using
 KR_threads=5
@@ -1034,7 +1056,7 @@ done
 
   (a) uses all the reads in the sample
   (b) tends to give a more accurate representation of what the community looks like, at (e.g.) the _species_-level
-  (c) **is the [recommended route](http://ccb.jhu.edu/data/kraken2_protocol/) by the developers of Kraken2 for community profiling**  
+  (c) as above - it's the [recommended route](http://ccb.jhu.edu/data/kraken2_protocol/) by the developers  
 
 Here, because `Bracken` is fast and relatively lightweight, `slurm` would be unnecessarily complicating things. We will make:
 
