@@ -903,7 +903,7 @@ Once we have our clean, host-free `F+R` reads, we assign identity to them as pre
 Note that there are many different programs for estimating community composition! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_... Instead, check [the literature](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=metagenomic+taxonomic+classifier+comparison&btnG=) for a comparison, have a look at a really nice comparison by [Walsh _et al._](https://link.springer.com/article/10.1186/s40168-018-0437-0) from 2018, or see similar articles from [2019 onwards](https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&linkname=pubmed_pubmed&from_uid=29554948).
 
 
-## identify reads with `Kracken2`
+## identify reads with `Kracken2` `r emo::ji("squid")`
 
 [`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
 
@@ -1059,7 +1059,7 @@ done
 ```
 
 
-## estimate abundances with `Bracken`
+## estimate abundances with `Bracken` `r emo::ji("plant")`
 
 `Kraken2` tried to assign an identity to each read, as best possible. If we knew that we had `1M` reads in our `$TEST` sample, we could count how many reads are for (e.g.) _Escherichia coli_, and decide that the relative abundance of _E. coli_ in the sample is simply `n_reads_E_coli / n_total_sample_reads`. This might work in some cases, but it would only count reads that were assigned _exactly_ to _E. coli_, and would miss all the _E. coli_ reads that could only be assigned to (e.g.) genus _Escherichia_, or class Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn't what you want. 
 
@@ -1228,6 +1228,159 @@ less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 <!-- for i in $(cat $INES/Materials/samples | head -1 ); -->
 <!--   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ; -->
 <!-- done -->
+
+
+
+## identify reads with `Kaiju` `r emo::ji("reptile")`
+
+It is nice when things work, but this is not always the case. Here we use [`Kaiju`](https://kaiju.binf.ku.dk), a program similar to `Kraken2` in that it uses sequences _patterns_ (`kmers`) and not just _alignments_, but `Kaiju` uses amino acid (`AA`) patterns rather than nucleotides. Our steps, and many of the concepts are similar to `Kraken2`, although note that there is no ``Bracken`-like step with `Kaiju`, although we will employ a similar reads threshold of `--c 10`, so that only assignments detected 10 or more times are kept. Note also that (depending on database and sample) `Kaiju` (~10~60 min) takes a lot longer to run than `Kraken2` (~2~8min), as it needs to translate all sequences into 6 different reading frames. 
+
+parameter | function
+ ----- | -----------------------------
+-e | allowed mismatches ( `def = 3` )
+-m | match length ( `def = 11` )
+-s | match score ( `def = 65` )
+-z | number of threads ( `def = 1` )
+
+
+First, we try a test example:
+
+```{bash, eval=FALSE}
+
+## setup kaiju  ==========================================
+    
+conda create -n kaijamie
+conda install -c bioconda kaiju
+conda activate kaijamie
+
+KaDB=/data/databases/kaiju/nr     # nr-euk very big..
+Ka_THREADS=10
+KaOUT=$WRK/4__kaiju
+mkdir $KaOUT
+# ulimit -s unlimited    # nasa mem trick
+
+
+## choose!
+#TEST=Q4T8
+#TEST=_N5_Nuria_S296_L001
+
+
+## test kaiju  ==========================================
+    
+time kaiju \
+-v \
+-z 5 \
+-e 3 \
+-m 11 \
+-s 65 \
+-t $KaDB/nodes.dmp \
+-f $KaDB/kaiju_db_nr.fmi \
+-i $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
+-j $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
+-o $KaOUT/${TEST}_kaiju
+
+less -S $KaOUT/${TEST}_kaiju
+
+KAI_C=$(grep -cE '^C' $KaOUT/${TEST}_kaiju )
+KAI_U=$(grep -cE '^U' $KaOUT/${TEST}_kaiju )
+echo "scale=3; $KAI_C / $KAI_U" | bc
+```
+
+
+And then, we create a `slurm` script to process the samples in serial, to avoid crashing the airplane due to our memory demands. note we also use `if-statements` to check whether or not the sample has been run before - this can be helpful to not needlessly duplicate work. We also count up our reads assigned : total reads.
+
+````{bash, eval=FALSE}
+
+## slurm-loop  kaiju   =======================================
+
+echo '#!/bin/bash
+
+#SBATCH --job-name=kaij_loop
+#SBATCH --output=kaij_loop.%j.txt
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=10
+#SBATCH --time=150:00
+
+LIST=$1
+IN=$2
+OUT=$3
+DB=$4
+THREADS=$5
+
+
+## one big slurm to for-loop over kaiju, thereby avoiding mem issues
+
+# operate over some list of sample names
+for i in $( cat $LIST );
+do
+  if [ -s $OUT/${i}*_kaiku ]
+  then
+    echo "## kaiju output for $i already in $OUT - stopping"
+  else
+    echo "## firing kaiju on $i"
+
+    time kaiju \
+    -v \
+    -e 3 \
+    -m 11 \
+    -s 65 \
+    -z $THREADS \
+    -t $DB/nodes.dmp \
+    -f $DB/kaiju_db_nr.fmi \
+    -i $IN/${i}_bt2decon_R1.fastq.gz \
+    -j $IN/${i}_bt2decon_R2.fastq.gz \
+    -o $OUT/${i}_kaiju
+
+    # count things
+    if [ -s $OUT/${i}*_kaiju ]
+    then
+      KAI_C=$(grep -cE '^C' $OUT/${i}_kaiju ) &
+      KAI_U=$(grep -cE '^U' $OUT/${i}_kaiju ) 
+      KAI_TOT=$(echo "$KAI_C + $KAI_U" | bc)
+      KAI_PC=$(echo "scale=2; ($KAI_C / $KAI_TOT)*100" | bc)
+      echo "## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read-pairs)  ------"
+    else
+      echo "## no output - kaiju for sample ${i} failed"
+    fi
+
+  fi
+    
+done
+
+
+' > $MAT/slurm_kaij_loop.sh  # **LIST** IN OUT DB THREADS
+
+
+## fire all in serial
+sbatch $MAT/slurm_kaij_loop.sh  $NUR/Materials/samples $KDOUT $KaOUT $KaDB $Ka_THREADS ;
+
+```
+
+
+Finally for `Kaiju`, we export all our samples into one combined table using `kaiju2table` to summarise to `-r species level`, including only those taxa seen (counted) more than `-c 10` times, and including the `-l  domain,phylum,class,order,family,genus,species` taxon levels. We will then process this table in `R`, as with (but different to...) `Kraken2`.
+
+```{bash, eval=FALSE}
+## we can redo the counting of taxonomic assignemnts outiside of the loop too:
+for i in $( cat $MAT/samples );
+do 
+  KAI_C=$(grep -cE '^C' $KaOUT/${i}_kaiju )
+  KAI_U=$(grep -cE '^U' $KaOUT/${i}_kaiju ) 
+  KAI_TOT=$(echo "$KAI_C + $KAI_U" | bc)
+  KAI_PC=$(echo "scale=2; ($KAI_C / $KAI_TOT)*100" | bc)
+  echo "## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read pairs)  ------"
+done
+
+
+## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
+
+less $KaOUT/total_kaiju__summary_species.tsv
+
+
+# step off to R!
+
+```
 
 ---
 
