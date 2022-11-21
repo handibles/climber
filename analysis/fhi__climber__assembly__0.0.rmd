@@ -1208,7 +1208,7 @@ mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/Krak
 ~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h '|s_' $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq  sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h '|s_' $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 # a last look
 less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
@@ -1302,6 +1302,7 @@ time kaiju \
 
 less -S $KaOUT/${TEST}_kaiju
 
+# check rates of assignment
 KAI_C=$(grep -cE '^C' $KaOUT/${TEST}_kaiju )
 KAI_U=$(grep -cE '^U' $KaOUT/${TEST}_kaiju )
 echo "scale=3; $KAI_C / $KAI_U" | bc

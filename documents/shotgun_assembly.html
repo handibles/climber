@@ -1511,7 +1511,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">18 Nov 2022, 13:48</h4>
+<h4 class="date">21 Nov 2022, 15:18</h4>
 
 </div>
 
@@ -2328,7 +2328,7 @@ done
 <p>Once we have our clean, host-free <code>F+R</code> reads, we assign identity to them as precisely as is reliable (<code>Kraken2</code>), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (<code>Bracken</code>). <strong>Using <code>Kraken2</code> and <code>Bracken</code> together is the <a href="http://ccb.jhu.edu/data/kraken2_protocol/">recommended route</a> by the developers of Kraken2 for community profiling</strong></p>
 <p>Note that there are many different programs for estimating community composition! Feel free to try alternate methods, but be wary of the small voice which suggests trying <em>everything</em>… Instead, check <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=metagenomic+taxonomic+classifier+comparison&amp;btnG=">the literature</a> for a comparison, have a look at a really nice comparison by <a href="https://link.springer.com/article/10.1186/s40168-018-0437-0">Walsh <em>et al.</em></a> from 2018, or see similar articles from <a href="https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&amp;linkname=pubmed_pubmed&amp;from_uid=29554948">2019 onwards</a>.</p>
 <div id="identify-reads-with-kracken2" class="section level2">
-<h2>identify reads with <code>Kracken2</code></h2>
+<h2>identify reads with <code>Kracken2</code> 🦑</h2>
 <p><a href="https://github.com/DerrickWood/kraken2"><code>Kraken2</code></a> was <a href="https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786"><em>not</em></a> designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (<code>k-mer</code> frequencies) in each read. It uses these patterns to find the “best” match in the reference database’ phylogenetic tree. If <code>Kraken2</code> finds multiple “best” matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting ‘stranded’ in the branches of your tree, with no good way of telling where they come from.</p>
 <div id="kraken2-databases" class="section level3">
 <h3><code>Kraken2</code> databases</h3>
@@ -2456,7 +2456,7 @@ done
 </div>
 </div>
 <div id="estimate-abundances-with-bracken" class="section level2">
-<h2>estimate abundances with <code>Bracken</code></h2>
+<h2>estimate abundances with <code>Bracken</code> 🌰</h2>
 <p><code>Kraken2</code> tried to assign an identity to each read, as best possible. If we knew that we had <code>1M</code> reads in our <code>$TEST</code> sample, we could count how many reads are for (e.g.) <em>Escherichia coli</em>, and decide that the relative abundance of <em>E. coli</em> in the sample is simply <code>n_reads_E_coli / n_total_sample_reads</code>. This might work in some cases, but it would only count reads that were assigned <em>exactly</em> to <em>E. coli</em>, and would miss all the <em>E. coli</em> reads that could only be assigned to (e.g.) genus <em>Escherichia</em>, or class Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn’t what you want.</p>
 <p><a href="https://github.com/jenniferlu717/Bracken"><code>Bracken</code></a> <a href="https://www.nature.com/articles/s41596-022-00738-y">addresses this problem</a> by using <a href="https://peerj.com/articles/cs-104/">Bayesian re-estimation</a> to estimate, using the distribution of all reads in the reference phylogenetic tree, what the “real” abundances were for all (e.g.) <em>species</em> in the original sample. This:</p>
 <ol style="list-style-type: lower-alpha">
@@ -2498,8 +2498,28 @@ ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d
 ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
 ln -s $K2REFDIR/library $WRK/ref/library  
 ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
-time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &amp;
 cd ~
+
+
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=brack_db
+#SBATCH --njobs=35
+#SBATCH --output=brack_db.%j.txt
+
+#SBATCH --time=240:00
+
+BRDB_DIR=$1
+BRDB_KMER=$2
+BRDB_LENG=$3
+BRDB_THREADS=$4
+
+## not tested!
+time ./bracken-build -d $BRDB_DIR -k $BRDB_KMER -l $BRDB_LENG -t $BRDB_THREADS
+
+&#39; &gt; $MAT/slurm_brak_db.sh # dir kmer length threads
+
+sbatch slurm_brak_db.sh $MSDAT/ref/kraken2 $BR_kmer $BR_leng 20
 </code></pre>
 </div>
 <div id="run-bracken" class="section level3">
@@ -2574,22 +2594,22 @@ combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/fhi_redch_krakenSt
 </tr>
 </tbody>
 </table>
-<p><strong>NB:</strong> because we use the <code>--report-zero-counts</code> option in <code>Kraken2</code>, this will have <em>all</em> the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step <em>once</em> per project.</p>
+<p><strong>NB:</strong> because we used the <code>--report-zero-counts</code> option in <code>Kraken2</code> for the <strong>test report</strong>, this will have <em>all</em> the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step <em>once</em> per project. If you lack this test report, simply run <code>Kraken2</code> on any sample, using the <code>--report-zero-counts</code> flag.</p>
 <p>Note also that some lifeforms, i.e. viri, don’t have the same taxonomic ranks as us, which can be problematic for the taxonomic table, as the columns will suddenly mean different things between types of life - this is simplified by sorting the data later but it can still be an issue. (if <code>--report-zero-counts</code> was omitted, just repeat a single <code>Kraken2</code> step above and convert the output.)</p>
 <pre class="bash"><code># have a luk at the Kraken2 output - note no one line has all the info on D/P/C/O/F/G/S...
-less -S $KROUT/${TEST}_kraken_report
+less -S $KROUT/${TEST}_test_kraken_report
 
 # download KrakenTools to your ~
 mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/KrakenTools.git ; cd $HOME
 
 # KrakenTools: convert to mpa stylee
-~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}_kraken_mpa
+~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 # a last look
-less -S $KROUT/${TEST}_kraken_taxonomy.tsv
+less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 </code></pre>
 </div>
 </div>
@@ -2619,6 +2639,162 @@ less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv</code></pre>
 <!-- for i in $(cat $INES/Materials/samples | head -1 ); -->
 <!--   do kreport2mpa.py -r {} -o $KROUT/${i}_bracken.mpa ::: $KROUT/*report* > $KROUT/fhi_redch_bragglers ; -->
 <!-- done -->
+</div>
+<div id="identify-reads-with-kaiju" class="section level2">
+<h2>identify reads with <code>Kaiju</code> 🦎</h2>
+<p>It is nice when things work, but this is not always the case. Here we use <a href="https://kaiju.binf.ku.dk"><code>Kaiju</code></a>, a program similar to <code>Kraken2</code> in that it uses sequences <em>patterns</em> (<code>kmers</code>) and not just <em>alignments</em>, but <code>Kaiju</code> uses amino acid (<code>AA</code>) patterns rather than nucleotides. Our steps, and many of the concepts are similar to <code>Kraken2</code>, although note that there is no `<code>Bracken</code>-like step with <code>Kaiju</code>, although we will employ a similar reads threshold of <code>--c 10</code>, so that only assignments detected 10 or more times are kept. Note also that (depending on database and sample) <code>Kaiju</code> (<sub>10</sub>60 min) takes a lot longer to run than <code>Kraken2</code> (<sub>2</sub>8min), as it needs to translate all sequences into 6 different reading frames.</p>
+<table>
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>-e</td>
+<td>allowed mismatches ( <code>def = 3</code> )</td>
+</tr>
+<tr class="even">
+<td>-m</td>
+<td>match length ( <code>def = 11</code> )</td>
+</tr>
+<tr class="odd">
+<td>-s</td>
+<td>match score ( <code>def = 65</code> )</td>
+</tr>
+<tr class="even">
+<td>-z</td>
+<td>number of threads ( <code>def = 1</code> )</td>
+</tr>
+</tbody>
+</table>
+<p>First, we try a test example:</p>
+<pre class="bash"><code>
+## setup kaiju  ==========================================
+    
+conda create -n kaijamie
+conda install -c bioconda kaiju
+conda activate kaijamie
+
+KaDB=/data/databases/kaiju/nr     # nr-euk very big..
+Ka_THREADS=10
+KaOUT=$WRK/4__kaiju
+mkdir $KaOUT
+# ulimit -s unlimited    # nasa mem trick
+
+
+## choose!
+#TEST=Q4T8
+#TEST=_N5_Nuria_S296_L001
+
+
+## test kaiju  ==========================================
+    
+time kaiju \
+-v \
+-z 5 \
+-e 3 \
+-m 11 \
+-s 65 \
+-t $KaDB/nodes.dmp \
+-f $KaDB/kaiju_db_nr.fmi \
+-i $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
+-j $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
+-o $KaOUT/${TEST}_kaiju
+
+less -S $KaOUT/${TEST}_kaiju
+
+# check rates of assignment
+KAI_C=$(grep -cE &#39;^C&#39; $KaOUT/${TEST}_kaiju )
+KAI_U=$(grep -cE &#39;^U&#39; $KaOUT/${TEST}_kaiju )
+echo &quot;scale=3; $KAI_C / $KAI_U&quot; | bc</code></pre>
+<p>And then, we create a <code>slurm</code> script to process the samples in serial, to avoid crashing the airplane due to our memory demands. note we also use <code>if-statements</code> to check whether or not the sample has been run before - this can be helpful to not needlessly duplicate work. We also count up our reads assigned : total reads.</p>
+<pre class="bash"><code>
+## slurm-loop  kaiju   =======================================
+
+echo &#39;#!/bin/bash
+
+#SBATCH --job-name=kaij_loop
+#SBATCH --output=kaij_loop.%j.txt
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=10
+#SBATCH --time=150:00
+
+LIST=$1
+IN=$2
+OUT=$3
+DB=$4
+THREADS=$5
+
+
+## one big slurm to for-loop over kaiju, thereby avoiding mem issues
+
+# operate over some list of sample names
+for i in $( cat $LIST );
+do
+  if [ -s $OUT/${i}*_kaiku ]
+  then
+    echo &quot;## kaiju output for $i already in $OUT - stopping&quot;
+  else
+    echo &quot;## firing kaiju on $i&quot;
+
+    time kaiju \
+    -v \
+    -e 3 \
+    -m 11 \
+    -s 65 \
+    -z $THREADS \
+    -t $DB/nodes.dmp \
+    -f $DB/kaiju_db_nr.fmi \
+    -i $IN/${i}_bt2decon_R1.fastq.gz \
+    -j $IN/${i}_bt2decon_R2.fastq.gz \
+    -o $OUT/${i}_kaiju
+
+    # count things
+    if [ -s $OUT/${i}*_kaiju ]
+    then
+      KAI_C=$(grep -cE &#39;^C&#39; $OUT/${i}_kaiju ) &amp;
+      KAI_U=$(grep -cE &#39;^U&#39; $OUT/${i}_kaiju ) 
+      KAI_TOT=$(echo &quot;$KAI_C + $KAI_U&quot; | bc)
+      KAI_PC=$(echo &quot;scale=2; ($KAI_C / $KAI_TOT)*100&quot; | bc)
+      echo &quot;## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read-pairs)  ------&quot;
+    else
+      echo &quot;## no output - kaiju for sample ${i} failed&quot;
+    fi
+
+  fi
+    
+done
+
+
+&#39; &gt; $MAT/slurm_kaij_loop.sh  # **LIST** IN OUT DB THREADS
+
+
+## fire all in serial
+sbatch $MAT/slurm_kaij_loop.sh  $NUR/Materials/samples $KDOUT $KaOUT $KaDB $Ka_THREADS ;
+</code></pre>
+<p>Finally for <code>Kaiju</code>, we export all our samples into one combined table using <code>kaiju2table</code> to summarise to <code>-r species level</code>, including only those taxa seen (counted) more than <code>-c 10</code> times, and including the <code>-l  domain,phylum,class,order,family,genus,species</code> taxon levels. We will then process this table in <code>R</code>, as with (but different to…) <code>Kraken2</code>.</p>
+<pre class="bash"><code>## we can redo the counting of taxonomic assignemnts outiside of the loop too:
+for i in $( cat $MAT/samples );
+do 
+  KAI_C=$(grep -cE &#39;^C&#39; $KaOUT/${i}_kaiju )
+  KAI_U=$(grep -cE &#39;^U&#39; $KaOUT/${i}_kaiju ) 
+  KAI_TOT=$(echo &quot;$KAI_C + $KAI_U&quot; | bc)
+  KAI_PC=$(echo &quot;scale=2; ($KAI_C / $KAI_TOT)*100&quot; | bc)
+  echo &quot;## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read pairs)  ------&quot;
+done
+
+
+## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
+
+less $KaOUT/total_kaiju__summary_species.tsv
+
+
+# step off to R!
+</code></pre>
 <hr />
 </div>
 </div>
