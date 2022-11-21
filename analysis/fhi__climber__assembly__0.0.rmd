@@ -1105,8 +1105,29 @@ ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d
 ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
 ln -s $K2REFDIR/library $WRK/ref/library  
 ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
-time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &
 cd ~
+
+
+echo '#!/bin/bash
+
+#SBATCH --job-name=brack_db
+#SBATCH --njobs=35
+#SBATCH --output=brack_db.%j.txt
+
+#SBATCH --time=240:00
+
+BRDB_DIR=$1
+BRDB_KMER=$2
+BRDB_LENG=$3
+BRDB_THREADS=$4
+
+## not tested!
+time ./bracken-build -d $BRDB_DIR -k $BRDB_KMER -l $BRDB_LENG -t $BRDB_THREADS
+
+' > $MAT/slurm_brak_db.sh # dir kmer length threads
+
+sbatch slurm_brak_db.sh $MSDAT/ref/kraken2 $BR_kmer $BR_leng 20
+
 
 ```
 
@@ -1170,7 +1191,7 @@ step    | effect
 `sed 's/|/\t/g`  |  swap `"|"` for `"\t"`
 
 
-**NB:** because we use the `--report-zero-counts` option in `Kraken2`, this will have _all_ the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step _once_ per project. 
+**NB:** because we used the `--report-zero-counts` option in `Kraken2` for the  **test report**, this will have _all_ the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step _once_ per project. If you lack this test report, simply  run `Kraken2` on any sample, using the `--report-zero-counts` flag.
 
 Note also that some lifeforms, i.e. viri, don't have the same taxonomic ranks as us, which can be problematic for the taxonomic table, as the columns will suddenly mean different things between types of life - this is simplified by sorting the data later but it can still be an issue. (if `--report-zero-counts` was omitted, just repeat a single `Kraken2` step above and convert the output.)
 
@@ -1178,13 +1199,13 @@ Note also that some lifeforms, i.e. viri, don't have the same taxonomic ranks as
 
 ```{bash, eval=FALSE}
 # have a luk at the Kraken2 output - note no one line has all the info on D/P/C/O/F/G/S...
-less -S $KROUT/${TEST}_kraken_report
+less -S $KROUT/${TEST}_test_kraken_report
 
 # download KrakenTools to your ~
 mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/KrakenTools.git ; cd $HOME
 
 # KrakenTools: convert to mpa stylee
-~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}_kraken_mpa
+~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
 grep -h '|s_' $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
@@ -1289,7 +1310,7 @@ echo "scale=3; $KAI_C / $KAI_U" | bc
 
 And then, we create a `slurm` script to process the samples in serial, to avoid crashing the airplane due to our memory demands. note we also use `if-statements` to check whether or not the sample has been run before - this can be helpful to not needlessly duplicate work. We also count up our reads assigned : total reads.
 
-````{bash, eval=FALSE}
+```{bash, eval=FALSE}
 
 ## slurm-loop  kaiju   =======================================
 
