@@ -1511,7 +1511,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">21 Nov 2022, 15:03</h4>
+<h4 class="date">21 Nov 2022, 15:11</h4>
 
 </div>
 
@@ -2456,7 +2456,7 @@ done
 </div>
 </div>
 <div id="estimate-abundances-with-bracken" class="section level2">
-<h2>estimate abundances with <code>Bracken</code> 🌰</h2>
+<h2>estimate abundances with <code>Bracken</code> 🌵</h2>
 <p><code>Kraken2</code> tried to assign an identity to each read, as best possible. If we knew that we had <code>1M</code> reads in our <code>$TEST</code> sample, we could count how many reads are for (e.g.) <em>Escherichia coli</em>, and decide that the relative abundance of <em>E. coli</em> in the sample is simply <code>n_reads_E_coli / n_total_sample_reads</code>. This might work in some cases, but it would only count reads that were assigned <em>exactly</em> to <em>E. coli</em>, and would miss all the <em>E. coli</em> reads that could only be assigned to (e.g.) genus <em>Escherichia</em>, or class Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn’t what you want.</p>
 <p><a href="https://github.com/jenniferlu717/Bracken"><code>Bracken</code></a> <a href="https://www.nature.com/articles/s41596-022-00738-y">addresses this problem</a> by using <a href="https://peerj.com/articles/cs-104/">Bayesian re-estimation</a> to estimate, using the distribution of all reads in the reference phylogenetic tree, what the “real” abundances were for all (e.g.) <em>species</em> in the original sample. This:</p>
 <ol style="list-style-type: lower-alpha">
@@ -2606,10 +2606,10 @@ mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/Krak
 ~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq  sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 # a last look
-less -S $KROUT/${TEST}_kraken_taxonomy.tsv
+less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 </code></pre>
 </div>
 </div>

@@ -1208,10 +1208,10 @@ mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/Krak
 ~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h '|s_' $KROUT/${TEST}_kraken_mpa_temp1 | cut -f 1 | sort | uniq  sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h '|s_' $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq  sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 # a last look
-less -S $KROUT/${TEST}_kraken_taxonomy.tsv
+less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 ```
 
