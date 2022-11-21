@@ -22,12 +22,12 @@ Metagenomic shotgun assembly covers the following steps:
   4. Metagenomic Community profiling - `Kraken2` & `Bracken`
 
 
-We also move through <a href="documents/data_to_R.html">`importing output from _Kaiju_ or _Kraken2+Bracken_` into _R_<\a>. This awkward step is finished, but not pretty.
+We also move through <a href="documents/data_to_R.html">importing output from `Kaiju` or `Kraken2+Bracken` into `R`<\a>. This awkward step is finished, but not pretty.
 
-  5. importing data into `R` - 
+  * importing data into `R` - generating a count matrix, taxonomic table, and phyloseq object from metagenomic data
 
 
-The metagenomic workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished, so not currently up to date with the above).
+This metagenomic workflow is also present in simple, `raw code` (the two workflows will be unified once writing is finished, so not currently up to date with the above).
 
   * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly`</a> - as above, less explanation, **incomplete**
 

@@ -1534,7 +1534,7 @@ describe stack
   b. reorganise it for `Kaiju`
 3. save this &quot;basic&quot; output as `.tsv` text files, that can be used in e.g. excel (if you like excel)
 4. export this output to [`phyloseq`](http://joey711.github.io/phyloseq/install.html), a `R` library _specifically_ for doing microbial community ecology, designed to keep all the community data in one place, and make using `R` easier for microbiologists, virologists, mycologists &amp; co. </code></pre>
-<p><strong>Note:</strong> - it’s the same idea for <code>Kraken2-Bracken</code> and for <code>Kaiju</code>, except that step 2 is different (because <code>Bracken</code> output is different from <code>Kaiju</code> output). Note also that we’re starting this in <code>R</code>, using the outputs from the <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling">first page</a>.</p>
+<p><strong>Note:</strong> - it’s the same idea for <code>Kraken2-Bracken</code> and for <code>Kaiju</code>, except that step 2 is different (because <code>Bracken</code> output is different from <code>Kaiju</code> output). Note also that we’re starting this in <code>R</code>, using the outputs from the <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling">first page</a>. Note finally that in some places, libraries such as ggplot have been hashed-out due to issues crossing over between computers <code>:\</code></p>
 <div id="a.-import-data-to-r-and-re-arrange-for-kraken2bracken." class="section level2">
 <h2>1-2a. Import data to R, and re-arrange for <code>Kraken2+Bracken</code>.</h2>
 <p>Point to output file, and import</p>
@@ -1640,8 +1640,6 @@ describe stack
 <div id="b-re-arrange-for-kaiju" class="section level2">
 <h2>1-2.b Re-arrange for <code>Kaiju</code></h2>
 <p>In case we have outputs for <code>Kaiju</code>: point to output file, and then manipulate that data:</p>
-<pre><code>&lt;!-- # ## fix sample names - NURIA --&gt;
-&lt;!-- # kaidat$file &lt;- gsub(&quot;.*/_(N.*)_Nuria.*&quot;, &quot;\\1&quot;, kaidat$file) --&gt;</code></pre>
 <pre class="r"><code>## find it somewhere sensible   ------------
 
   mfile=&quot;../input/fhi__redch__kaiju_speciesab.tsv&quot;
