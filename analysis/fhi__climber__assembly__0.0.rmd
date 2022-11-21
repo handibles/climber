@@ -1404,6 +1404,11 @@ less $KaOUT/total_kaiju__summary_species.tsv
 
 ```
 
+# Next Step
+
+There are many things that we can do to change the above, but once happy, try [bringing your data into `R` for more processing!](./documents/data_to_R.html)
+
+
 ---
 
 # Reading / Reference
