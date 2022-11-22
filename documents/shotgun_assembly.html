@@ -1493,7 +1493,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">22 Nov 2022, 12:14</h4>
+<h4 class="date">22 Nov 2022, 12:48</h4>
 
 </div>
 
@@ -2685,16 +2685,18 @@ database from them using <code>bowtie-build</code>.</p>
 <div id="microbiome-community-profiling" class="section level1">
 <h1>4 - Microbiome Community Profiling</h1>
 <p>Once we have our clean, host-free <code>F+R</code> reads, we assign
-identity to them as precisely as is reliable (<code>Kraken2</code>), and
-from the available identities of those reads, try to re-assemble the
-makeup of the microbial community they came from (<code>Bracken</code>).
-<strong>Using <code>Kraken2</code> and <code>Bracken</code> together is
-the <a href="http://ccb.jhu.edu/data/kraken2_protocol/">recommended
-route</a> by the developers of Kraken2 for community
-profiling</strong></p>
-<p>Note that there are many different programs for estimating community
-composition! Feel free to try alternate methods, but be wary of the
-small voice which suggests trying <em>everything</em>… Instead, check <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=metagenomic+taxonomic+classifier+comparison&amp;btnG=">the
+identity to them as precisely as is reliable. We can try do this using
+the nucleotide sequences to be as exact as we can
+(<code>Kraken2</code>), and from the available identities of those
+reads, try to re-assemble the makeup of the microbial community they
+came from (<code>Bracken</code>). Alternatively, we could translate
+those nucleotide sequences into all 6 reading frames, and try
+reconstruct the microbial community based on broader, more conserved
+protein-sequence similarities.</p>
+<p>However, there are many, many different approaches, and programs, for
+estimating community composition! Feel free to try alternate methods,
+but be wary of the small voice which suggests trying
+<em>everything</em>… Instead, check <a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=metagenomic+taxonomic+classifier+comparison&amp;btnG=">the
 literature</a> for a comparison, have a look at a really nice comparison
 by <a href="https://link.springer.com/article/10.1186/s40168-018-0437-0">Walsh
 <em>et al.</em></a> from 2018, or see similar articles from <a href="https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&amp;linkname=pubmed_pubmed&amp;from_uid=29554948">2019
@@ -2715,6 +2717,10 @@ have lots of novel taxa in your dataset, or a poor reference database,
 or sick data, this can lead to a large amount of your reads getting
 ‘stranded’ in the branches of your tree, with no good way of telling
 where they come from.</p>
+<p><strong>Note: using <code>Kraken2</code> and <code>Bracken</code>
+together is the <a href="http://ccb.jhu.edu/data/kraken2_protocol/">recommended route</a>
+by the developers of Kraken2 for community profiling</strong> (there is
+no equivalent step for <code>Kaiju</code>).</p>
 <div id="kraken2-databases" class="section level3">
 <h3><code>Kraken2</code> databases</h3>
 <p>If setting up <code>Kracken2</code>, you’ll be directed to build a

@@ -894,16 +894,16 @@ If we wanted to achieve the same things with `KneadData`, we could provide simil
 
 # 4 - Microbiome Community Profiling
 
-Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). **Using `Kraken2` and `Bracken` together is the [recommended route](http://ccb.jhu.edu/data/kraken2_protocol/) by the developers of Kraken2 for community profiling**  
+Once we have our clean, host-free `F+R` reads, we assign identity to them as precisely as is reliable. We can try do this using the nucleotide sequences to be as exact as we can (`Kraken2`), and from the available identities of those reads, try to re-assemble the makeup of the microbial community they came from (`Bracken`). Alternatively, we could translate those nucleotide sequences into all 6 reading frames, and try reconstruct the microbial community based on broader, more conserved protein-sequence similarities. 
 
-
-Note that there are many different programs for estimating community composition! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_... Instead, check [the literature](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=metagenomic+taxonomic+classifier+comparison&btnG=) for a comparison, have a look at a really nice comparison by [Walsh _et al._](https://link.springer.com/article/10.1186/s40168-018-0437-0) from 2018, or see similar articles from [2019 onwards](https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&linkname=pubmed_pubmed&from_uid=29554948).
+However, there are many, many different approaches, and programs, for estimating community composition! Feel free to try alternate methods, but be wary of the small voice which suggests trying _everything_... Instead, check [the literature](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=metagenomic+taxonomic+classifier+comparison&btnG=) for a comparison, have a look at a really nice comparison by [Walsh _et al._](https://link.springer.com/article/10.1186/s40168-018-0437-0) from 2018, or see similar articles from [2019 onwards](https://pubmed.ncbi.nlm.nih.gov/?filter=years.2019-2022&linkname=pubmed_pubmed&from_uid=29554948).
 
 
 ## identify reads with `Kracken2` `r emo::ji("squid")`
 
 [`Kraken2`](https://github.com/DerrickWood/kraken2) was [_not_](https://github.com/DerrickWood/kraken2/issues/32#issuecomment-410582786) designed to estimate community profiles! It was designed to identify reads, based on the sequences patterns (`k-mer` frequencies) in each read. It uses these patterns to find the "best" match in the reference database' phylogenetic tree. If `Kraken2` finds multiple "best" matches for a read and cannot decide who the read belongs to, it will check the phylogenetic tree, and instead assign that read to the most recent common ancestor of all those best matches (providing the match to the recent ancestor is a good match). If you have lots of novel taxa in your dataset, or a poor reference database, or sick data, this can lead to a large amount of your reads getting 'stranded' in the branches of your tree, with no good way of telling where they come from.
 
+**Note: using `Kraken2` and `Bracken` together is the [recommended route](http://ccb.jhu.edu/data/kraken2_protocol/) by the developers of Kraken2 for community profiling** (there is no equivalent step for `Kaiju`).  
 
 ### `Kraken2` databases
 
