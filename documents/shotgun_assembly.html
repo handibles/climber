@@ -1493,7 +1493,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">22 Nov 2022, 12:48</h4>
+<h4 class="date">22 Nov 2022, 14:46</h4>
 
 </div>
 
@@ -1551,8 +1551,8 @@ methods used here. For that, check the <em>References</em> section at
 the bottom of the page. In particular, importing data, and analysis of
 communities, in <code>R</code> will need their own documents:</p>
 <ul>
-<li><p><a href="./documents/data_to_R.html">importing data to
-<code>R</code> 💻</a></p></li>
+<li><p><a href="./data_to_R.html">importing data to <code>R</code>
+💻</a></p></li>
 <li><p>analysing microbial communities in R: this is a big topic -
 consider the links below (and bottom of page):</p>
 <ul>
@@ -2840,62 +2840,78 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 <!-- First run requires a load to shared mem step, which takes time  -  to do this, possibly omit the memory mapping step. GOing to omit entirely as mem not an issue, yet -->
 <!-- # for ROUND 1, paired-mode onl y is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
 <!-- # can remember why we included the zero counts...but we did, intentionally -->
-<p>If that works, scale it for <code>slurm</code>:</p>
+<p>If that works, scale it for <code>slurm</code>! For
+<code>BowTie2</code>, we sent all samples to <code>sbatch</code> at the
+same time, to all be processed at the same time (i.e. in parallel).
+<code>Kraken2</code> is very fast, but can also have a very large
+database (depending on what type/version you are using), which can cause
+problems with enough memory. Instead of doing it in parallel, we write a
+script that will process each sample, one after the other (in serial).
+This is almost as fast with <code>Kraken2</code>, but avoids huge memory
+requirements.</p>
+<p>We also use a small <code>if</code> statement, to avoid re-running
+samples unnecessarily, structured as
+<code>if [ $SAMPLE.output exists ]; then skip re-running ; else run Kraken2 on $SAMPLE ; fi</code>.
+More info on how this works can be found <a href="https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php">here</a></p>
 <pre class="bash"><code>echo &#39;#!/bin/bash
 
-#SBATCH --job-name=krak2_filt
-#SBATCH --output=krak2_filt.%j.txt
+#SBATCH --job-name=krak2_loop
+#SBATCH --output=krak2_loop.%j.txt
+#SBATCH --ntasks=10
+#SBATCH --time=180:00
 
-#SBATCH --time=15:00
-
-SAMPLE=$1
+LIST=$1
 IN=$2
 OUT=$3
 DB=$4
 THREADS=$5
 
-if [ -s $OUT/${SAMPLE}*_kraken_report ]
+## one big slurm to for-loop over kraken (which is fast to iterate)
+## thereby avoiding mem issues
 
-then
-  echo &quot;## sample $SAMPLE in $OUT - stopping&quot;
+for i in $( cat $LIST );
+do
+  if [ -s $OUT/${i}*_kraken_report ]
+  then
+    echo &quot;## krak2 output for $i already in $OUT - stopping&quot;
+  else
+    echo &quot;## firing krak2 on $i&quot;
 
+    time kraken2 --db $DB \
+    $IN/${i}_bt2decon_R1.fastq.gz \
+    $IN/${i}_bt2decon_R2.fastq.gz \
+    --paired \
+    --confidence 0.5 \
+    --minimum-hit-groups 5 \
+    --minimum-base-quality 20 \
+    --threads $THREADS \
+    --gzip-compressed \
+    --report $OUT/${i}_kraken_report \
+    --unclassified-out /dev/null/${i}_kraken_unclass# \
+    --output /dev/null/${i}_kraken_output
 
-else
-  echo &quot;## firing krak2 on $SAMPLE&quot;
+  fi
 
-  time kraken2 --db $DB \
-  $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
-  $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
-  --paired \
-  --confidence 0.5 \
-  --minimum-hit-groups 5 \
-  --minimum-base-quality 20 \
-  --threads $THREADS \
-  --gzip-compressed \
-  --report $OUT/${SAMPLE}_kraken_report \
-  --unclassified-out /dev/null/${SAMPLE}_kraken_unclass# \
-  --output /dev/null/${SAMPLE}_kraken_output
-
-fi
-
-&#39; &gt; $MAT/slurm_krak2.sh  # SAMPLE IN OUT DB THREADS
+done&#39; &gt; $MAT/slurm_krak2_loop.sh
 </code></pre>
-<p>Again, we use a little <code>for-loop</code> to give each sample to
-<code>slurm</code> (<code>$i</code>), making sure to pass it the dir for
-the filtered input data (<code>$KDOUT</code>), the output folder for
-<code>Kraken2</code> (<code>$KROUT</code>), and the location of the
-Kraken2 DB (<code>$K2REFDIR</code>).</p>
-<p><!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; --></p>
-<pre class="bash"><code># check first using $TEST
-sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
+<p>Because the <code>for-loop</code> is contained in the
+<code>slurm</code> script above, instead of a <code>for-loop</code> we
+pass <code>sbatch</code> a list of samples (stored in
+<code>$MAT/samples</code>), the dir for the filtered input data
+(<code>$KDOUT</code>), the output folder for <code>Kraken2</code>
+(<code>$KROUT</code>), the location of the Kraken2 DB we use
+(<code>$K2REFDIR</code>), and the number of processors
+(<code>$KR_threads</code>).</p>
+<!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; -->
+<pre class="bash"><code># pass all to slurm
+sbatch $MAT/slurm_krak2_loop.sh $MAT/samples $KDOUT $KROUT $K2REFDIR $KR_threads
 
-# pass all to slurm
-for i in $( cat $MAT/samples );
+# progress is in the slurm txt file
+cat krak2_loop.*.txt
 
-  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
-
-done
- </code></pre>
+# have a look at the outputs once finished
+less -S $KROUT/${TEST}_kraken_report
+</code></pre>
 </div>
 </div>
 <div id="estimate-abundances-with-bracken" class="section level2">
@@ -3391,7 +3407,7 @@ lk $MAT
 <p>There are many things that we can do to change the above, but once
 happy:</p>
 <ul>
-<li>try <a href="./documents/data_to_R.html">bringing your data into
+<li>try <a href="./data_to_R.html">bringing your data into
 <code>R</code> to start exploring!</a></li>
 </ul>
 <hr />
@@ -3419,6 +3435,10 @@ and variables</a></p>
 <blockquote>
 <p><a href="https://robinwinslow.uk/regex">regular expressions
 (<code>regex</code>)</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php">`if-statements
+- controlling what happens</a></p>
 </blockquote>
 <blockquote>
 <p><a href="https://linuxize.com/post/bash-for-loop/"><code>for-loop</code>s -

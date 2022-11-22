@@ -60,7 +60,7 @@ Please note this page is still being written. If something is missing, unclear, 
 <!-- , and the intro document (**Nov 2022: not yet written**). -->
 This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page. In particular, importing data, and analysis of communities, in `R` will need their own documents:
 
-  * [importing data to `R` `r emo::ji("computer")`](./documents/data_to_R.html)
+  * [importing data to `R` `r emo::ji("computer")`](./data_to_R.html)
   
   * analysing microbial communities in R: this is a big topic - consider the links below (and bottom of page):
   
@@ -993,66 +993,68 @@ $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 <!-- # for ROUND 1, paired-mode onl y is fine, as some disagreement about handling btw forum and manual - possibly has been updated in latter. -->
 <!-- # can remember why we included the zero counts...but we did, intentionally -->
 
-If that works, scale it for `slurm`:
+If that works, scale it for `slurm`! For `BowTie2`, we sent all samples to `sbatch` at the same time, to all be processed at the same time (i.e. in parallel). `Kraken2` is very fast, but can also have a very large database (depending on what type/version you are using), which can cause problems with enough memory. Instead of doing it in parallel, we write a script that will process each sample, one after the other (in serial). This is almost as fast with `Kraken2`, but avoids huge memory requirements.
+
+We also use a small `if` statement, to avoid re-running samples unnecessarily, structured as `if [ $SAMPLE.output exists ]; then skip re-running ; else run Kraken2 on $SAMPLE ; fi`. More info on how this works can be found [here](https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php)
 
 ```{bash, eval=FALSE}
 echo '#!/bin/bash
 
-#SBATCH --job-name=krak2_filt
-#SBATCH --output=krak2_filt.%j.txt
+#SBATCH --job-name=krak2_loop
+#SBATCH --output=krak2_loop.%j.txt
+#SBATCH --ntasks=10
+#SBATCH --time=180:00
 
-#SBATCH --time=15:00
-
-SAMPLE=$1
+LIST=$1
 IN=$2
 OUT=$3
 DB=$4
 THREADS=$5
 
-if [ -s $OUT/${SAMPLE}*_kraken_report ]
+## one big slurm to for-loop over kraken (which is fast to iterate)
+## thereby avoiding mem issues
 
-then
-  echo "## sample $SAMPLE in $OUT - stopping"
+for i in $( cat $LIST );
+do
+  if [ -s $OUT/${i}*_kraken_report ]
+  then
+    echo "## krak2 output for $i already in $OUT - stopping"
+  else
+    echo "## firing krak2 on $i"
 
+    time kraken2 --db $DB \
+    $IN/${i}_bt2decon_R1.fastq.gz \
+    $IN/${i}_bt2decon_R2.fastq.gz \
+    --paired \
+    --confidence 0.5 \
+    --minimum-hit-groups 5 \
+    --minimum-base-quality 20 \
+    --threads $THREADS \
+    --gzip-compressed \
+    --report $OUT/${i}_kraken_report \
+    --unclassified-out /dev/null/${i}_kraken_unclass# \
+    --output /dev/null/${i}_kraken_output
 
-else
-  echo "## firing krak2 on $SAMPLE"
+  fi
 
-  time kraken2 --db $DB \
-  $IN/${SAMPLE}_bt2decon_R1.fastq.gz \
-  $IN/${SAMPLE}_bt2decon_R2.fastq.gz \
-  --paired \
-  --confidence 0.5 \
-  --minimum-hit-groups 5 \
-  --minimum-base-quality 20 \
-  --threads $THREADS \
-  --gzip-compressed \
-  --report $OUT/${SAMPLE}_kraken_report \
-  --unclassified-out /dev/null/${SAMPLE}_kraken_unclass# \
-  --output /dev/null/${SAMPLE}_kraken_output
-
-fi
-
-' > $MAT/slurm_krak2.sh  # SAMPLE IN OUT DB THREADS
+done' > $MAT/slurm_krak2_loop.sh
 
 ```
 
+Because the `for-loop` is contained in the `slurm` script above, instead of a `for-loop` we pass `sbatch` a list of samples (stored in `$MAT/samples`), the dir for the filtered input data (`$KDOUT`), the output folder for `Kraken2` (`$KROUT`), the location of the Kraken2 DB we use (`$K2REFDIR`), and the number of processors (`$KR_threads`).
 
-Again, we use a little `for-loop` to give each sample to `slurm` (`$i`), making sure to pass it the dir for the filtered input data (`$KDOUT`), the output folder for `Kraken2` (`$KROUT`), and the location of the Kraken2 DB (`$K2REFDIR`). 
-
-  <!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; -->
+<!-- do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $MSDAT/ref $KR_threads ; -->
 
 ```{bash, eval=FALSE}
-# check first using $TEST
-sbatch $MAT/slurm_krak2.sh $TEST $KDOUT $KROUT $K2REFDIR $KR_threads 
-
 # pass all to slurm
-for i in $( cat $MAT/samples );
+sbatch $MAT/slurm_krak2_loop.sh $MAT/samples $KDOUT $KROUT $K2REFDIR $KR_threads
 
-  do sbatch $MAT/slurm_krak2.sh $i $KDOUT $KROUT $K2REFDIR $KR_threads ;
+# progress is in the slurm txt file
+cat krak2_loop.*.txt
 
-done
- 
+# have a look at the outputs once finished
+less -S $KROUT/${TEST}_kraken_report
+
 ```
 
 
@@ -1467,7 +1469,7 @@ lk $MAT
 ## towards analysis in `R` `r emo::ji("computer")`
 There are many things that we can do to change the above, but once happy: 
 
-  * try [bringing your data into `R` to start exploring!](./documents/data_to_R.html)
+  * try [bringing your data into `R` to start exploring!](./data_to_R.html)
 
 
 ---
@@ -1485,6 +1487,8 @@ There are many things that we can do to change the above, but once happy:
 > [`glomming`](https://linuxhint.com/bash_globbing_tutorial/)
 
 > [regular expressions (`regex`)](https://robinwinslow.uk/regex)
+
+> [`if-statements - controlling what happens](https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php)
 
 > [`for-loop`s - first step in `bash` superpowers](https://linuxize.com/post/bash-for-loop/)
 
