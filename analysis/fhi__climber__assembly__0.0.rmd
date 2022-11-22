@@ -26,7 +26,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 <!-- ``` -->
 
-> this document is complete, but pieces might change 
+> workflow is complete, but page remains under construction `r emo::ji("construction")`
 
     
 
@@ -1164,7 +1164,7 @@ for i in $(cat $MAT/samples | head -1);
 done                                                                                        
 
 ## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/fhi_redch_krakenStnd_abundances.tsv
+combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/krakenStnd_abundances.tsv
 
 ```
 
@@ -1192,7 +1192,7 @@ step    | effect
 
 **NB:** because we used the `--report-zero-counts` option in `Kraken2` for the  **test report**, this will have _all_ the species-level taxa in the database, and we can use it with any of our samples (this taxonomic table will do for all our samples). As such, we only need to do this step _once_ per project. If you lack this test report, simply  run `Kraken2` on any sample, using the `--report-zero-counts` flag.
 
-Note also that some lifeforms, i.e. viri, don't have the same taxonomic ranks as us, which can be problematic for the taxonomic table, as the columns will suddenly mean different things between types of life - this is simplified by sorting the data later but it can still be an issue. (if `--report-zero-counts` was omitted, just repeat a single `Kraken2` step above and convert the output.)
+Note also that some lifeforms, i.e. viri, don't have the same number or type of taxonomic ranks as e.g. us, which can be problematic for the taxonomic table, as the columns will suddenly mean different things between types of life - this is simplified by sorting the data later but it can still be an issue. (if `--report-zero-counts` was omitted, just repeat a single `Kraken2` step above and convert the output.)
 
 
 
@@ -1207,10 +1207,10 @@ mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/Krak
 ~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h '|s_' $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed 's/|/\t/g' > $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h '|s_' $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed 's/|/\t/g' > $KROUT/krakenStnd_taxonomy.tsv
 
 # a last look
-less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+less -S $KROUT/krakenStnd_taxonomy.tsv
 
 ```
 
@@ -1221,10 +1221,10 @@ Finally! Most of the data management from here will take place in `R`, but we ca
 
 ```{bash, eval=FALSE}
 # sample abundances
-less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+less $KROUT/krakenStnd_abundances.tsv
 
 # taxonomic hierarchy:
-less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+less $KROUT/krakenStnd_taxonomy.tsv
 ```
 
 
@@ -1394,7 +1394,7 @@ done
 
 
 ## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
-kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/kaiju_summary_species.tsv $KaOUT/*_kaiju
 
 
 # step off to R!
@@ -1408,7 +1408,7 @@ Finally, again! Just as with `Kraken2+Bracken`, it's a good idea to look at the 
 
 ```{bash, eval=FALSE}
 # sample abundances
-less $KaOUT/total_kaiju__summary_species.tsv
+less $KaOUT/kaiju_summary_species.tsv
 
 ```
 
@@ -1447,17 +1447,17 @@ du -sh $KDOUT
 ls -lsh $KROUT
 
 # sample abundances
-less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+less $KROUT/krakenStnd_abundances.tsv
 
 # taxonomic hierarchy:
-less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+less $KROUT/krakenStnd_taxonomy.tsv
 
 
 ## generated microbial profiles for our data using translated seq info (Kaiju)
 ls -lsh $KaOUT
 
 # sample abundances
-less $KaOUT/total_kaiju__summary_species.tsv
+less $KaOUT/kaiju_summary_species.tsv
 
 
 ## the scripts and parameters etc:

@@ -1493,13 +1493,13 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Porting Metagenomics into
 <code>R</code></h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">22 Nov 2022, 12:21</h4>
+<h4 class="date">22 Nov 2022, 15:36</h4>
 
 </div>
 
 
 <blockquote>
-<p>page is complete, but remains under construction 🚧</p>
+<p>workflow is complete, but page remains under construction 🚧</p>
 </blockquote>
 <hr />
 <p>The <code>R</code> work starts here 😬, continued from work
@@ -1548,10 +1548,10 @@ for <code>Kraken2</code>, 1 file for <code>Kaiju</code>.</p>
 <pre class="r"><code>## Kraken2
 
 # output from kraken2-bracken, combined to one file
-  krak2_brack_file=&quot;../input/fhi_redch_krakenStnd_abundances.tsv&quot;
+  krak2_brack_file=&quot;../input/fhi__redch_krakenStnd_abundances.tsv&quot;
 
 # output from single kraken2 report, converted to MPA
-  krak2_mpa_file=&quot;../input/fhi_redch_krakenStnd_abundances.tsv&quot;
+  krak2_mpa_file=&quot;../input/fhi__redch_krakenStnd_abundances.tsv&quot;
 
 
 ## Kaiju
@@ -1740,7 +1740,10 @@ and then manipulate that data:</p>
   dim( ka_counts &lt;- ka_counts[ , !apply( ka_counts, 2, function(aa){ all(aa == 0)}) ] )
 
   # look
-  ka_counts[1:10,1:10]</code></pre>
+  ka_counts[1:10,1:10]
+  
+  # make relative abudance
+  ka_relab &lt;- apply( ka_counts, 2, function(aa){ aa/sum(aa) })</code></pre>
 <p>Again, we have to fabricate out own taxonomic table, while taking
 care to manage any irregularities.</p>
 <pre class="r"><code>  ka_tax &lt;- unique( t(# do.call(&quot;rbind&quot;, 
@@ -1804,47 +1807,90 @@ care to manage any irregularities.</p>
 </div>
 <div id="save-the-output-in-a-basic-format" class="section level2">
 <h2>3. save the output in a basic format</h2>
+<p>Note - at this stage we’ve reduced gigabytes of sequence data into ~3
+basic spreadsheets (<code>.tsv</code>), irrespective of whether it came
+from <code>Kraken2</code> or <code>Kaiju</code> (or some other program)
+- from here on, the data used can be processed using standard methods
+from biology and data-science, whether that’s in <code>R</code>,
+<code>python</code>, <code>MSExcel</code> etc.</p>
 <pre class="r"><code>## general metadata
-    write.table(mgdat, &quot;../output/fhi__redch__metadata-20__dat..tsv&quot;)
-    saveRDS( mgdat, &quot;../output/fhi__redch__metadata-20__dat.RDS&quot;)
+    write.table(mgdat, &quot;./fhi__redch__metadata-20__dat.tsv&quot;)
+    saveRDS( mgdat, &quot;./fhi__redch__metadata-20__dat.RDS&quot;)
 
 
 ## for Kraken2:
   
   ## tsv output
-    write.table(k2_counts, &quot;../output/fhi__redch__krakenStnd-20__num..tsv&quot;)
-    write.table(k2_relab, &quot;../output/fhi__redch__krakenStnd-20__frac..tsv&quot;)
-    write.table(k2_tax, &quot;../output/fhi__redch__krakenStnd-20__tax..tsv&quot;)
+    write.table(k2_counts, &quot;./fhi__redch__krakenStnd-20__num.tsv&quot;)
+    write.table(k2_relab, &quot;./fhi__redch__krakenStnd-20__frac.tsv&quot;)
+    write.table(k2_tax, &quot;./fhi__redch__krakenStnd-20__tax.tsv&quot;)
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(k2_counts), &quot;../output/fhi__redch__krakenStnd-20__num.RDS&quot;)
-    saveRDS( t(k2_relab), &quot;../output/fhi__redch__krakenStnd-20__frac.RDS&quot;)
-    saveRDS( k2_tax, &quot;../output/fhi__redch__krakenStnd-20__tax.RDS&quot;)
+    saveRDS( t(k2_counts), &quot;./fhi__redch__krakenStnd-20__num.RDS&quot;)
+    saveRDS( t(k2_relab), &quot;./fhi__redch__krakenStnd-20__frac.RDS&quot;)
+    saveRDS( k2_tax, &quot;./fhi__redch__krakenStnd-20__tax.RDS&quot;)
 
         
 ## for Kaiju:
 
   ## tsv output
-    write.table(ka_counts, &quot;../output/fhi__redch__kaijuStnd-20__num..tsv&quot;)
-    write.table(ka_relab, &quot;../output/fhi__redch__kaijuStnd-20__frac..tsv&quot;)
-    write.table(ka_tax, &quot;../output/fhi__redch__kaijuStnd-20__tax..tsv&quot;)
+    write.table(ka_counts, &quot;./fhi__redch__kaijuStnd-20__num.tsv&quot;)
+    write.table(ka_relab, &quot;./fhi__redch__kaijuStnd-20__frac.tsv&quot;)
+    write.table(ka_tax, &quot;./fhi__redch__kaijuStnd-20__tax.tsv&quot;)
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(ka_counts), &quot;../output/fhi__redch__kaijuStnd-20__num.RDS&quot;)
-    saveRDS( t(ka_relab), &quot;../output/fhi__redch__kaijuStnd-20__frac.RDS&quot;)
-    saveRDS( ka_tax, &quot;../output/fhi__redch__kaijuStnd-20__tax.RDS&quot;)</code></pre>
+    saveRDS( t(ka_counts), &quot;./fhi__redch__kaijuStnd-20__num.RDS&quot;)
+    saveRDS( t(ka_relab), &quot;./fhi__redch__kaijuStnd-20__frac.RDS&quot;)
+    saveRDS( ka_tax, &quot;./fhi__redch__kaijuStnd-20__tax.RDS&quot;)</code></pre>
 </div>
 <div id="export-to-rphyloseq" class="section level2">
 <h2>4. export to <code>R::phyloseq</code></h2>
 <p>More info on the gateway drug that is <code>phyloseq</code>, see the
 <a href="http://joey711.github.io/phyloseq">phyloseq main page</a>, and
 <a href="http://joey711.github.io/phyloseq/import-data.html">here</a>
-for importing data.</p>
-<pre class="r"><code>  # note: we use the count data..
-  (phyloseq_dat &lt;- phyloseq(j, tax, mgdat))
+for importing data. Note again that here, it doesn’t matter whether it’s
+<code>Kraken2</code> or <code>Kaiju</code> (or some other program) -
+from here on, the data used can be processed using standard methods from
+biology and data-science</p>
+<pre class="r"><code>  ## note: we use the count data (making % is easy in R, but 
+  ##  - we would have no way of knowing the original counts)
 
-  # note: we did not extract phylogenetic tree from the shotgun data, so no tree
-  saveRDS( phyloseq_dat, &quot;output/fhi__redch__krakenStnd-20__phylo.RDS&quot;)</code></pre>
+  ## note also: we did not extract any phylogenetic tree from 
+  ##  - the shotgun data, so no tree is included below
+
+## Kraken2/Bracken   ---
+
+  # look at the first ten rows, ten columns:
+    kr_counts[1:10, 1:10]
+    kr_relab[1:10, 1:10]
+    kr_tax[1:10, 1:5]
+    mgdat[1:10, 1:10 ]
+
+    (kr2_phyloseq_dat &lt;- phyloseq(mg_count, mg_tax, mgdat))
+
+    saveRDS( kr2_phyloseq_dat, &quot;./fhi__redch__KrakenStnd__phylo.RDS&quot;)
+    phylo1 &lt;- readRDS(&quot;./fhi__redch__KrakenStnd__phylo.RDS&quot;)
+    phylo1
+
+            
+## Kaiju   ----------
+    
+  # look at the first ten rows, ten columns:
+    kr_counts[1:10, 1:10]
+    kr_relab[1:10, 1:10]
+    kr_tax[1:10, 1:5]
+    mgdat[1:10, 1:10 ]
+
+  # note: we use the count data..
+    (kai_phyloseq_dat &lt;- phyloseq(mg_count, mg_tax, mgdat))
+
+    saveRDS( kai_phyloseq_dat, &quot;./fhi__redch__KaijuStnd__phylo.RDS&quot;)
+    phylo2 &lt;- readRDS(&quot;./fhi__redch__KaijuStnd__phylo.RDS&quot;)
+    phylo2</code></pre>
+</div>
+</div>
+<div id="next-steps" class="section level1">
+<h1>Next Steps</h1>
 <p>That was, hopefully, easy! Take this data, and have a look at the <a href="http://joey711.github.io/phyloseq">phyloseq guide</a> to exploring
 data, their inspirational <a href="https://f1000research.com/articles/5-1492">F1000 expanded methods
 paper</a>, or other guides as recommended on the <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference"><code>climber</code>
@@ -1876,7 +1922,6 @@ page</a>.</p>
 <!-- ##    C L R   T R A N S F O R M   =============================================== -->
 <!--     dim( kaigeal_czm <- zCompositions::cmultRepl(t(kaigeal), label=0, method="CZM") )                     # samples must be ROWS ; returns samples as rows -->
 <!--     dim( kaigeal_clr <- t( clr(kaigeal_czm)) )                              # samples as ROWS ; returns samples as rows -->
-</div>
 </div>
 
 

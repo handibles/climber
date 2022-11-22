@@ -15,7 +15,7 @@ output:
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/data_to_R.html') })
 ---
 
-> page is complete, but remains under construction `r emo::ji("construction")`
+> workflow is complete, but page remains under construction `r emo::ji("construction")`
 
 ---
 
@@ -58,10 +58,10 @@ Point to your output files, and import them: here there are 2 files for `Kraken2
 ## Kraken2
 
 # output from kraken2-bracken, combined to one file
-  krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv"
+  krak2_brack_file="../input/fhi__redch_krakenStnd_abundances.tsv"
 
 # output from single kraken2 report, converted to MPA
-  krak2_mpa_file="../input/fhi_redch_krakenStnd_abundances.tsv"
+  krak2_mpa_file="../input/fhi__redch_krakenStnd_abundances.tsv"
 
 
 ## Kaiju
@@ -272,6 +272,10 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
 
   # look
   ka_counts[1:10,1:10]
+  
+  # make relative abudance
+  ka_relab <- apply( ka_counts, 2, function(aa){ aa/sum(aa) })
+
 ```
 
 
@@ -350,52 +354,87 @@ Again, we have to fabricate out own taxonomic table, while taking care to manage
 
 ## 3. save the output in a basic format
 
+Note - at this stage we've reduced gigabytes of sequence data into ~3 basic spreadsheets (`.tsv`), irrespective of whether it came from `Kraken2` or `Kaiju` (or some other program) - from here on, the data used can be processed using standard methods from biology and data-science, whether that's in `R`, `python`, `MSExcel` etc. 
+
 ```{R, eval=FALSE}
 ## general metadata
-    write.table(mgdat, "../output/fhi__redch__metadata-20__dat..tsv")
-    saveRDS( mgdat, "../output/fhi__redch__metadata-20__dat.RDS")
+    write.table(mgdat, "./fhi__redch__metadata-20__dat.tsv")
+    saveRDS( mgdat, "./fhi__redch__metadata-20__dat.RDS")
 
 
 ## for Kraken2:
   
   ## tsv output
-    write.table(k2_counts, "../output/fhi__redch__krakenStnd-20__num..tsv")
-    write.table(k2_relab, "../output/fhi__redch__krakenStnd-20__frac..tsv")
-    write.table(k2_tax, "../output/fhi__redch__krakenStnd-20__tax..tsv")
+    write.table(k2_counts, "./fhi__redch__krakenStnd-20__num.tsv")
+    write.table(k2_relab, "./fhi__redch__krakenStnd-20__frac.tsv")
+    write.table(k2_tax, "./fhi__redch__krakenStnd-20__tax.tsv")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(k2_counts), "../output/fhi__redch__krakenStnd-20__num.RDS")
-    saveRDS( t(k2_relab), "../output/fhi__redch__krakenStnd-20__frac.RDS")
-    saveRDS( k2_tax, "../output/fhi__redch__krakenStnd-20__tax.RDS")
+    saveRDS( t(k2_counts), "./fhi__redch__krakenStnd-20__num.RDS")
+    saveRDS( t(k2_relab), "./fhi__redch__krakenStnd-20__frac.RDS")
+    saveRDS( k2_tax, "./fhi__redch__krakenStnd-20__tax.RDS")
 
         
 ## for Kaiju:
 
   ## tsv output
-    write.table(ka_counts, "../output/fhi__redch__kaijuStnd-20__num..tsv")
-    write.table(ka_relab, "../output/fhi__redch__kaijuStnd-20__frac..tsv")
-    write.table(ka_tax, "../output/fhi__redch__kaijuStnd-20__tax..tsv")
+    write.table(ka_counts, "./fhi__redch__kaijuStnd-20__num.tsv")
+    write.table(ka_relab, "./fhi__redch__kaijuStnd-20__frac.tsv")
+    write.table(ka_tax, "./fhi__redch__kaijuStnd-20__tax.tsv")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(ka_counts), "../output/fhi__redch__kaijuStnd-20__num.RDS")
-    saveRDS( t(ka_relab), "../output/fhi__redch__kaijuStnd-20__frac.RDS")
-    saveRDS( ka_tax, "../output/fhi__redch__kaijuStnd-20__tax.RDS")
+    saveRDS( t(ka_counts), "./fhi__redch__kaijuStnd-20__num.RDS")
+    saveRDS( t(ka_relab), "./fhi__redch__kaijuStnd-20__frac.RDS")
+    saveRDS( ka_tax, "./fhi__redch__kaijuStnd-20__tax.RDS")
 
 ```
 
 
 ## 4. export to `R::phyloseq`
 
-More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](http://joey711.github.io/phyloseq), and [here](http://joey711.github.io/phyloseq/import-data.html) for importing data.
-
+More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](http://joey711.github.io/phyloseq), and [here](http://joey711.github.io/phyloseq/import-data.html) for importing data. Note again that here, it doesn't matter whether it's `Kraken2` or `Kaiju` (or some other program) - from here on, the data used can be processed using standard methods from biology and data-science 
 
 ```{R, eval=FALSE}
-  # note: we use the count data..
-  (phyloseq_dat <- phyloseq(j, tax, mgdat))
+  ## note: we use the count data (making % is easy in R, but 
+  ##  - we would have no way of knowing the original counts)
 
-  # note: we did not extract phylogenetic tree from the shotgun data, so no tree
-  saveRDS( phyloseq_dat, "output/fhi__redch__krakenStnd-20__phylo.RDS")
+  ## note also: we did not extract any phylogenetic tree from 
+  ##  - the shotgun data, so no tree is included below
+
+## Kraken2/Bracken   ---
+
+  # look at the first ten rows, ten columns:
+    kr_counts[1:10, 1:10]
+    kr_relab[1:10, 1:10]
+    kr_tax[1:10, 1:5]
+    mgdat[1:10, 1:10 ]
+
+    (kr2_phyloseq_dat <- phyloseq(mg_count, mg_tax, mgdat))
+
+    saveRDS( kr2_phyloseq_dat, "./fhi__redch__KrakenStnd__phylo.RDS")
+    phylo1 <- readRDS("./fhi__redch__KrakenStnd__phylo.RDS")
+    phylo1
+
+            
+## Kaiju   ----------
+    
+  # look at the first ten rows, ten columns:
+    kr_counts[1:10, 1:10]
+    kr_relab[1:10, 1:10]
+    kr_tax[1:10, 1:5]
+    mgdat[1:10, 1:10 ]
+
+  # note: we use the count data..
+    (kai_phyloseq_dat <- phyloseq(mg_count, mg_tax, mgdat))
+
+    saveRDS( kai_phyloseq_dat, "./fhi__redch__KaijuStnd__phylo.RDS")
+    phylo2 <- readRDS("./fhi__redch__KaijuStnd__phylo.RDS")
+    phylo2
+    
 ```
+
+
+# Next Steps
 
 That was, hopefully, easy! Take this data, and have a look at the [phyloseq guide](http://joey711.github.io/phyloseq) to exploring data, their inspirational [F1000 expanded methods paper](https://f1000research.com/articles/5-1492), or other guides as recommended on the [`climber` page](https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference).
         

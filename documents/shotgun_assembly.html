@@ -1493,7 +1493,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">22 Nov 2022, 14:46</h4>
+<h4 class="date">22 Nov 2022, 15:36</h4>
 
 </div>
 
@@ -1506,7 +1506,7 @@ border-radius: 0px;
 <!--  - text folding (~simplify) -->
 <!-- ``` -->
 <blockquote>
-<p>this document is complete, but pieces might change</p>
+<p>workflow is complete, but page remains under construction 🚧</p>
 </blockquote>
 <div id="preamble" class="section level1">
 <h1>Preamble</h1>
@@ -3046,7 +3046,7 @@ one, but this time we combine all the samples to one large table
 done                                                                                        
 
 ## combine reports to one monolith.tsv
-combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/fhi_redch_krakenStnd_abundances.tsv
+combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/krakenStnd_abundances.tsv
 </code></pre>
 </div>
 <div id="output-taxonomic-hierarchy" class="section level3">
@@ -3113,12 +3113,13 @@ samples (this taxonomic table will do for all our samples). As such, we
 only need to do this step <em>once</em> per project. If you lack this
 test report, simply run <code>Kraken2</code> on any sample, using the
 <code>--report-zero-counts</code> flag.</p>
-<p>Note also that some lifeforms, i.e. viri, don’t have the same
-taxonomic ranks as us, which can be problematic for the taxonomic table,
-as the columns will suddenly mean different things between types of life
-- this is simplified by sorting the data later but it can still be an
-issue. (if <code>--report-zero-counts</code> was omitted, just repeat a
-single <code>Kraken2</code> step above and convert the output.)</p>
+<p>Note also that some lifeforms, i.e. viri, don’t have the same number
+or type of taxonomic ranks as e.g. us, which can be problematic for the
+taxonomic table, as the columns will suddenly mean different things
+between types of life - this is simplified by sorting the data later but
+it can still be an issue. (if <code>--report-zero-counts</code> was
+omitted, just repeat a single <code>Kraken2</code> step above and
+convert the output.)</p>
 <pre class="bash"><code># have a luk at the Kraken2 output - note no one line has all the info on D/P/C/O/F/G/S...
 less -S $KROUT/${TEST}_test_kraken_report
 
@@ -3129,10 +3130,10 @@ mkdir $HOME/bin ; cd $HOME/bin ; git clone https://github.com/jenniferlu717/Krak
 ~/bin/KrakenTools/kreport2mpa.py -r $KROUT/${TEST}_test_kraken_report -o $KROUT/${TEST}_kraken_mpa
 
 # pipe mpa file to reformat
-grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed &#39;s/|/\t/g&#39; &gt; $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+grep -h &#39;|s_&#39; $KROUT/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed &#39;s/|/\t/g&#39; &gt; $KROUT/krakenStnd_taxonomy.tsv
 
 # a last look
-less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+less -S $KROUT/krakenStnd_taxonomy.tsv
 </code></pre>
 </div>
 <div id="check-kraken2bracken-outputs" class="section level3">
@@ -3141,10 +3142,10 @@ less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 <code>R</code>, but we can check our outputs here &amp; now before
 moving over:</p>
 <pre class="bash"><code># sample abundances
-less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+less $KROUT/krakenStnd_abundances.tsv
 
 # taxonomic hierarchy:
-less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv</code></pre>
+less $KROUT/krakenStnd_taxonomy.tsv</code></pre>
 <!-- # rename the DB after your own one, and decide what -t/-s is appropriate -->
 <!-- for i in $(cat $MAT/samples | head -1 ); -->
 <!-- #  do est_abundance.py \ -->
@@ -3337,7 +3338,7 @@ done
 
 
 ## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
-kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/kaiju_summary_species.tsv $KaOUT/*_kaiju
 
 
 # step off to R!
@@ -3348,7 +3349,7 @@ kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phy
 good idea to look at the data, and consider what information it
 provides.</p>
 <pre class="bash"><code># sample abundances
-less $KaOUT/total_kaiju__summary_species.tsv
+less $KaOUT/kaiju_summary_species.tsv
 </code></pre>
 <!-- need to unify output names... -->
 </div>
@@ -3386,17 +3387,17 @@ du -sh $KDOUT
 ls -lsh $KROUT
 
 # sample abundances
-less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+less $KROUT/krakenStnd_abundances.tsv
 
 # taxonomic hierarchy:
-less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+less $KROUT/krakenStnd_taxonomy.tsv
 
 
 ## generated microbial profiles for our data using translated seq info (Kaiju)
 ls -lsh $KaOUT
 
 # sample abundances
-less $KaOUT/total_kaiju__summary_species.tsv
+less $KaOUT/kaiju_summary_species.tsv
 
 
 ## the scripts and parameters etc:
