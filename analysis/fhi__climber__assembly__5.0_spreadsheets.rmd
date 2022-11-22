@@ -74,7 +74,7 @@ Point to your output files, and import them: here there are 2 files for `Kraken2
   
 ## 2. Re-arrange data
 
-There are many, many ways to do things (generally and) in `R` - note that this page avoids using `R::tidy` solutions
+There are many, many ways to do things (generally and) in `R` - note that this page avoids using `R::tidy` solutions, but feel free to suggest some.
 
   
 ### 2a. for `Kraken2+Bracken` data:
