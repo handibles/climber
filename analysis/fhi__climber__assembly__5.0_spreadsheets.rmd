@@ -15,9 +15,11 @@ output:
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/data_to_R.html') })
 ---
 
+> page is complete, but remains under construction `r emo::ji("construction")`
+
 ---
 
-The `R` work starts here `R emo::ji("grimmace")`, continued from work assembling the [metagenomic data](./shotgun_assembly.html).
+The `R` work starts here `r emo::ji("grimacing_face")`, continued from work assembling the [metagenomic data](./shotgun_assembly.html).
 
 ```
 # todo for jfg
@@ -37,26 +39,50 @@ Getting metagenomic data from `bash & co.` to `R` can be awkward - this is just 
 
 Here, we do the following: for `Kraken2+Bracken`, and separately for ``Kaiju`: 
   
-    1. import the data from `Bracken` **or** `Kaiju` into `R`:
-    2. re-arrange the outputs in `R` in one of two ways:
-      a. reorganise it for `Bracken`
-      b. reorganise it for `Kaiju`
-    3. save this "basic" output as `.tsv` text files, that can be used in e.g. excel (if you like excel)
-    4. export this output to [`phyloseq`](http://joey711.github.io/phyloseq/install.html), a `R` library _specifically_ for doing microbial community ecology, designed to keep all the community data in one place, and make using `R` easier for microbiologists, virologists, mycologists & co. 
+  1. import the data from `Bracken` **or** `Kaiju` into `R`:
+  2. re-arrange the outputs in `R` in one of two ways:
+    a. reorganise it for `Bracken`
+    b. reorganise it for `Kaiju`
+  3. save this "basic" output as `.tsv` text files, that can be used in e.g. excel (if you like excel)
+  4. export this output to [`phyloseq`](http://joey711.github.io/phyloseq/install.html), a `R` library _specifically_ for doing microbial community ecology, designed to keep all the community data in one place, and make using `R` easier for microbiologists, virologists, mycologists & co. 
 
   
 **Note:**  - it's the same idea for `Kraken2-Bracken` and for `Kaiju`, except that step 2 is different (because `Bracken` output is different from `Kaiju` output). Note also that we're starting this in `R`, using the outputs from the [first page](https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling).
 
 
-## 1-2a. Import data to R, and re-arrange for `Kraken2+Bracken`.
+## 1. Import data to `R`
+
+Point to your output files, and import them: here there are 2 files for `Kraken2`, 1 file for `Kaiju`.
+
+```{R, eval=FALSE}
+## Kraken2
+
+# output from kraken2-bracken, combined to one file
+  krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv"
+
+# output from single kraken2 report, converted to MPA
+  krak2_mpa_file="../input/fhi_redch_krakenStnd_abundances.tsv"
+
+
+## Kaiju
+  
+# output from kaiju's kaiju2table output
+  kaij_file="../input/fhi__chickmi__kaiju_species.tsv"
+```
+
+
+  
+## 2. Re-arrange data
+
+There are many, many ways to do things (generally and) in `R` - note that this page avoids using `R::tidy` solutions
+
+  
+### 2a. for `Kraken2+Bracken` data:
 
 Point to output file, and import
 
 ```{R, eval=FALSE}
-# move it somewhere sensible
-  mfile="../input/fhi_redch_krakenStnd_abundances.tsv"
-  
-  k2dat <- read.table(file = mfile, header=TRUE, quote = "", sep = '\t')
+  k2dat <- read.table(file = krak2_brack_file, header=TRUE, quote = "", sep = '\t')
   k2dat[1:10, 1:10]
   
   prenames_k2dat <- paste0("k2_", stringr::str_pad(k2dat[,2], width=7, pad=0))
@@ -77,16 +103,20 @@ Point to output file, and import
 We need to make taxonomic data from the material we have (we made files for this using `--report-zero-counts` and `kreport2mpa.py`). Note that this takes a little organisation, as the taxonomic hierarchy is not the same across all domains of life (because it is imaginary).
 
 ```{R, eval=FALSE}
+## start with data from the abundance table names  --------------------------------
+
   tax_a <- data.frame(taxon=k2dat[ ,1], k2_id=k2dat[ ,2], row.names = rownames(k2dat) , stringsAsFactors = FALSE)
   tax_a[,1] <- gsub('\\/','', tax_a[,1])
   tax_a[,1] <- gsub('ALOs_','ALOs-', tax_a[,1])
   # tax_a[,1] <- gsub("'","", tax_a[,1])      # none?
+
   
-## NOTE use quote="" to avoid nightmare of special characters like '"`/,| etc in names
-  tax_b <- read.table('input/fhi_redch_krakenStnd_taxonomy.tsv', sep='\t', header=FALSE, fill = TRUE, stringsAsFactors = FALSE, quote="")
+  ## NOTE use quote="" to avoid nightmare of special characters like '"`/,| etc in names
+  tax_b <- read.table( krak2_mpa_file, sep='\t', header=FALSE, fill = TRUE, stringsAsFactors = FALSE, quote="")
   head(tax_b)
   
-## regularise taxonomic ranks (not all have K:P:C:O:F:G:S etc.)
+## regularise taxonomic ranks (not all have K:P:C:O:F:G:S etc.)   -----------------
+  
   ranks <- c("k__", "p__", "c__", "o__" , "f__", "g__", "s__")
   tax_b <- t(apply(tax_b, 1, function(aa){  # aa <- tax_b[1,]
     sapply(ranks, function(aaa){ # aaa <- "c__"
@@ -117,14 +147,16 @@ We need to make taxonomic data from the material we have (we made files for this
   head(tax_b) ;   head(tax_b[ , "S"]) ;  dim(tax_b)
   
   
-## stitch  &  name
+## stitch  &  name   ----------------------------------
+  
   tax_c <- merge(tax_b, tax_a, by.x="S", by.y="taxon")[, c(2:7,1,8)]
   head(tax_c) ; dim(tax_c)
   prenames_tax <- paste0("k2_", stringr::str_pad(tax_c[,"k2_id"], width=7, pad=0))
   rownames(tax_c) <- prenames_tax
   
   
-## check all on the same page
+## check all on the same page   -----------------------
+  
   all(rownames(k2dat) == rownames(k2_counts) & rownames(k2dat) == rownames(k2_relab))
   all(rownames(k2dat) %in% rownames(tax_c))
   
@@ -134,12 +166,11 @@ We need to make taxonomic data from the material we have (we made files for this
   k2_relab <- k2_relab [kraken_ids , ]
   tax_c <- tax_c[kraken_ids , ]
   
-  
   ## remove if no values (kraken2 set to give all taxa)
   pos_abund <- rownames(k2_relab)[rowSums(k2_relab) > 0]
   k2_relab <- k2_relab[ pos_abund , ]
   k2_counts <- k2_counts[ pos_abund , ]
-  tax <- tax_c[ pos_abund , ]
+  k2_tax <- tax_c[ pos_abund , ]
   
 ```
 
@@ -150,7 +181,6 @@ Next, add in the metadata we use to orgainse this study. Environmental variables
   mgdat <- data.frame("sample" = colnames(k2_counts),
                      "type" = gsub("(.).*", "\\1", colnames(k2_counts), perl = TRUE),
                      "seqdepth" = colSums(k2_counts) )
-  
 ```
 
 
@@ -158,10 +188,11 @@ Next, check that all the data looks sane and normal.
 
 ```{R, eval=FALSE}
 
-  ## check - do all match?
+## check - do all match?   -----------------------
+
   dim(k2_counts)
   dim(k2_relab)
-  dim(tax)
+  dim(k2_tax)
   dim(mgdat)
   
   # look
@@ -174,23 +205,17 @@ Next, check that all the data looks sane and normal.
 
 
 
-## 1-2.b  Re-arrange for `Kaiju`
+### 2b. for `Kaiju` data:
 
 In case we have outputs for `Kaiju`: point to output file, and then manipulate that data:
 
-    <!-- # ## fix sample names - NURIA -->
-    <!-- # kaidat$file <- gsub(".*/_(N.*)_Nuria.*", "\\1", kaidat$file) -->
+<!-- # ## fix sample names - NURIA -->
+<!-- # kaidat$file <- gsub(".*/_(N.*)_Nuria.*", "\\1", kaidat$file) -->
 
 ```{R, eval=FALSE}
-## find it somewhere sensible   ------------
+## note the quote option, to stop strange names doing strange things
 
-  mfile="../input/fhi__redch__kaiju_speciesab.tsv"
-
-
-## import data into R.    ------------------
-
-  # note the quote option, to stop strange names doing strange things
-  kaidat <- read.table(file = mfile, header = TRUE, sep = "\t", stringsAsFactors = FALSE, quote = "")
+  kaidat <- read.table(file = kaij_file, header = TRUE, sep = "\t", stringsAsFactors = FALSE, quote = "")
   # remove 1+ header(s)
   kaidat <- kaidat[ !grepl("file", kaidat[,1]) , ]
   dim(kaidat)
@@ -203,17 +228,20 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
   length(unique(kaidat$file))         # 20 files
   length(unique(kaidat$otu))          # 1.3K OTUs
   kaidat$percent <- as.numeric(as.character(kaidat$percent))
+  
+  # should be very close to nsamples * 100
   sum(kaidat$percent, na.rm = TRUE)
 
   head(kaidat) # View(kaidat)
   str(kaidat)
 
   
-## assess total output    -----------------
+## assess total output    ----------------------------
   
   kaidf <- as.data.frame(kaidat) 
   kaidf[ , "reads"] <- as.numeric(kaidf[ , "reads"])
   
+  # again, counts and percent
   sum( (kaidf[ , "reads"]))
   sum( (kaidf[ , "percent"]), na.rm = TRUE)  # nsample*100%
 
@@ -228,7 +256,7 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
   u_sample <- unique( kai$file)
 
   # to each unique taxon found (u_bio), assign the number of counts found in each unique sample (u_sample)
-  kaigeal <- do.call("rbind", lapply( u_bio, function(aa){   # aa <- u_bio[100]
+  ka_counts <- do.call("rbind", lapply( u_bio, function(aa){   # aa <- u_bio[100]
     bb_df <- kai[ grep(aa, kai$otu) , ]
     cc_vec <- unlist(lapply( u_sample, function(aaa){ # aaa <- u_sample[9]
       as.numeric(bb_df[ match(aaa, bb_df$file) , "reads" ])
@@ -236,21 +264,21 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
   } )
   )
   
-  rownames(kaigeal) <- u_bio# [1:100]
-  colnames(kaigeal) <- u_sample
+  rownames(ka_counts) <- u_bio# [1:100]
+  colnames(ka_counts) <- u_sample
   # only keep real numbers
-  kaigeal[ is.na(kaigeal)] <- 0
-  dim( kaigeal <- kaigeal[ , !apply( kaigeal, 2, function(aa){ all(aa == 0)}) ] )
+  ka_counts[ is.na(ka_counts)] <- 0
+  dim( ka_counts <- ka_counts[ , !apply( ka_counts, 2, function(aa){ all(aa == 0)}) ] )
 
   # look
-  kaigeal[1:10,1:10]
+  ka_counts[1:10,1:10]
 ```
 
 
 Again, we have to fabricate out own taxonomic table, while taking care to manage any irregularities.
 
 ```{R, eval=FALSE}
-  tax <- unique( t(# do.call("rbind", 
+  ka_tax <- unique( t(# do.call("rbind", 
                  apply( kai[ , c("ID", "taxon_name")], 1, function(aa){   # aa <- kai[ 1, c("ID", "taxon_name" )]
                    bb_vec <- aa[2] # paste0( aa, collapse = ";")
                    if( grepl("Viruses", bb_vec)){ 
@@ -259,10 +287,12 @@ Again, we have to fabricate out own taxonomic table, while taking care to manage
                      cc_vec <- c( unlist(strsplit(unlist(bb_vec), ";"))[ 2:7], aa[1] )
                      }
                    cc_vec  }) ))
-  rownames(tax) <- tax[,6]
-  colnames(tax) <- c("p", "c", "o", "f", "g", "s", "ID")   # Jun'22 - remove "d" here, increase index of all names by 1
-  head(tax)
-  dim(tax <- (unique(tax)))
+
+  # set names
+  rownames(ka_tax) <- ka_tax[,5]
+  colnames(ka_tax) <- c("p", "c", "o", "f", "g", "s", "ID")   # Jun'22 - remove "d" here, increase index of all names by 1
+  head(ka_tax)
+  dim(ka_tax <- (unique(ka_tax)))
 
 ```
 
@@ -321,42 +351,40 @@ Again, we have to fabricate out own taxonomic table, while taking care to manage
 ## 3. save the output in a basic format
 
 ```{R, eval=FALSE}
+## general metadata
+    write.table(mgdat, "../output/fhi__redch__metadata-20__dat..tsv")
+    saveRDS( mgdat, "../output/fhi__redch__metadata-20__dat.RDS")
+
 
 ## for Kraken2:
   
   ## tsv output
-    write.file(mg_counts, "output/fhi__redch__krakenStnd-20__num..tsv")
-    write.file(mg_relab, "output/fhi__redch__krakenStnd-20__frac..tsv")
-    write.file(tax, "output/fhi__redch__krakenStnd-20__tax..tsv")
-    write.file(mgdat, "output/fhi__redch__krakenStnd-20__dat..tsv")
+    write.table(k2_counts, "../output/fhi__redch__krakenStnd-20__num..tsv")
+    write.table(k2_relab, "../output/fhi__redch__krakenStnd-20__frac..tsv")
+    write.table(k2_tax, "../output/fhi__redch__krakenStnd-20__tax..tsv")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(j), "output/fhi__redch__krakenStnd-20__num.RDS")
-    saveRDS( t(k), "output/fhi__redch__krakenStnd-20__frac.RDS")
-    saveRDS( tax, "output/fhi__redch__krakenStnd-20__tax.RDS")
-    saveRDS( mgdat, "output/fhi__redch__krakenStnd-20__dat.RDS")
+    saveRDS( t(k2_counts), "../output/fhi__redch__krakenStnd-20__num.RDS")
+    saveRDS( t(k2_relab), "../output/fhi__redch__krakenStnd-20__frac.RDS")
+    saveRDS( k2_tax, "../output/fhi__redch__krakenStnd-20__tax.RDS")
 
         
 ## for Kaiju:
 
   ## tsv output
-    write.file(mg_counts, "output/fhi__redch__kaijuStnd-20__num..tsv")
-    write.file(mg_relab, "output/fhi__redch__kaijuStnd-20__frac..tsv")
-    write.file(tax, "output/fhi__redch__kaijuStnd-20__tax..tsv")
-    write.file(mgdat, "output/fhi__redch__kaijuStnd-20__dat..tsv")
+    write.table(ka_counts, "../output/fhi__redch__kaijuStnd-20__num..tsv")
+    write.table(ka_relab, "../output/fhi__redch__kaijuStnd-20__frac..tsv")
+    write.table(ka_tax, "../output/fhi__redch__kaijuStnd-20__tax..tsv")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(j), "output/fhi__redch__kaijuStnd-20__num.RDS")
-    saveRDS( t(k), "output/fhi__redch__kaijuStnd-20__frac.RDS")
-    saveRDS( tax, "output/fhi__redch__kaijuStnd-20__tax.RDS")
-    saveRDS( mgdat, "output/fhi__redch__kaijuStnd-20__dat.RDS")
+    saveRDS( t(ka_counts), "../output/fhi__redch__kaijuStnd-20__num.RDS")
+    saveRDS( t(ka_relab), "../output/fhi__redch__kaijuStnd-20__frac.RDS")
+    saveRDS( ka_tax, "../output/fhi__redch__kaijuStnd-20__tax.RDS")
 
-    
-    
 ```
 
 
-## 4. bring that output into `R::phyloseq`
+## 4. export to `R::phyloseq`
 
 More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](http://joey711.github.io/phyloseq), and [here](http://joey711.github.io/phyloseq/import-data.html) for importing data.
 
@@ -372,15 +400,11 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
 That was, hopefully, easy! Take this data, and have a look at the [phyloseq guide](http://joey711.github.io/phyloseq) to exploring data, their inspirational [F1000 expanded methods paper](https://f1000research.com/articles/5-1492), or other guides as recommended on the [`climber` page](https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference).
         
 <!-- ##  handy but unused ====================================================== -->
-
-
-
 <!-- ```{R, eval = FALSE} -->
 <!--   rm(list=ls()) -->
 <!--   library(ggplot2)   -->
 <!--   library(parallel)   -->
 <!--   source("~/Dropbox/SeqBiome/sb_4.11_master/analysis/background_code/R__fns_jfg/fn_definitions.R") -->
-
 <!--   ab_col <- ( c("#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a", "#FF1493", -->
 <!--                 "#b15928", "#737f33", "#8B008B", "#32fbd8", "#fdbf6f", -->
 <!--                 RColorBrewer::brewer.pal(5, "Spectral"), -->
@@ -389,26 +413,16 @@ That was, hopefully, easy! Take this data, and have a look at the [phyloseq guid
 <!--                 RColorBrewer::brewer.pal(4,'Accent') -->
 <!--   ) -->
 <!--   ) -->
-
 <!--   clr <- function(aa){    print(paste("samples must be ROWS ; dim =", dim(aa)[1], "x", dim(aa)[2]))  -->
 <!--     t(apply(aa, 1, function(bb) log(bb) - log(mean(bb)) ))  -->
 <!--   } -->
-
-
 <!-- ``` -->
-
 <!-- ##   D I S T A N T   C L U S T E R S     ======================================= -->
-
 <!--     kaigeal_ra <- apply( kaigeal, 2, function(aa) aa/sum(aa)) -->
 <!--     kaigeal_bc <- vegan::vegdist(t(kaigeal_ra[ , rownames(metad)]), method = "bray") -->
 <!--     kaigeal_ja <- vegan::vegdist(t(kaigeal_ra[ , rownames(metad)]), method = "jaccard") -->
-
 <!--     kaigeal_ja_hclust <- hclust( kaigeal_ja, method = "ward.D2") -->
 <!--     metad$hclust <- kaigeal_ja_hclust$order -->
-
-
 <!-- ##    C L R   T R A N S F O R M   =============================================== -->
-
 <!--     dim( kaigeal_czm <- zCompositions::cmultRepl(t(kaigeal), label=0, method="CZM") )                     # samples must be ROWS ; returns samples as rows -->
 <!--     dim( kaigeal_clr <- t( clr(kaigeal_czm)) )                              # samples as ROWS ; returns samples as rows -->
-

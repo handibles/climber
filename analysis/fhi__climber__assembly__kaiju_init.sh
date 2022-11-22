@@ -60,9 +60,9 @@ DB=$4
 THREADS=$5
 
 
-## one big slurm to for-loop over kaiju (which is also fast to iterate)
-## thereby avoiding mem issues
+## one big slurm to for-loop over kaiju, thereby avoiding mem issues
 
+# operate over some list of sample names
 for i in $( cat $LIST );
 do
   if [ -s $OUT/${i}*_kaiku ]
@@ -88,8 +88,8 @@ do
     then
       KAI_C=$(grep -cE '^C' $OUT/${i}_kaiju ) &
       KAI_U=$(grep -cE '^U' $OUT/${i}_kaiju ) 
-      KAI_PC=$(echo "scale=2; ($KAI_C / $KAI_U)*100" | bc)
       KAI_TOT=$(echo "$KAI_C + $KAI_U" | bc)
+      KAI_PC=$(echo "scale=2; ($KAI_C / $KAI_TOT)*100" | bc)
       echo "## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read-pairs)  ------"
     else
       echo "## no output - kaiju for sample ${i} failed"
@@ -107,33 +107,22 @@ done
 sbatch $MAT/slurm_kaij_loop.sh  $NUR/Materials/samples $KDOUT $KaOUT $KaDB $Ka_THREADS ;
 
 
-KAI_C=$(grep -cE '^C' $KaOUT/${TEST}_kaiju )
-KAI_U=$(grep -cE '^U' $KaOUT/${TEST}_kaiju ) 
-KAI_PC=$(echo "scale=3; ($KAI_C / $KAI_U)*100" | bc)
-KAI_TOT=$(echo "$KAI_C + $KAI_U" | bc)
-echo "## kaiju sample processed: ${TEST} : total classified: ${KAI_PC}% (total: $KAI_TOT read pairs)  ------"
-  
-
 ## count amounts
 for i in $( cat $NUR/Materials/samples );
 do 
   KAI_C=$(grep -cE '^C' $KaOUT/${i}_kaiju )
   KAI_U=$(grep -cE '^U' $KaOUT/${i}_kaiju ) 
-  KAI_PC=$(echo "scale=3; ($KAI_C / $KAI_U)*100" | bc)
   KAI_TOT=$(echo "$KAI_C + $KAI_U" | bc)
+  KAI_PC=$(echo "scale=2; ($KAI_C / $KAI_TOT)*100" | bc)
   echo "## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read pairs)  ------"
-done >> delete_temp
+done # >> delete_temp
 
 
 ## all taxonomy together - some issue solved by adding -l arg in kaiju2Table
 
-ls cat $NUR/Materials/samples | parallel -j 22 kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r genus -l domain,phylum,class,order,family,genus -o $KaOUT/{}_kaiju__summary_genus.tsv $KaOUT/{}_kaiju__out.total
-cat $KaOUT/*/*summary_genus.tsv | sed -E 's/.*\/(.*_kaiju__out.total.*$)/\1/' | sed -E 's/_kaiju__out.total//g' > $KaOUT/ms__paedcf_kaiju_genus.master
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r genus -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
 
-ls cat $NUR/Materials/samples | parallel -j 22 kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r phylum -l domain,phylum,class,order,family,phylum -o $KaOUT/{}_kaiju__summary_phylum.tsv $KaOUT/{}_kaiju__out.total
-cat $KaOUT/*/*summary_phylum.tsv | sed -E 's/.*\/(.*_kaiju__out.total.*$)/\1/' | sed -E 's/_kaiju__out.total//g' > $KaOUT/ms__paedcf_kaiju_phylum.master
-  
-  ## ???
+# step off to R!
 
 
 

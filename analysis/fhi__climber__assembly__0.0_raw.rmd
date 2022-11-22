@@ -425,7 +425,7 @@ done
 ## build data base first   ----------------------------
 
 BR_kmer=35    # this is the default kmer length of the Kraken2 DB on the HPC
-BR_leng=130   # length post-trimm
+BR_leng=125   # length post-trimm
 
 # need to make a bit of a hack here
 mkdir ~/bin ; cd ~/bin &&
@@ -442,14 +442,34 @@ ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d
 ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
 ln -s $K2REFDIR/library $WRK/ref/library  
 ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
-time ./bracken-build -d $WRK/ref -k $BR_kmer -l $BR_leng -t 20 &
 cd ~
+
+
+echo '#!/bin/bash
+
+#SBATCH --job-name=brack_db
+#SBATCH --njobs=35
+#SBATCH --output=brack_db.%j.txt
+
+#SBATCH --time=240:00
+
+BRDB_DIR=$1
+BRDB_KMER=$2
+BRDB_LENG=$3
+BRDB_THREADS=$4
+
+## not tested!
+time ./bracken-build -d $BRDB_DIR -k $BRDB_KMER -l $BRDB_LENG -t $BRDB_THREADS
+
+' > $MAT/slurm_brak_db.sh # dir kmer length threads
+
+sbatch slurm_brak_db.sh $MSDAT/ref/kraken2 $BR_kmer $BR_leng 20
 
 
 ## run bracken   ----------------------------
 
 # crucial parameters! fee free to adapt s and l. r probably more use fi read length differs from DB being used
-BR_r=130
+BR_r=125
 BR_l=S
 BR_t=10   # counts! not threads
 

@@ -1,5 +1,5 @@
 ---
-title: 'Assembling Metagenomic Sequence Data'
+title: 'Assembling Metagenomic Sequence Data `r emo::ji("person_climbing")`'
 author: 'IC / NPV / JFG'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
@@ -17,32 +17,25 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-# `r emo::ji("construction")` this document is not finished `r emo::ji("construction")`
 
-Please note this page is still being written. If something is missing, unclear, or flaming wrong, please point it out! 
+<!-- ``` -->
+<!-- # todo for jfg -->
+<!--  - issue with samsort -->
+<!--  - can we add a sandbox?... -->
+<!--  - text folding (~simplify) -->
 
-In addition, the following steps are incomplete:
+<!-- ``` -->
 
-  * feed clean sequences to `Kraken2`
-  * sanitise the `Kraken2` output using `Bracken`
-  * pass output to `R` for analysis
+> this document is complete, but pieces might change 
 
-Analysis of communities in `R` will need its own document.
+    
 
-```
-# todo for jfg
- - issue with samsort
- - can we add a sandbox?...
- - text folding (~simplify)
 
-```
 
+# Preamble
 
 ---
-
-
-# Introduction
-
+    
 #### what this **is**, and **who** it is for:
 
 This document covers how to do the following:
@@ -55,16 +48,25 @@ This document covers how to do the following:
 
 We provide _minimal_ guidance on how to adapt the different steps to the workflow (different parameters, different options or tools). 
 
-This document was originally put together by Ines Calvete (IPLA/CSIC), Nuria Peǹa Vidal (UCM), and Jamie FitzGerald (Teagasc/UCD) as a roadmap for analysing microbiomes from cheese, and chicken GI tract respectively. It uses material sourced from well-written reference manuals, online communities, and our own mistakes (see *References* section).
+This document was originally put together by Ines Calvete (IPLA/CSIC), Nuria Peǹa Vidal (UCM), and Jamie FitzGerald (Teagasc/UCD) as a roadmap for analysing microbiomes from cheese, and chicken GI tract respectively. It uses material sourced from well-written reference manuals, online communities, and our own mistakes (see *References* section). We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting.  
 
-We assume a beginner's understanding of the HPC, `ssh`, `bash`, and scripting. See the **Intro document which is not written yet**.  
+Please note this page is still being written. If something is missing, unclear, or flaming wrong, please point it out! 
+<!-- See the **Intro document which is not written yet**.-->
 
 ---
 
 #### what this document is **not**:
 
-This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page
 <!-- , and the intro document (**Nov 2022: not yet written**). -->
+This is not a guide to the _**Why**_ of the methods used here. For that, check the *References* section at the bottom of the page. In particular, importing data, and analysis of communities, in `R` will need their own documents:
+
+  * [importing data to `R` `r emo::ji("computer")`](./documents/data_to_R.html)
+  
+  * analysing microbial communities in R: this is a big topic - consider the links below (and bottom of page):
+  
+    - [Data Carpentry's Microbial Ecology Workshop](https://cnoecker.github.io/R-microbiome-workshop/index.html)
+    - [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/)
+    - [microbiome code browser](http://metagenome.cs.umn.edu/microbiomecodebrowser)
 
 ---
 
@@ -99,10 +101,6 @@ One of the best ways to learn quickly (and hopefully make different, exciting mi
 > Finally, please remember:
 
 >  * when you login to the HPC, you must **always** change to a `node` (eg `ssh compute05`) before you do any work 
-
-<!-- >  * you **must** be connected to the Teagasc network/VPN in order to access the  HPC. -->
-
->  * take notes, save your data, make backups, brush your teeth.
 
 
 ---  
@@ -163,7 +161,6 @@ WRK=/data/Food/analysis/R0936_redcheese
 
 # scripts, and slurms for queueing up jobs
 MAT=$WRK/Materials
-SLURM=$WRK/slurms
 
 # outputs etc
 QC=$WRK/1__qc
@@ -210,7 +207,7 @@ In our unified data (`$RAW`) and work folders (`$WRK`), we create different fold
 mkdir $BT_DB $RAW $WRK $FILT $QC $FQC $KDOUT $KROUT
 
 # make script dirs etc.
-mkdir $MAT $SLURM
+mkdir $MAT
 
 # make dirs for qc outputs
 mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/fhi_redch_raw_multi $FQC/fhi_redch_filt_multi
@@ -287,10 +284,10 @@ OUT=$2
 # -t is the number of threads (tasks) to use
 # curly brackets {} allow us to match either gz or bz2 file extensions
 time fastqc -t 15 $IN/*fastq.{bz2,gz} -o $OUT
-' > $SLURM/slurm_fqc.sh
+' > $MAT/slurm_fqc.sh
 
 # review:
-cat $SLURM/slurm_fqc.sh
+cat $MAT/slurm_fqc.sh
 ```
 
 This `slurm` script will give a name, output-log, runtime, and number of threads needed to the `slurm manager`, and use the input and output dirs we give to find `fastq.gz\bz2` files, start FastQC, and place outputs in the $OUT dir. We need to 'give' this `slurm` to `sbatch`:
@@ -299,7 +296,7 @@ This `slurm` script will give a name, output-log, runtime, and number of threads
 
 ```{bash, eval = FALSE}
 # trust slurm
-sbatch $SLURM/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
+sbatch $MAT/slurm_fqc.sh $RAW $FQC/fhi_redch_raw
 
 # combine outputs
 time multiqc $FQC/fhi_redch_raw -o $FQC/fhi_redch_raw_multi
@@ -1059,7 +1056,7 @@ done
 ```
 
 
-## estimate abundances with `Bracken` `r emo::ji("plant")`
+## estimate abundances with `Bracken` `r emo::ji("herb")`
 
 `Kraken2` tried to assign an identity to each read, as best possible. If we knew that we had `1M` reads in our `$TEST` sample, we could count how many reads are for (e.g.) _Escherichia coli_, and decide that the relative abundance of _E. coli_ in the sample is simply `n_reads_E_coli / n_total_sample_reads`. This might work in some cases, but it would only count reads that were assigned _exactly_ to _E. coli_, and would miss all the _E. coli_ reads that could only be assigned to (e.g.) genus _Escherichia_, or class Gammaproteobacteria, because there were too many similar matches. At the end, you would have a community table based only on unique sequence matches and ignoring all other data, which probably isn't what you want. 
 
@@ -1216,7 +1213,7 @@ less -S $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 ```
 
 
-## check outputs before changing to `R`
+### check `Kraken2+Bracken` outputs
 
 Finally! Most of the data management from here will take place in `R`, but we can check our outputs here & now before moving over:
 
@@ -1252,7 +1249,7 @@ less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
 
 
 
-## identify reads with `Kaiju` `r emo::ji("reptile")`
+## identify reads with `Kaiju` `r emo::ji("dragon_face")`
 
 It is nice when things work, but this is not always the case. Here we use [`Kaiju`](https://kaiju.binf.ku.dk), a program similar to `Kraken2` in that it uses sequences _patterns_ (`kmers`) and not just _alignments_, but `Kaiju` uses amino acid (`AA`) patterns rather than nucleotides. Our steps, and many of the concepts are similar to `Kraken2`, although note that there is no ``Bracken`-like step with `Kaiju`, although we will employ a similar reads threshold of `--c 10`, so that only assignments detected 10 or more times are kept. Note also that (depending on database and sample) `Kaiju` (~10~60 min) takes a lot longer to run than `Kraken2` (~2~8min), as it needs to translate all sequences into 6 different reading frames. 
 
@@ -1397,16 +1394,80 @@ done
 ## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
 kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/total_kaiju__summary_species.tsv $KaOUT/*_kaiju
 
-less $KaOUT/total_kaiju__summary_species.tsv
-
 
 # step off to R!
 
 ```
 
-# Next Step
 
-There are many things that we can do to change the above, but once happy, try [bringing your data into `R` for more processing!](./documents/data_to_R.html)
+### check `Kaiju` outputs
+
+Finally, again! Just as with `Kraken2+Bracken`, it's a good idea to look at the data, and consider what information it provides. 
+
+```{bash, eval=FALSE}
+# sample abundances
+less $KaOUT/total_kaiju__summary_species.tsv
+
+```
+
+<!-- need to unify output names... -->
+
+# Review / Next Steps
+
+It's worth checking what we have done in this page before moving on - here we check the outputs, and the size of data associated:
+
+```{bash, eval=FALSE}
+## obtained the raw sequences
+ls -lsh $RAW
+du -sh $FILT
+
+
+## QC - checked quality
+ls -lsh $FQC
+
+
+## QC - removed artificial sequences and low quality sequences
+ls -lsh $FILT
+du -sh $FILT
+
+
+## built a bowtie2 database of possible contaminants for our data
+ls -lsh $BT_DB
+du -sh $BT_DB
+
+
+## removed contaminants from our data
+ls -lsh $KDOUT
+du -sh $KDOUT
+
+
+## generated microbial profiles for our data using nucleotide seq info (Kraken2/Bracken)
+ls -lsh $KROUT
+
+# sample abundances
+less $KROUT/fhi_redch_krakenStnd_abundances.tsv
+
+# taxonomic hierarchy:
+less $KROUT/fhi_redch_krakenStnd_taxonomy.tsv
+
+
+## generated microbial profiles for our data using translated seq info (Kaiju)
+ls -lsh $KaOUT
+
+# sample abundances
+less $KaOUT/total_kaiju__summary_species.tsv
+
+
+## the scripts and parameters etc:
+lk $MAT
+
+
+```
+
+## towards analysis in `R` `r emo::ji("computer")`
+There are many things that we can do to change the above, but once happy: 
+
+  * try [bringing your data into `R` to start exploring!](./documents/data_to_R.html)
 
 
 ---
