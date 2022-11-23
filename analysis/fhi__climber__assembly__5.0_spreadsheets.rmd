@@ -19,15 +19,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-The `R` work starts here `r emo::ji("grimacing_face")`, continued from work assembling the [metagenomic data](./shotgun_assembly.html).
-
-```
-# todo for jfg
-design stack
-make stack
-describe stack
-
-```
+The `R` work starts here `r emo::ji("grimacing_face")`, continued from work assembling the [metagenomic data](./shotgun_assembly.html). 
 
 
 ---
@@ -47,27 +39,70 @@ Here, we do the following: for `Kraken2+Bracken`, and separately for ``Kaiju`:
   4. export this output to [`phyloseq`](http://joey711.github.io/phyloseq/install.html), a `R` library _specifically_ for doing microbial community ecology, designed to keep all the community data in one place, and make using `R` easier for microbiologists, virologists, mycologists & co. 
 
   
-**Note:**  - it's the same idea for `Kraken2-Bracken` and for `Kaiju`, except that step 2 is different (because `Bracken` output is different from `Kaiju` output). Note also that we're starting this in `R`, using the outputs from the [first page](https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling).
+**Note:**  - it's the same idea for `Kraken2-Bracken` and for `Kaiju`, except that step 2 is different (because `Bracken` output is different from `Kaiju` output). Note also that we're using the outputs from the [first page](https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling).
 
+
+## 0. Set up `R`
+
+This might not be necessary for you, but here we set up `R` using `conda` - this creates a local version that we have control over. We start off in `*bash*`, using [`conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) to get going.
+
+```{R, eval=FALSE}
+# R! - requires conda to be installed
+conda create -n fyR
+conda activate fyR
+
+# get a personal copy of R; -y flag for silent install
+# we'll still have to install libraries of interest 
+conda install -c r -y r
+
+# dir for microbial community
+R=$WRK/5__rmicro
+mkdir $R
+mkdir $R/analysis $R/input $R/output $R/vis $R/documents
+
+# arrange your outputs from Krak  & kaiju
+cp $KROUT/*tsv $R/input
+cp $KaOUT/*tsv $R/input
+
+# check picking up the correct env
+which R
+
+# here we go!
+R
+
+``` 
 
 ## 1. Import data to `R`
 
 Point to your output files, and import them: here there are 2 files for `Kraken2`, 1 file for `Kaiju`.
 
+  
+  
 ```{R, eval=FALSE}
 ## Kraken2
 
+  # # dummy
+  # # INES
+  # krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv"
+  # krak2_mpa_file="../input/fhi_redch_krakenStnd_taxonomy.tsv"
+  # kaij_file="../input/fhi__redch__kaiju_speciesab.tsv"
+  # # NURIA
+  # krak2_brack_file="../input/fhi__chickmi_krakenStnd_abundances.tsv"
+  # krak2_mpa_file="../input/fhi__chickmi_krakenStnd_taxonomy.tsv"
+  # kaij_file="../input/fhi__chickmi_total__kaiju_summary_species.tsv"
+  
+  
 # output from kraken2-bracken, combined to one file
-  krak2_brack_file="../input/fhi__redch_krakenStnd_abundances.tsv"
+  krak2_brack_file="../input/rmicro__krakenStnd_abundances.tsv"
 
 # output from single kraken2 report, converted to MPA
-  krak2_mpa_file="../input/fhi__redch_krakenStnd_abundances.tsv"
+  krak2_mpa_file="../input/rmicro__krakenStnd_taxonomy.tsv"
 
 
 ## Kaiju
   
 # output from kaiju's kaiju2table output
-  kaij_file="../input/fhi__chickmi__kaiju_species.tsv"
+  kaij_file="../input/rmicro__total__kaiju_summary_species.tsv"
 ```
 
 
@@ -358,34 +393,34 @@ Note - at this stage we've reduced gigabytes of sequence data into ~3 basic spre
 
 ```{R, eval=FALSE}
 ## general metadata
-    write.table(mgdat, "./fhi__redch__metadata-20__dat.tsv")
-    saveRDS( mgdat, "./fhi__redch__metadata-20__dat.RDS")
+    write.table(mgdat, "../output/rmicro__metadata__dat.tsv", sep = "\t")
+    saveRDS( mgdat, "../output/rmicro__metadata__dat.RDS")
 
 
 ## for Kraken2:
   
   ## tsv output
-    write.table(k2_counts, "./fhi__redch__krakenStnd-20__num.tsv")
-    write.table(k2_relab, "./fhi__redch__krakenStnd-20__frac.tsv")
-    write.table(k2_tax, "./fhi__redch__krakenStnd-20__tax.tsv")
+    write.table(k2_counts, "../output/rmicro__krakenStnd__num.tsv", sep = "\t")
+    write.table(k2_relab, "../output/rmicro__krakenStnd__frac.tsv", sep = "\t")
+    write.table(k2_tax, "../output/rmicro__krakenStnd__tax.tsv", sep = "\t")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(k2_counts), "./fhi__redch__krakenStnd-20__num.RDS")
-    saveRDS( t(k2_relab), "./fhi__redch__krakenStnd-20__frac.RDS")
-    saveRDS( k2_tax, "./fhi__redch__krakenStnd-20__tax.RDS")
+    saveRDS( t(k2_counts), "../output/rmicro__krakenStnd__num.RDS")
+    saveRDS( t(k2_relab), "../output/rmicro__krakenStnd__frac.RDS")
+    saveRDS( k2_tax, "../output/rmicro__krakenStnd__tax.RDS")
 
         
 ## for Kaiju:
 
   ## tsv output
-    write.table(ka_counts, "./fhi__redch__kaijuStnd-20__num.tsv")
-    write.table(ka_relab, "./fhi__redch__kaijuStnd-20__frac.tsv")
-    write.table(ka_tax, "./fhi__redch__kaijuStnd-20__tax.tsv")
+    write.table(ka_counts, "../output/rmicro__kaijuStnd__num.tsv", sep = "\t")
+    write.table(ka_relab, "../output/rmicro__kaijuStnd__frac.tsv", sep = "\t")
+    write.table(ka_tax, "../output/rmicro__kaijuStnd__tax.tsv", sep = "\t")
     
   ## RDS for R output - note samples are ROWS
-    saveRDS( t(ka_counts), "./fhi__redch__kaijuStnd-20__num.RDS")
-    saveRDS( t(ka_relab), "./fhi__redch__kaijuStnd-20__frac.RDS")
-    saveRDS( ka_tax, "./fhi__redch__kaijuStnd-20__tax.RDS")
+    saveRDS( t(ka_counts), "../output/rmicro__kaijuStnd__num.RDS")
+    saveRDS( t(ka_relab), "../output/rmicro__kaijuStnd__frac.RDS")
+    saveRDS( ka_tax, "../output/rmicro__kaijuStnd__tax.RDS")
 
 ```
 
@@ -401,35 +436,37 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
   ## note also: we did not extract any phylogenetic tree from 
   ##  - the shotgun data, so no tree is included below
 
+    library(phyloseq)
+
 ## Kraken2/Bracken   ---
 
   # look at the first ten rows, ten columns:
-    kr_counts[1:10, 1:10]
-    kr_relab[1:10, 1:10]
-    kr_tax[1:10, 1:5]
-    mgdat[1:10, 1:10 ]
+    k2_counts[1:10, 1:10]
+    k2_relab[1:10, 1:10]
+    k2_tax[1:10, 1:5]
+    mgdat[1:10,  ]
 
-    (kr2_phyloseq_dat <- phyloseq(mg_count, mg_tax, mgdat))
+    (k2_phyloseq_dat <- phyloseq(k2_counts, k2_tax, mgdat))
 
-    saveRDS( kr2_phyloseq_dat, "./fhi__redch__KrakenStnd__phylo.RDS")
-    phylo1 <- readRDS("./fhi__redch__KrakenStnd__phylo.RDS")
-    phylo1
+    saveRDS( k2_phyloseq_dat, "./rmicro__KrakenStnd__phylo.RDS")
+    k2_phylo <- readRDS("./rmicro__KrakenStnd__phylo.RDS")
+    k2_phylo
 
             
 ## Kaiju   ----------
     
   # look at the first ten rows, ten columns:
-    kr_counts[1:10, 1:10]
-    kr_relab[1:10, 1:10]
-    kr_tax[1:10, 1:5]
+    ka_counts[1:10, 1:10]
+    ka_relab[1:10, 1:10]
+    ka_tax[1:10, 1:5]
     mgdat[1:10, 1:10 ]
 
   # note: we use the count data..
-    (kai_phyloseq_dat <- phyloseq(mg_count, mg_tax, mgdat))
+    (kai_phyloseq_dat <- phyloseq(ka_counts, ka_tax, mgdat))
 
-    saveRDS( kai_phyloseq_dat, "./fhi__redch__KaijuStnd__phylo.RDS")
-    phylo2 <- readRDS("./fhi__redch__KaijuStnd__phylo.RDS")
-    phylo2
+    saveRDS( kai_phyloseq_dat, "./rmicro__KaijuStnd__phylo.RDS")
+    kai_phylo <- readRDS("./rmicro__KaijuStnd__phylo.RDS")
+    kai_phylo
     
 ```
 
