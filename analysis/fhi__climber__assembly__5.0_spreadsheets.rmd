@@ -46,7 +46,7 @@ Here, we do the following: for `Kraken2+Bracken`, and separately for ``Kaiju`:
 
 This might not be necessary for you, but here we set up `R` using `conda` - this creates a local version that we have control over. We start off in `*bash*`, using [`conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html) to get going.
 
-```{R, eval=FALSE}
+```{bash, eval=FALSE}
 # R! - requires conda to be installed
 conda create -n fyR
 conda activate fyR
@@ -75,23 +75,21 @@ R
 ## 1. Import data to `R`
 
 Point to your output files, and import them: here there are 2 files for `Kraken2`, 1 file for `Kaiju`.
-
   
+  <!-- # # dummy -->
+  <!-- # # INES -->
+  <!-- # krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv" -->
+  <!-- # krak2_mpa_file="../input/fhi_redch_krakenStnd_taxonomy.tsv" -->
+  <!-- # kaij_file="../input/fhi__redch__kaiju_speciesab.tsv" -->
+  <!-- # # NURIA -->
+  <!-- krak2_brack_file="../input/fhi__chickmi_krakenStnd_abundances.tsv" -->
+  <!-- krak2_mpa_file="../input/fhi__chickmi_krakenStnd_taxonomy.tsv" -->
+  <!-- kaij_file="../input/fhi__chickmi_total__kaiju_summary_species.tsv" -->
+
   
 ```{R, eval=FALSE}
 ## Kraken2
 
-  # # dummy
-  # # INES
-  # krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv"
-  # krak2_mpa_file="../input/fhi_redch_krakenStnd_taxonomy.tsv"
-  # kaij_file="../input/fhi__redch__kaiju_speciesab.tsv"
-  # # NURIA
-  # krak2_brack_file="../input/fhi__chickmi_krakenStnd_abundances.tsv"
-  # krak2_mpa_file="../input/fhi__chickmi_krakenStnd_taxonomy.tsv"
-  # kaij_file="../input/fhi__chickmi_total__kaiju_summary_species.tsv"
-  
-  
 # output from kraken2-bracken, combined to one file
   krak2_brack_file="../input/rmicro__krakenStnd_abundances.tsv"
 
@@ -210,12 +208,13 @@ We need to make taxonomic data from the material we have (we made files for this
 ```
 
 
-Next, add in the metadata we use to orgainse this study. Environmental variables like pH, SCFA, dates, locations, and other study design data go in here. We create a minimal set based on the data available:
+Next, add in the metadata we use to organise this study. Environmental variables like pH, SCFA, dates, locations, and other study design data go in here. We create a minimal set based on the data available:
 
 ```{R, eval=FALSE}
   mgdat <- data.frame("sample" = colnames(k2_counts),
                      "type" = gsub("(.).*", "\\1", colnames(k2_counts), perl = TRUE),
                      "seqdepth" = colSums(k2_counts) )
+  # View(mgdat)
 ```
 
 
@@ -242,7 +241,9 @@ Next, check that all the data looks sane and normal.
 
 ### 2b. for `Kaiju` data:
 
-In case we have outputs for `Kaiju`: point to output file, and then manipulate that data:
+In case we have outputs for `Kaiju`: point to output file, and then manipulate that data. We extract count and `%` data directly from the `kaidat` object, and set `kaiju IDs` as the "names" of the taxa.
+
+Note, had to delete some "`#`" characters from file, which gives errors.
 
 <!-- # ## fix sample names - NURIA -->
 <!-- # kaidat$file <- gsub(".*/_(N.*)_Nuria.*", "\\1", kaidat$file) -->
@@ -254,14 +255,16 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
   # remove 1+ header(s)
   kaidat <- kaidat[ !grepl("file", kaidat[,1]) , ]
   dim(kaidat)
+  head(kaidat)
   # View(kaidat)
   
   ## fix sample names
   kaidat$file <- gsub(".*/(.*)_kaiju.*", "\\1", kaidat$file)
-  kaidat$otu <- gsub( ".*;(.*);.*;", "\\1", kaidat$taxon_name )
+  kaidat$otu <- gsub( ".*;(.*);", "\\1", kaidat$taxon_name )
   kaidat$ID <- paste0( "kai__", stringr::str_pad( kaidat[, "taxon_id"], width = 7, pad = 0) )
   length(unique(kaidat$file))         # 20 files
-  length(unique(kaidat$otu))          # 1.3K OTUs
+  length(unique(kaidat$otu))          # 11.7K OTUs
+  length(unique(kaidat$ID))           # 11.7K IDs
   kaidat$percent <- as.numeric(as.character(kaidat$percent))
   
   # should be very close to nsamples * 100
@@ -279,37 +282,55 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
   # again, counts and percent
   sum( (kaidf[ , "reads"]))
   sum( (kaidf[ , "percent"]), na.rm = TRUE)  # nsample*100%
-
+  
   ## nreads unclassified / sent to bin
-  kaidf$substrate <- gsub(".*-([A-Z]*).*_.*", "\\1", kaidf$file)
+  kaidf$substrate <- gsub("([A-Z]).*", "\\1", kaidf$file)
   # ggplot(kaidf, aes(log10(reads), fill = substrate)) + geom_boxplot() + labs(title = "total N reads per substrate")
 
   
 ## congeal  -------------------------------------------
   
-  u_bio <- unique( kai$otu)
-  u_sample <- unique( kai$file)
-
+  # use the Kaiju ID, bot the genus name
+    u_bio <- unique( kaidf$ID)
+    u_sample <- unique( kaidf$file)
+    
+  ## count data
   # to each unique taxon found (u_bio), assign the number of counts found in each unique sample (u_sample)
-  ka_counts <- do.call("rbind", lapply( u_bio, function(aa){   # aa <- u_bio[100]
-    bb_df <- kai[ grep(aa, kai$otu) , ]
-    cc_vec <- unlist(lapply( u_sample, function(aaa){ # aaa <- u_sample[9]
-      as.numeric(bb_df[ match(aaa, bb_df$file) , "reads" ])
-    }))
-  } )
-  )
-  
-  rownames(ka_counts) <- u_bio# [1:100]
-  colnames(ka_counts) <- u_sample
-  # only keep real numbers
-  ka_counts[ is.na(ka_counts)] <- 0
-  dim( ka_counts <- ka_counts[ , !apply( ka_counts, 2, function(aa){ all(aa == 0)}) ] )
+    ka_counts <- do.call("rbind", lapply( u_bio, function(aa){   # aa <- u_bio[100]
+      bb_df <- kaidf[ grep(aa, kaidf$ID) , ]
+      cc_vec <- unlist(lapply( u_sample, function(aaa){ # aaa <- u_sample[9]
+        as.numeric(bb_df[ match(aaa, bb_df$file) , "reads" ])
+      }))
+    } )
+    )
+    rownames(ka_counts) <- u_bio # [1:100]
+    colnames(ka_counts) <- u_sample
+    
+    # only keep real numbers
+    ka_counts[ is.na(ka_counts)] <- 0
+    dim( ka_counts <- ka_counts[ , !apply( ka_counts, 2, function(aa){ all(aa == 0)}) ] )
 
-  # look
-  ka_counts[1:10,1:10]
-  
-  # make relative abudance
-  ka_relab <- apply( ka_counts, 2, function(aa){ aa/sum(aa) })
+        
+  ## % data    
+  # same, but make relative abudances using the values given by kaiju
+    ka_relab <- do.call("rbind", lapply( u_bio, function(aa){   # aa <- u_bio[100]
+      bb_df <- kaidf[ grep(aa, kaidf$ID) , ]
+      cc_vec <- unlist(lapply( u_sample, function(aaa){ # aaa <- u_sample[9]
+        as.numeric(bb_df[ match(aaa, bb_df$file) , "percent" ])
+      }))
+    } )
+    )
+    rownames(ka_relab) <- u_bio # [1:100]
+    colnames(ka_relab) <- u_sample
+    
+    # only keep real numbers
+    ka_relab[ is.na(ka_relab)] <- 0
+    dim( ka_relab <- ka_relab[ , !apply( ka_relab, 2, function(aa){ all(aa == 0)}) ] )
+    
+    
+    # look
+    ka_counts[1:10,1:10]
+    ka_relab[1:10,1:10]
 
 ```
 
@@ -317,18 +338,20 @@ In case we have outputs for `Kaiju`: point to output file, and then manipulate t
 Again, we have to fabricate out own taxonomic table, while taking care to manage any irregularities.
 
 ```{R, eval=FALSE}
+  
   ka_tax <- unique( t(# do.call("rbind", 
-                 apply( kai[ , c("ID", "taxon_name")], 1, function(aa){   # aa <- kai[ 1, c("ID", "taxon_name" )]
-                   bb_vec <- aa[2] # paste0( aa, collapse = ";")
-                   if( grepl("Viruses", bb_vec)){ 
-                     cc_vec <- c( rep( "Viruses", length(2:7)), aa[1])
-                   }else{
-                     cc_vec <- c( unlist(strsplit(unlist(bb_vec), ";"))[ 2:7], aa[1] )
-                     }
-                   cc_vec  }) ))
+    apply( kaidf[ , c("ID", "taxon_name")], 1, function(aa){   # aa <- kaidf[ 1, c("ID", "taxon_name" )]
+      bb_vec <- aa[2]
+      if( grepl("Viruses", bb_vec)){ 
+        cc_vec <- c( rep( "Viruses", length(2:7)), aa[1])
+      }else{
+        cc_vec <- c( unlist(strsplit(unlist(bb_vec), ";"))[ 2:7], aa[1] )
+      }
+      cc_vec  }) ))
+
 
   # set names
-  rownames(ka_tax) <- ka_tax[,5]
+  rownames(ka_tax) <- ka_tax[,7]
   colnames(ka_tax) <- c("p", "c", "o", "f", "g", "s", "ID")   # Jun'22 - remove "d" here, increase index of all names by 1
   head(ka_tax)
   dim(ka_tax <- (unique(ka_tax)))
@@ -446,10 +469,21 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
     k2_tax[1:10, 1:5]
     mgdat[1:10,  ]
 
-    (k2_phyloseq_dat <- phyloseq(k2_counts, k2_tax, mgdat))
+    # note: we use the count data
+    k2_otu <- otu_table(k2_counts, taxa_are_rows = TRUE)
+    # convert from df to matrix to tax_table to avoid losing rownames...
+    k2_tax2 <- tax_table(as.matrix(k2_tax))
 
-    saveRDS( k2_phyloseq_dat, "./rmicro__KrakenStnd__phylo.RDS")
-    k2_phylo <- readRDS("./rmicro__KrakenStnd__phylo.RDS")
+    (k2_phyloseq_dat <- phyloseq(
+      k2_otu,
+      k2_tax2,
+      # note no phylogenetic tree
+      sample_data(mgdat)
+      ))
+    
+    saveRDS( k2_phyloseq_dat, "../output/rmicro__KrakenStnd__phylo.RDS")
+    # check: save and read back in. RDS is a handy way to save/load data
+    k2_phylo <- readRDS("../output/rmicro__KrakenStnd__phylo.RDS")
     k2_phylo
 
             
@@ -459,15 +493,24 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
     ka_counts[1:10, 1:10]
     ka_relab[1:10, 1:10]
     ka_tax[1:10, 1:5]
-    mgdat[1:10, 1:10 ]
+    mgdat[1:10, ]
 
   # note: we use the count data..
-    (kai_phyloseq_dat <- phyloseq(ka_counts, ka_tax, mgdat))
+    # sample names need to match - here we solve an issue between "-" and "."
+    colnames(ka_counts) <- gsub("-", ".", colnames(ka_counts))
+    dim(kai_otu <- otu_table(ka_counts, taxa_are_rows = TRUE))
+    # minimum modification of sample names
+    colnames(kai_otu) <- paste0("X", colnames(kai_otu))
+    dim(kai_tax2 <- tax_table(ka_tax))
 
-    saveRDS( kai_phyloseq_dat, "./rmicro__KaijuStnd__phylo.RDS")
-    kai_phylo <- readRDS("./rmicro__KaijuStnd__phylo.RDS")
+    (kai_phyloseq_dat <- phyloseq(kai_otu, kai_tax2, sample_data(mgdat)))
+
+    saveRDS( kai_phyloseq_dat, "../output/rmicro__KaijuStnd__phylo.RDS")
+    # demo - save out and read back in again
+    kai_phylo <- readRDS("../output/rmicro__KaijuStnd__phylo.RDS")
     kai_phylo
-    
+
+        
 ```
 
 

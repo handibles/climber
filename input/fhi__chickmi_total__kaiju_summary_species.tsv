@@ -1,8 +1,8 @@
 file	percent	reads	taxon_id	taxon_name
 /data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju	0	0	10239	Viruses
 /data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju	0	0	NA	cannot be assigned to a (non-viral) genus
-/data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju	#NAME?	0	NA	belong to a (non-viral) genus having less than 10 reads
-/data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju	#NAME?	0	NA	unclassified
+/data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju		0	NA	belong to a (non-viral) genus having less than 10 reads
+/data/Food/analysis/R0602_microsupport/r0937/4__kaiju/APC084_neg_ctl_5_S304_L001_kaiju		0	NA	unclassified
 /data/Food/analysis/R0602_microsupport/r0937/4__kaiju/_N10_Nuria_S301_L001_kaiju	32.66489	75223	1578	NA;Firmicutes;Bacilli;Lactobacillales;Lactobacillaceae;Lactobacillus;NA;
 /data/Food/analysis/R0602_microsupport/r0937/4__kaiju/_N10_Nuria_S301_L001_kaiju	2.446078	5633	810	NA;Chlamydiae;Chlamydiia;Chlamydiales;Chlamydiaceae;Chlamydia;NA;
 /data/Food/analysis/R0602_microsupport/r0937/4__kaiju/_N10_Nuria_S301_L001_kaiju	2.108239	4855	209	NA;Proteobacteria;Epsilonproteobacteria;Campylobacterales;Helicobacteraceae;Helicobacter;NA;

@@ -1,0 +1,103 @@
+---
+title: 'First Look at the Microbiome in `R`'
+author: 'IC / NPV / JFG'
+date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
+output:
+  html_document:
+    toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+    number_sections: FALSE
+  pdf_document: 
+    toc: TRUE
+    toc_depth: 3
+    number_sections: FALSE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/data_to_R.html') })
+---
+
+> workflow incomplete `r emo::ji("construction")`
+
+---
+
+Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly foamt
+
+
+
+---
+
+
+# Introduction
+
+Get
+  
+  
+```{R, eval=FALSE}
+
+
+
+
+library("phyloseq"); packageVersion("phyloseq")
+
+theme_set(theme_bw())
+
+# basic visuals
+
+plot_bar(physeq, fill = "Family")
+
+plot_heatmap(physeq1)
+
+plot_heatmap(physeq1, taxa.label="Phylum")
+
+plot_richness(myData, x="BODY_SITE", color="Description")
+
+OTUnames10 = names(sort(taxa_sums(GP), TRUE)[1:10])
+GP10  = prune_taxa(OTUnames10,  GP)
+mGP10 = prune_taxa(OTUnames10, mergedGP)
+ocean_samples = sample_names(subset(sample_data(GP), SampleType=="Ocean"))
+print(ocean_samples)
+
+rowSums(otu_table(GP10)[, ocean_samples])
+
+plot_richness(GP, "human", "SampleType", title="unmerged")
+
+
+# basic subsets 
+
+rank_names(GlobalPatterns)
+
+sample_variables(GlobalPatterns)
+
+otu_table(GlobalPatterns)[1:5, 1:5]
+
+tax_table(GlobalPatterns)[1:5, 1:4]
+
+taxa_names(GlobalPatterns)[1:10]
+
+# name the ten largest
+myTaxa = names(sort(taxa_sums(GlobalPatterns), decreasing = TRUE)[1:10])
+
+# choose jsut those ten
+ex1 = prune_taxa(myTaxa, GlobalPatterns)
+
+# make %
+GPr  = transform_sample_counts(GlobalPatterns, function(x) x / sum(x) )
+
+# filter out those below 10-5 (0.00001) %
+GPfr = filter_taxa(GPr, function(x) mean(x) > 1e-5, TRUE)
+
+# keep only the family Chlamydiae
+GP.chl = subset_taxa(GlobalPatterns, Phylum=="Chlamydiae")
+# from those samples, only keep samples with at least 20 counts
+GP.chl = prune_samples(sample_sums(GP.chl)>=20, GP.chl)
+
+# combine aka merge the first 5 Chlamydiae taxa
+GP.chl.merged = merge_taxa(GP.chl, taxa_names(GP.chl)[1:5])
+
+# summarise all taxa to the family level
+gpsfbg = tax_glom(gpsfb, "Family")
+
+
+
+
+
+```
