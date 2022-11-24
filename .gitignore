@@ -4,11 +4,12 @@
 #/analysis
 #/documents
 #/input
-#/output
 #/vis
 #*.R
 #*.sh
 #*.py
+/output/r0936
+/output/r0937
 
 ## ignore for the most part, Rstudio chaff
 /.Rproj.user
