@@ -1011,24 +1011,31 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-## one big slurm to for-loop over kraken (which is fast to iterate)
-## thereby avoiding mem issues
+module load kraken2/2.1.1
 
+
+# explicit about our parameters
+CONF=0.15
+MINH=3
+MINQ=10
+
+
+#one big loop / aw yeh aw yehh
 for i in $( cat $LIST );
 do
   if [ -s $OUT/${i}*_kraken_report ]
   then
     echo "## krak2 output for $i already in $OUT - stopping"
   else
-    echo "## firing krak2 on $i"
+    echo "## firing krak2 on $i ; conf $CONF: min-hits $MINH; min qual: $MINQ "
 
     time kraken2 --db $DB \
     $IN/${i}_bt2decon_R1.fastq.gz \
     $IN/${i}_bt2decon_R2.fastq.gz \
     --paired \
-    --confidence 0.5 \
-    --minimum-hit-groups 5 \
-    --minimum-base-quality 20 \
+    --confidence $CONF \
+    --minimum-hit-groups $MINH \
+    --minimum-base-quality $MINQ \
     --threads $THREADS \
     --gzip-compressed \
     --report $OUT/${i}_kraken_report \

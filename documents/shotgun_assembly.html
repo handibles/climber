@@ -1493,7 +1493,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">22 Nov 2022, 15:36</h4>
+<h4 class="date">29 Nov 2022, 16:22</h4>
 
 </div>
 
@@ -2866,24 +2866,31 @@ OUT=$3
 DB=$4
 THREADS=$5
 
-## one big slurm to for-loop over kraken (which is fast to iterate)
-## thereby avoiding mem issues
+module load kraken2/2.1.1
 
+
+# explicit about our parameters
+CONF=0.15
+MINH=3
+MINQ=10
+
+
+#one big loop / aw yeh aw yehh
 for i in $( cat $LIST );
 do
   if [ -s $OUT/${i}*_kraken_report ]
   then
     echo &quot;## krak2 output for $i already in $OUT - stopping&quot;
   else
-    echo &quot;## firing krak2 on $i&quot;
+    echo &quot;## firing krak2 on $i ; conf $CONF: min-hits $MINH; min qual: $MINQ &quot;
 
     time kraken2 --db $DB \
     $IN/${i}_bt2decon_R1.fastq.gz \
     $IN/${i}_bt2decon_R2.fastq.gz \
     --paired \
-    --confidence 0.5 \
-    --minimum-hit-groups 5 \
-    --minimum-base-quality 20 \
+    --confidence $CONF \
+    --minimum-hit-groups $MINH \
+    --minimum-base-quality $MINQ \
     --threads $THREADS \
     --gzip-compressed \
     --report $OUT/${i}_kraken_report \
