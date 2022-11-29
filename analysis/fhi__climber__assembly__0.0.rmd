@@ -963,9 +963,9 @@ time kraken2 --db $K2REFDIR \
 $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
 $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.5 \
---minimum-hit-groups 5 \
---minimum-base-quality 20 \
+--confidence 0.15 \
+--minimum-hit-groups 3 \
+--minimum-base-quality 10 \
 --report-zero-counts \
 --gzip-compressed \
 --threads $KR_threads \

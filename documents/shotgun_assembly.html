@@ -1493,7 +1493,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">29 Nov 2022, 16:22</h4>
+<h4 class="date">29 Nov 2022, 16:28</h4>
 
 </div>
 
@@ -2816,9 +2816,9 @@ time kraken2 --db $K2REFDIR \
 $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
 $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.5 \
---minimum-hit-groups 5 \
---minimum-base-quality 20 \
+--confidence 0.15 \
+--minimum-hit-groups 3 \
+--minimum-base-quality 10 \
 --report-zero-counts \
 --gzip-compressed \
 --threads $KR_threads \
