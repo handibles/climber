@@ -1091,28 +1091,26 @@ Bioinformaticians use *three weird tricks* to make their microbial dreams come t
 
 There are several databases on the HPC for Bracken, but if there is not one for our read-length (**130bp?**), we will have to make one!
 
+<!-- # can write out to main ref dir! also, issues if using on softlinks??  -->
+<!-- # need to make a bit of a hack here:  *symlink* to the K2 DB as not sure can write out to main ref dir -->
+<!-- ln -s $K2REFDIR/opts.k2d $WRK/ref/opts.k2d   -->
+<!-- ln -s $K2REFDIR/hash.k2d $WRK/ref/hash.k2d   -->
+<!-- ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d   -->
+<!-- ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map   -->
+<!-- ln -s $K2REFDIR/library $WRK/ref/library   -->
+<!-- ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy   -->
+<!-- cd ~ -->
+
 ```{bash, eval=FALSE}
 ## build data base first
 BR_kmer=35    # this is the default kmer length of the Kraken2 DB on the HPC
 BR_leng=130   # length post-trimm
 
-# need to make a bit of a hack here
+## make a local install of bracken via github for building DB
 mkdir ~/bin ; cd ~/bin &&
 wget https://github.com/jenniferlu717/Bracken/archive/refs/heads/master.zip ; unzip master.zip && rm master.zip
 cd ~/bin/Bracken-master
 chmod +x install_bracken.sh ; ./install_bracken.sh
-
-# next, *symlink* to the K2 DB as not sure can write out to main ref dir
-module load kraken2/2.1.1 
-module unload braken
-ln -s $K2REFDIR/opts.k2d $WRK/ref/opts.k2d  
-ln -s $K2REFDIR/hash.k2d $WRK/ref/hash.k2d  
-ln -s $K2REFDIR/taxo.k2d $WRK/ref/taxo.k2d  
-ln -s $K2REFDIR/seqid2taxid.map $WRK/ref/seqid2taxid.map  
-ln -s $K2REFDIR/library $WRK/ref/library  
-ln -s $K2REFDIR/taxonomy $WRK/ref/taxonomy  
-cd ~
-
 
 echo '#!/bin/bash
 
@@ -1127,13 +1125,13 @@ BRDB_KMER=$2
 BRDB_LENG=$3
 BRDB_THREADS=$4
 
-## not tested!
-time ./bracken-build -d $BRDB_DIR -k $BRDB_KMER -l $BRDB_LENG -t $BRDB_THREADS
+## not tested
+time ~/bin/Braken-master/bracken-build -d $BRDB_DIR -k $BRDB_KMER -l $BRDB_LENG -t $BRDB_THREADS
 
 ' > $MAT/slurm_brak_db.sh # dir kmer length threads
 
-sbatch slurm_brak_db.sh $MSDAT/ref/kraken2 $BR_kmer $BR_leng 20
-
+# run on the existing, default kraken database
+sbatch slurm_brak_db.sh /data/databases/kraken2 $BR_kmer $BR_leng 20
 
 ```
 
