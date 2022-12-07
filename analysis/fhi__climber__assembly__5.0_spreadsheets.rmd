@@ -238,8 +238,81 @@ Next, check that all the data looks sane and normal.
 ```
 
 
+### 2b. `Kraken2` on it's own `:(`
 
-### 2b. for `Kaiju` data:
+> note that this isn't recommended 
+
+You might not want to use `Bracken` (or more likely, you might not be able to make a `Bracken` database). It is [not the best idea](https://doi.org/10.1038/s41596-022-00738-y), but you can 
+
+  * combine all the `Kraken2` reports to one file
+  * get all the species (`S`) and strains (`S1`) from that report
+  * extract the taxonomic info, and combine all the abundances at `S`pecies level
+
+First, we get the species data. Be careful here that you don't accidentally include the `$TEST` file too! This would duplicate that sample. 
+
+```{bash, eval=FALSE}
+##   i n   b a s h   ================================================== ##
+
+# presume you've made a load of kraken2 files:
+ls -lsh $KROUT/*kraken_report
+
+# be careful here that you don't accidentally include the $TEST file too! This would duplicate that sample
+~/bin/KrakenTools/combine_kreports.py -r $KROUT/*kraken_report -o $KROUT/krakenStnd_kreportCombo.tsv
+
+# table of sorts
+grep -E 'perc\stot_all' $KROUT/krakenStnd_kreportCombo.tsv | sed 's/#//' > $KROUT/krakenStnd_kreportCombo_count.tsv
+grep -E '\sS1?\s' $KROUT/krakenStnd_kreportCombo.tsv >> $KROUT/krakenStnd_kreportCombo_count.tsv
+
+```
+
+
+Put the file where it needs to be (assuming alongside `krak2_brack_file` & `krak2_mpa_file` described above). Note the structure of this data using `head()`: there are two columns for each sample: `all` (all reads from this point onwards in the tree), and `lvl` (reads assigned to this specific level in the tree). If we selected `all`, we would count the same values multiple times at each level. The `lvl` counts are the abundances assigned specifically to that taxonomic point - this is what we will use.
+
+As there will be several e.g. _Streptococcus thermophilus_ strains (`S1` level), we will gather read abundances for all those strains to `S`pecies level by finding all taxa who's names contain _Streptococcus thermophilus_ (and do this for all taxa present). 
+
+Note that we also make a `taxonomy` table based on the work above, to try match the feature IDs properly. 
+
+```{R, eval=FALSE}
+
+just_krak <- "../input/krakenStnd_kreportCombo.tsv"
+krak2 <- read.table(just_krak, header=TRUE, sep="\t", quote = "")
+rownames(krak2) <- paste0("k2_", stringr::str_pad(krak2$taxid, width=7, pad=0))
+head(krak2)
+# View(krak2)
+
+# choose to keep the abundances at "_lvl", rather than at "_all" 
+kfeat <- krak2[ , grep("\\d_lvl$", colnames(krak2), value= TRUE, perl=TRUE) ]
+head(kfeat)
+
+# fix some names, esp for the next step
+tax_x <- data.frame(taxon=krak2[ ,30], k2_id=krak2[ ,29], row.names = rownames(krak2) , stringsAsFactors = FALSE)
+tax_x[,1] <- gsub('\\/','', tax_x[,1])
+tax_x[,1] <- gsub('ALOs_','ALOs-', tax_x[,1])
+tax_x[,1] <- gsub('[\\[\\]]','', tax_x[,1], perl = TRUE)
+
+# make a clean genus and species column
+tax_x$G <- gsub("^\\s*(\\w*)\\s.*", "\\1", tax_x$taxon, perl=TRUE)
+tax_x$S <- gsub("^\\s*(\\w+)\\s(\\w+)\\s*.*", "\\2", tax_x$taxon, perl=TRUE)
+head(tax_x)
+# View(tax_x)
+
+# now gather abundances based on perfect matches to each "Genus species" combo
+kIDs_per_unique_binomials <- apply( unique(tax_x[,c("G", "S")]), 1, function(aa){ rownames(tax_x)[(tax_x$G == unlist(aa[1])) & (tax_x$S == unlist(aa[2]))] })
+k2only_counts <- t(sapply( kIDs_per_unique_binomials, function(aa){ colSums(kfeat[ aa , ]) }))
+
+# make a taxonomy file, based on teh work done above using krak2_mpa_file
+k2only_tax2 <- tax_c[kraken_ids , ]
+
+# check dimensions / orientation
+dim(k2only_counts)
+dim(k2only_tax)
+
+```
+
+From here, `k2only_counts` and `k2only_tax` can be used instead of `k2_counts` & `k2_tax` made above (i.e. use them to make `phyloseq` etc.), though you will have to edit the names as necessary. Do also check that the `taxa`/`samples` are on the right sides!
+
+
+### 2c. for `Kaiju` data:
 
 In case we have outputs for `Kaiju`: point to output file, and then manipulate that data. We extract count and `%` data directly from the `kaidat` object, and set `kaiju IDs` as the "names" of the taxa.
 
@@ -514,7 +587,78 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
 ```
 
 
+<!-- # Sandbox -->
+
+<!-- Use a phyloseq object - it's up to you which one. -->
+
+<!-- ```{R, eval=FALSE} -->
+<!-- library("phyloseq"); packageVersion("phyloseq") -->
+
+<!-- theme_set(theme_bw()) -->
+
+<!-- # basic visuals -->
+
+<!-- plot_bar(physeq, fill = "Family") -->
+
+<!-- plot_heatmap(physeq1) -->
+
+<!-- plot_heatmap(physeq1, taxa.label="Phylum") -->
+
+<!-- plot_richness(myData, x="BODY_SITE", color="Description") -->
+
+<!-- OTUnames10 = names(sort(taxa_sums(GP), TRUE)[1:10]) -->
+<!-- GP10  = prune_taxa(OTUnames10,  GP) -->
+<!-- mGP10 = prune_taxa(OTUnames10, mergedGP) -->
+<!-- ocean_samples = sample_names(subset(sample_data(GP), SampleType=="Ocean")) -->
+<!-- print(ocean_samples) -->
+
+<!-- rowSums(otu_table(GP10)[, ocean_samples]) -->
+
+<!-- plot_richness(GP, "human", "SampleType", title="unmerged") -->
+
+
+<!-- # basic subsets  -->
+
+<!-- rank_names(GlobalPatterns) -->
+
+<!-- sample_variables(GlobalPatterns) -->
+
+<!-- otu_table(GlobalPatterns)[1:5, 1:5] -->
+
+<!-- tax_table(GlobalPatterns)[1:5, 1:4] -->
+
+<!-- taxa_names(GlobalPatterns)[1:10] -->
+
+<!-- # name the ten largest -->
+<!-- myTaxa = names(sort(taxa_sums(GlobalPatterns), decreasing = TRUE)[1:10]) -->
+
+<!-- # choose jsut those ten -->
+<!-- ex1 = prune_taxa(myTaxa, GlobalPatterns) -->
+
+<!-- # make % -->
+<!-- GPr  = transform_sample_counts(GlobalPatterns, function(x) x / sum(x) ) -->
+
+<!-- # filter out those below 10-5 (0.00001) % -->
+<!-- GPfr = filter_taxa(GPr, function(x) mean(x) > 1e-5, TRUE) -->
+
+<!-- # keep only the family Chlamydiae -->
+<!-- GP.chl = subset_taxa(GlobalPatterns, Phylum=="Chlamydiae") -->
+<!-- # from those samples, only keep samples with at least 20 counts -->
+<!-- GP.chl = prune_samples(sample_sums(GP.chl)>=20, GP.chl) -->
+
+<!-- # combine aka merge the first 5 Chlamydiae taxa -->
+<!-- GP.chl.merged = merge_taxa(GP.chl, taxa_names(GP.chl)[1:5]) -->
+
+<!-- # summarise all taxa to the family level -->
+<!-- gpsfbg = tax_glom(gpsfb, "Family") -->
+
+<!-- ``` -->
+
+
+
 # Next Steps
+
+
 
 That was, hopefully, easy! Take this data, and have a look at the [phyloseq guide](http://joey711.github.io/phyloseq) to exploring data, their inspirational [F1000 expanded methods paper](https://f1000research.com/articles/5-1492), or other guides as recommended on the [`climber` page](https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference).
         
