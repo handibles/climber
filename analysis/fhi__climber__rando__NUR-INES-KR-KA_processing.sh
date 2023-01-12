@@ -1,6 +1,58 @@
 
 
-  walkthrouhg for contaminated NURIA data
+
+
+
+
+
+##  30.11.2022   ==================
+
+# nur def v def15.3.10
+WRK=/data/Food/share/jamie/r0937
+K2REFDIR=$MSDAT/ref   # 130mers
+KR_threads=5
+TEST=Q4T8
+
+
+module load kraken2/2.1.1
+module load braken
+
+BR_r=130
+BR_l=S
+BR_t=10   # counts! not threads
+
+for i in $(cat $INES/Materials/samples );
+  do bracken -d $MSDAT/ref/ -i ${KROUT}_def15.3.10/${i}_kraken_report -o ${KROUT}_def15.3.10/${i}.bracken -r $BR_r -l $BR_l -t $BR_t ;
+done                                                                                        
+
+combine_bracken_outputs.py --files ${KROUT}_def15.3.10/*.bracken -o ${KROUT}_def15.3.10/fhi_chickmi_krakenStnd_abundances.def15.3.10.tsv
+
+
+time kraken2 --db $K2REFDIR \
+$KDOUT/${TEST}_bt2decon_R1.fastq.gz \
+$KDOUT/${TEST}_bt2decon_R2.fastq.gz \
+--paired \
+--confidence 0.15 \
+--report-zero-counts \
+--minimum-hit-groups 3 \
+--minimum-base-quality 10 \
+--gzip-compressed \
+--threads $KR_threads \
+--report ${KROUT}_def15.3.10/${TEST}_kraken_report \
+--output ${KROUT}_def15.3.10/${TEST}_kraken_output
+
+
+~/bin/KrakenTools/kreport2mpa.py -r ${KROUT}_def15.3.10/${TEST}_test_kraken_report -o ${KROUT}_def15.3.10/${TEST}_kraken.def15.3.10_mpa 
+grep -h '|s_' ${KROUT}_default/${TEST}_kraken.def15.3.10_mpa | cut -f 1 | sort | uniq  sed 's/|/\t/g' > ${KROUT}_default/fhi_redch_krakenStnd_taxonomy.def15.3.10.tsv
+
+
+
+##  29.11.2022   ==================
+
+
+## ================================
+
+ walkthrouhg for contaminated NURIA data
 
 ## todo
 rearrange NUria samples
@@ -9,6 +61,18 @@ what database
 INES: 
 kai - ....
 kr2 - done
+krak - which one had how much?
+
+for i in $(cat $INES/Materials/samples );
+do
+	echo $i $(grep -E 'unclassified$' $SHAR/r0936/4__krak2_def15/${i}_kraken_report) ;
+done > ines_krak_unclass_counter.txt
+
+# alt
+for i in $(cat $INES/Materials/samples );
+do
+	echo $i $(grep -E 'root$' $SHAR/r0936/4__krak2_def15/${i}_kraken_report) ;
+done > ines_krak_class_counter.txt
 
 NUR:
 kai - done
@@ -73,8 +137,8 @@ graphical representations!!
 KaDB=/data/databases/kaiju/nr
 WRK=$MSDAT/r0936
 KDOUT=$WRK/3__knead
-KaOUT=$WRK/4__kaiju
-KROUT=$MSDAT/r0936/4__krak2_default
+#KaOUT=$WRK/4__kaiju
+KROUT=$MSDAT/r0936/4__krak2
 # mkdir $KaOUT
 TEST=Q4T7
 
@@ -88,28 +152,73 @@ gzip $KDOUT/${TEST}_bt2_decontamd.bam &
 # kraken2
 module load kraken2/2.1.1
 KR_threads=5
-K2REFDIR=$MSDAT/ref   # 130mers
+K2REFDIR=/data/databases/kraken2   # 130mers
+TEST=Q4T8
 
+
+# kraken taxonomy
 time kraken2 --db $K2REFDIR \
 $KDOUT/${TEST}_bt2decon_R1.fastq.gz \
 $KDOUT/${TEST}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.5 \
---minimum-hit-groups 5 \
---minimum-base-quality 20 \
+--confidence 0.15 \
+--report-zero-counts \
+--minimum-hit-groups 3 \
+--minimum-base-quality 10 \
 --gzip-compressed \
 --threads $KR_threads \
---report $KROUT/${TEST}_kraken_report \
---output $KROUT/${TEST}_kraken_output
+--report ${KROUT}_def15.3.10/${TEST}_test_kraken_report \
+--output ${KROUT}_def15.3.10/${TEST}_test_kraken_output
+
+
+sbatch $MAT/slurm_krak2_loop.sh $INES/Materials/samples $KDOUT ${KROUT}_def15.3.10 $K2REFDIR 10
+
+## bracken 130
+time ~/bin/Bracken-master/bracken-build -d /data/databases/kraken2 -k 35 -l 125 -t 30
 
 module load braken
 BR_r=130
 BR_l=S
 BR_t=10   # counts! not threads
-bracken -d $K2REFDIR/ -i $KROUT/${TEST}_kraken_report -o $KROUT/${TEST}.bracken -r $BR_r -l $BR_l -t $BR_t
-lk $KROUT/*.bracken
-combine_bracken_outputs.py --files $KROUT/*.bracken -o $KROUT/krakenStnd_abundances.tsv
+for i in $( cat $INES/Materials/samples )
+	do bracken -d $MSDAT/ref/ -i ${KROUT}_def15.3.10/${i}_kraken_report -o ${KROUT}_def15.3.10/${i}.bracken -r $BR_r -l $BR_l -t $BR_t
+done
+combine_bracken_outputs.py --files ${KROUT}_def15.3.10/*.bracken -o ${KROUT}_def15.3.10/krakenStnd.0.15_abundances.tsv
+lk ${KROUT}_def15.3.10/*.bracken
 
+# regen taxonomy
+~/bin/KrakenTools/kreport2mpa.py \
+  -r ${KROUT}_def15.3.10/${TEST}_kraken_report \
+  -o ${KROUT}_def15.3.10/${TEST}_kraken_mpa
+grep -h '|s_' ${KROUT}_def15.3.10/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed 's/|/\t/g' > ${KROUT}_def15.3.10/krakenStnd0.15_taxonomy.tsv
+head $SHAR/r0936/4__krak2_def15/krakenStnd0.15_taxonomy.tsv
+
+
+# kraken2 standard (can use bracken)
+lk $INES/4__krak2
+
+# kraken2 maxi (no bracken) - in jamie.dir
+lk $MSDAT/r0936/4__krak2_maxi/*kraken_report
+
+
+## alt :: use permissive krak2_loop 15.3.10
+KROUT=$MSDAT/r0936/4__krak2
+
+mkdir ${KROUT}_def15.3.10
+sbatch $MAT/slurm_krak2_loop.sh $INES/Materials/samples $KDOUT ${KROUT}_def15.3.10 $K2REFDIR 10
+mkdir ${KROUT}_mxi15.3.10
+sbatch $MAT/slurm_krak2_loop.sh $INES/Materials/samples $KDOUT ${KROUT}_mxi15.3.10 $MXIKDB 10
+
+## check assignemnets of different kraken setups
+
+grep -E unclassified$ ${KROUT}_fonly/_N*report
+grep -E unclassified$ ${KROUT}_default/_N*report
+grep -E unclassified$ ${KROUT}_def15.3.10/_N*report
+grep -E unclassified$ ${KROUT}_maxi/_N*report
+grep -E unclassified$ ${KROUT}_maxi.15.3.10/_N*report
+
+
+##   I N E S   K A I J U   ------------------ #
 
 ## redo kaiju for $TEST also
 KaDB=/data/databases/kaiju/nr
@@ -132,6 +241,11 @@ time kaiju \
 -o $KaOUT/${TEST}_kaiju
 
 
+## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
+kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/fhi__redch__kaiju_speciesab.tsv $KaOUT/*_kaiju
+
+less $KaOUT/total_kaiju__summary_species.tsv
+
 
 # sbatch $MAT/slurm_kaij_loop.sh $INES/Materials/samples $KDOUT $KaOUT $KaDB  10
 
@@ -145,17 +259,6 @@ do
   echo "## kaiju sample processed: ${i} : total classified: ${KAI_PC}% (total: $KAI_TOT read pairs)  ------"
 done
 
-
-# kraken2 standard (can use bracken)
-lk $INES/4__krak2
-
-# kraken2 maxi (no bracken) - in jamie.dir
-lk $MSDAT/r0936/4__krak2_maxi/*kraken_report
-
-## all taxonomy together, *AT THE SPECIES LEVEL* - some issue solved by adding -l arg in kaiju2Table
-kaiju2table -t $KaDB/nodes.dmp -n $KaDB/names.dmp -r species -c 10 -l domain,phylum,class,order,family,genus,species -o $KaOUT/fhi__redch__kaiju_speciesab.tsv $KaOUT/*_kaiju
-
-less $KaOUT/total_kaiju__summary_species.tsv
 
 
 # NUR  ================================================
@@ -180,18 +283,18 @@ time kraken2 --db $K2REFDIR \
 ${KDOUT}/${TEST}_bt2decon_R1.fastq.gz \
 ${KDOUT}/${TEST}_bt2decon_R2.fastq.gz \
 --paired \
---confidence 0.5 \
---minimum-hit-groups 5 \
---minimum-base-quality 20 \
+--confidence 0.15 \
+--minimum-hit-groups 3 \
+--minimum-base-quality 10 \
 --report-zero-counts \
 --gzip-compressed \
 --threads $KR_threads \
---report ${KROUT}_default/${TEST}_test_kraken_report \
---unclassified-out ${KROUT}_default/${TEST}_test_kraken_unclass# \
---output ${KROUT}_default/${TEST}_test_kraken_output
+--report ${KROUT}_def15.3.10/${TEST}_test_kraken_report \
+--unclassified-out ${KROUT}_def15.3.10/${TEST}_test_kraken_unclass# \
+--output ${KROUT}_def15.3.10/${TEST}_test_kraken_output
 
 # KrakenTools: convert to mpa stylee
-~/bin/KrakenTools/kreport2mpa.py -r ${KROUT}_default/${TEST}_test_kraken_report -o ${KROUT}_default/${TEST}_kraken_mpa
+~/bin/KrakenTools/kreport2mpa.py -r ${KROUT}_def15.3.10/${TEST}_test_kraken_report -o ${KROUT}_def15.3.10/${TEST}_kraken_mpa
 # pipe mpa file to reformat
 grep -h '|s_' ${KROUT}_default/${TEST}_kraken_mpa | cut -f 1 | sort | uniq | sed 's/|/\t/g' > ${KROUT}_default/krakenStnd_taxonomy.tsv
 
@@ -200,6 +303,24 @@ K2REFDIR=$MSDAT/ref/kraken2
 sbatch $MAT/slurm_krak2_loop.sh $NUR/Materials/samples $KDOUT ${KROUT}_default $K2REFDIR 10
 sbatch $MAT/slurm_krak2_loop.sh $NUR/Materials/samples $KDOUT ${KROUT}_maxi $MXIKDB 10
 sbatch $MAT/slurm_krak2-fonly_loop.sh $NUR/Materials/samples $NUR/2__filt ${KROUT}_fonly $MXIKDB 10
+
+WRK=/data/Food/analysis/R0602_microsupport/jamie.fitzgerald/r0937
+KDOUT=$WRK/3__knead
+KROUT=$WRK/4__krak2
+mkdir ${KROUT}_def15.3.10
+sbatch $MAT/slurm_krak2_loop.sh $NUR/Materials/samples $KDOUT ${KROUT}_def15.3.10 $K2REFDIR 10
+
+# further tests: try permissive k2 on maxi
+mkdir ${KROUT}_maxi.15.3.10
+sbatch $MAT/slurm_krak2_loop.sh $NUR/Materials/samples $KDOUT ${KROUT}_maxi.15.3.10 $MXIKDB 10
+
+## check proceeds
+grep -E unclassified$ ${KROUT}_fonly/_N*report
+grep -E unclassified$ ${KROUT}_default/_N*report
+grep -E unclassified$ ${KROUT}_def15.3.10/_N*report
+grep -E unclassified$ ${KROUT}_maxi/_N*report
+grep -E unclassified$ ${KROUT}_maxi.15.3.10/_N*report
+
 
 # bracken on kracken-def - dcheck you've right db version etc.
 module load braken

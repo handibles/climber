@@ -1,0 +1,534 @@
+################################################################################
+################################################################################
+################################################################################
+
+#!/bin/sh
+#SBATCH --error err_2021_01.metawrap
+#SBATCH --output out_2021_01.metawrap
+#SBATCH --job-name 01.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+######################## decompressing the files   #############################
+
+
+cp /data/Food/primary/R6564_NGS/Samuel/WK_study/00_original_files_pool?/*/*fastq.gz .
+
+#removing time-course data that is in pool3 
+rm WK001T-*
+rm WK018T-*
+rm MediaT-*
+
+gunzip *fastq.gz
+
+
+######################## creating files with names #############################
+
+
+for filename in *.fastq
+  do
+yolo=$(echo "$filename" | rev | cut -c 14- | rev)
+echo $yolo >> names.txt
+done
+sort -u  names.txt >> names_undup.txt
+rm names.txt
+
+
+for item in $(less names_undup.txt)
+do
+g="${item%%_L*}"
+  echo "${g}">>names.txt
+done
+uniq names.txt names_uniq.txt
+sort names_uniq.txt
+rm names.txt
+
+cp names_undup.txt /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names
+cp names_uniq.txt /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names
+
+####################### combining lanes ########################################
+
+for filename in $(less names_uniq.txt)
+do
+cat "$filename"_L001_R1_001.fastq "$filename"_L002_R1_001.fastq "$filename"_L003_R1_001.fastq "$filename"_L004_R1_001.fastq > "$filename"_merged_R1.fastq
+cat "$filename"_L001_R2_001.fastq "$filename"_L002_R2_001.fastq "$filename"_L003_R2_001.fastq "$filename"_L004_R2_001.fastq > "$filename"_merged_R2.fastq
+done
+
+
+mkdir individual_lanes
+
+mv *001.fastq individual_lanes/
+
+
+################################################################################
+####################### FAST_QC ################################################
+################################################################################
+#this step took 1 day and 10.5h for one pool of samples with 75 cpus
+
+
+
+#!/bin/sh
+#SBATCH --error err_2021_02.metawrap
+#SBATCH --output out_2021_02.metawrap
+#SBATCH --job-name 02.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=50
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+for i in $(cat names_uniq.txt)
+do
+    mv "$i"_merged_R1.fastq "$i"_1.fastq
+
+    mv "$i"_merged_R2.fastq "$i"_2.fastq
+done 
+
+mkdir READ_QC
+
+for i in $(cat names_uniq.txt)
+do
+
+module load metawrap/1.3.2
+metaWRAP read_qc -x hg38 -t 50 -1 "$i"_1.fastq -2 "$i"_2.fastq -o READ_QC/"$i"
+module unload metawrap/1.3.2
+
+done 
+
+
+################################################################################
+####################### FAST_QC A ##############################################
+################################################################################
+#this step took 1 day and 10.5h for one pool of samples with 75 cpus
+
+#samples were manually split into 3 blocks for faster processing (a: Media - WK023; b: WK024 - 46; C: WK047 - WK069)
+
+#!/bin/sh
+#SBATCH --error err_2021_02a.metawrap
+#SBATCH --output out_2021_02a.metawrap
+#SBATCH --job-name 02a.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=39
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+
+for i in $(cat names_uniq_a.txt)
+do
+    mv "$i"_merged_R1.fastq "$i"_1.fastq
+
+    mv "$i"_merged_R2.fastq "$i"_2.fastq
+done 
+
+mkdir READ_QC
+
+for i in $(cat names_uniq_a.txt)
+do
+
+module load metawrap/1.3.2
+metaWRAP read_qc -x hg38 -t 39 -1 "$i"_1.fastq -2 "$i"_2.fastq -o READ_QC/"$i"
+module unload metawrap/1.3.2
+
+done 
+################################################################################
+####################### FAST_QC B ##############################################
+################################################################################
+#this step took 1 day and 10.5h for one pool of samples with 75 cpus
+#server super busy - spilt up into 2 blocks with 19 CPUs each
+
+
+#!/bin/sh
+#SBATCH --error err_2021_02b.metawrap
+#SBATCH --output out_2021_02b.metawrap
+#SBATCH --job-name 02b.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=50
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+for i in $(cat names_uniq_b.txt)
+do
+    mv "$i"_merged_R1.fastq "$i"_1.fastq
+
+    mv "$i"_merged_R2.fastq "$i"_2.fastq
+done 
+
+#mkdir READ_QC
+
+for i in $(cat names_uniq_b.txt)
+do
+
+module load metawrap/1.3.2
+metaWRAP read_qc -x hg38 -t 50 -1 "$i"_1.fastq -2 "$i"_2.fastq -o READ_QC/"$i"
+module unload metawrap/1.3.2
+
+done 
+################################################################################
+####################### FAST_QC C ##############################################
+################################################################################
+#this step took 1 day and 10.5h for one pool of samples with 75 cpus
+
+#server super busy - spilt up into 5 blocks with 10 CPUs each
+
+#!/bin/sh
+#SBATCH --error err_2021_02c.metawrap
+#SBATCH --output out_2021_02c.metawrap
+#SBATCH --job-name 02c.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=50
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+for i in $(cat names_uniq_c.txt)
+do
+    mv "$i"_merged_R1.fastq "$i"_1.fastq
+
+    mv "$i"_merged_R2.fastq "$i"_2.fastq
+done 
+
+#mkdir READ_QC
+
+for i in $(cat names_uniq_c.txt)
+do
+
+module load metawrap/1.3.2
+metaWRAP read_qc -x hg38 -t 50 -1 "$i"_1.fastq -2 "$i"_2.fastq -o READ_QC/"$i"
+module unload metawrap/1.3.2
+
+done 
+################################################################################
+################################# cleaninig up #################################
+################################################################################
+
+#!/bin/sh
+#SBATCH --error err_2021_03.metawrap
+#SBATCH --output out_2021_03.metawrap
+#SBATCH --job-name 03.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+mkdir merged_lanes/
+cd merged_lanes/
+
+mv /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/*.fastq .
+
+
+
+cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap
+
+mkdir CLEAN_READS
+
+for i in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_uniq.txt)
+do
+mv READ_QC/"$i"/final_pure_reads_1.fastq CLEAN_READS/"$i"_1.fastq
+mv READ_QC/"$i"/final_pure_reads_2.fastq CLEAN_READS/"$i"_2.fastq
+done 
+
+
+
+################################################################################
+########################### Kaiju ##############################################
+################################################################################
+#!/bin/sh
+#SBATCH --error err_2021_01.kaiju
+#SBATCH --output out_2021_01.kaiju
+#SBATCH --job-name 01.kaiju
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=60
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+
+module load kaiju/1.7.4
+
+for i in $(less /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_uniq_kaiju.txt)
+do
+
+kaiju -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -f /data/databases/kaiju_v1.7.4/nr_euk/nr_euk/kaiju_db_nr_euk.fmi \
+-i /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/CLEAN_READS/"$i"_1.fastq \
+-j /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/CLEAN_READS/"$i"_2.fastq \
+-o ./"$i"_kaiju.out -z 60 -E 1e-05 -v
+
+done
+
+#creating merged result tables 
+
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r species  -o merged_kaiju_species.tsv *_kaiju.out
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r species -u -o merged_kaiju_species_unclassifiedExcluded.tsv *_kaiju.out
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r phylum -o merged_kaiju_phylum.tsv *_kaiju.out
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r genus -o merged_kaiju_genus.tsv *_kaiju.out
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r genus -m 0.1 -o merged_kaiju_genus_0.1filter.tsv *_kaiju.out
+kaiju2table -t /data/databases/kaiju_v1.7.4/nr_euk/nodes.dmp -n /data/databases/kaiju_v1.7.4/nr_euk/names.dmp -r genus -m 1 -o merged_kaiju_genus_1.0filter.tsv *_kaiju.out
+module unload kaiju/1.7.4
+
+cut -f 5  merged_kaiju_genus_0.1filter.tsv | sort -u > list_uniq_genera_0.1filter.txt
+cut -f 5  merged_kaiju_genus_1.0filter.tsv | sort -u > list_uniq_genera_1.0filter.txt
+
+################################################################################
+################## preps for co-assembly each WK ###############################
+################################################################################
+#!/bin/sh
+#SBATCH --error err_2021_04.metawrap
+#SBATCH --output out_2021_04.metawrap
+#SBATCH --job-name 04.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.iels
+
+
+
+cp CLEAN_READS/*.fastq .
+
+mkdir ALL_READS/
+
+cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_uniq.txt | awk -F "-" '{print ""$1""}' | sort | uniq > /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt
+
+for i in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt)
+do
+cat "$i"-1-L-08h-*_1.fastq "$i"-1-L-48h-*_1.fastq "$i"-2-L-08h-*_1.fastq "$i"-2-L-48h-*_1.fastq "$i"-2-G-48h-*_1.fastq > ALL_READS/"$i"_ALL_READS_1.fastq
+cat "$i"-1-L-08h-*_2.fastq "$i"-1-L-48h-*_2.fastq "$i"-2-L-08h-*_2.fastq "$i"-2-L-48h-*_2.fastq "$i"-2-G-48h-*_2.fastq > ALL_READS/"$i"_ALL_READS_2.fastq
+done 
+
+#for Media:
+cat Media*_1.fastq > ALL_READS/Media_ALL_READS_1.fastq
+cat Media*_2.fastq > ALL_READS/Media_ALL_READS_2.fastq
+
+################################################################################
+
+#!/bin/sh
+#SBATCH --error err_2021_05.metawrap
+#SBATCH --output out_2021_05.metawrap
+#SBATCH --job-name 05.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+mkdir co_assembly_w_CheckM/
+cd co_assembly_w_CheckM/
+
+
+cp /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/ALL_READS/*_ALL_READS_1.fastq .
+cp /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/ALL_READS/*_ALL_READS_2.fastq .
+
+mkdir co_assembly_wo_CheckM/
+cd co_assembly_wo_CheckM/
+cp /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/ALL_READS/*_ALL_READS_?.fastq .
+
+
+
+
+#removing clean reads from metawrap folder
+cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap
+rm *.fastq
+
+
+################################################################################
+####################### co-assembly each WK ####################################
+################## w/ CheckM for bacterial bins ################################
+
+Run time 18-23:50:06
+
+#!/bin/sh
+#SBATCH --error err_2021_06.metawrap
+#SBATCH --output out_2021_06.metawrap
+#SBATCH --job-name 06.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=50
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+
+
+
+for i in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt)
+do
+    module load metawrap/1.3.2
+    metawrap assembly --metaspades -m 800 -t 50 -1 "$i"_ALL_READS_1.fastq -2 "$i"_ALL_READS_2.fastq -o "$i"_ASSEMBLY
+    module load concoct/1.1.0
+    source activate concoct_env
+    metawrap binning -o "$i"_INITIAL_BINNING -t 50 -a "$i"_ASSEMBLY/final_assembly.fasta --metabat2 --maxbin2 --concoct "$i"_ALL_READS_1.fastq "$i"_ALL_READS_2.fastq
+    conda deactivate
+    module unload concoct/1.1.0
+    module load checkm/1.0.18
+    metawrap bin_refinement -o "$i"_BIN_REFINEMENT -t 50 -A "$i"_INITIAL_BINNING/metabat2_bins/ -B "$i"_INITIAL_BINNING/maxbin2_bins/ -C "$i"_INITIAL_BINNING/concoct_bins/ -c 90 -x 5 
+    metawrap reassemble_bins -o "$i"_BIN_REASSEMBLY -1 "$i"_ALL_READS_1.fastq -2 "$i"_ALL_READS_2.fastq -t 50 -m 800 -c 90 -x 5 -b "$i"_BIN_REFINEMENT/metawrap_90_5_bins
+    module unload checkm/1.0.18
+    module unload metawrap/1.3.2
+
+done 
+
+
+#rm *_ALL_READS_1.fastq *_ALL_READS_1.fastq
+
+################################################################################
+####################### co-assembly each WK ####################################
+##################### w/o CheckM for fungal bins ###############################
+#runtime with 40 CPU and three pools: 7-03:14:22
+
+#!/bin/sh
+#SBATCH --error err_2021_07.metawrap
+#SBATCH --output out_2021_07.metawrap
+#SBATCH --job-name 07.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=40
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+for name in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt)
+do
+    module load metawrap/1.3.2
+    metawrap assembly --metaspades -m 800 -t 40 -1 "$name"_ALL_READS_1.fastq -2 "$name"_ALL_READS_2.fastq -o "$name"_ASSEMBLY
+    module load concoct/1.1.0
+    source activate concoct_env
+    metawrap binning -o "$name"_INITIAL_BINNING -t 40 -a "$name"_ASSEMBLY/final_assembly.fasta --metabat2 --maxbin2 --concoct "$name"_ALL_READS_1.fastq "$name"_ALL_READS_2.fastq
+    conda deactivate
+    module unload concoct/1.1.0
+    module load checkm/1.0.18
+    metawrap bin_refinement -o "$name"_BIN_REFINEMENT -t 40 -A "$name"_INITIAL_BINNING/metabat2_bins/ -B "$name"_INITIAL_BINNING/maxbin2_bins/ -C "$name"_INITIAL_BINNING/concoct_bins/ --skip-checkm 
+    #metawrap reassemble_bins skipping this step, as it takes very long and does not lead to much bin improvement
+    #metawrap reassemble_bins -o "$name"_BIN_REASSEMBLY -1 "$name"_ALL_READS_1.fastq -2 "$name"_ALL_READS_2.fastq -t 40 -m 800 --skip-checkm -b "$name"_BIN_REFINEMENT/work_files/binsM
+    module unload checkm/1.0.18
+    module unload metawrap/1.3.2
+
+done 
+
+
+#rm *_ALL_READS_1.fastq *_ALL_READS_1.fastq
+
+################################################################################
+################# backing up co-assembly results ###############################
+############################# wo checkM ########################################
+
+#here we are backing up the co-assembly results, as a safety measure
+
+
+#!/bin/sh
+#SBATCH --error err_2021_08.metawrap
+#SBATCH --output out_2021_08.metawrap
+#SBATCH --job-name 08.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+cp -R /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_wo_CheckM/*_BIN_REFINEMENT /data/Food/primary/R6564_NGS/Samuel/WK_study/backup_files/01_metawrap_co_assembly_wo_CheckM
+
+
+
+################################################################################
+#################   renaming co-assembly files   ###############################
+######################### wo checkM ############################################
+#to be employed from co-assembly folder
+
+#!/bin/sh
+#SBATCH --error err_2021_09.metawrap
+#SBATCH --output out_2021_09.metawrap
+#SBATCH --job-name 09.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+for name in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt)
+	do 
+		cd ./"$name"_BIN_REFINEMENT/work_files/binsM/
+			for filename in *.fa; do cp "$filename" "$name"_"$filename"; done;
+		cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_wo_CheckM
+done
+
+
+cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_wo_CheckM/
+mkdir ALL_wo_BINS
+cp ./*/work_files/binsM/WK0*.fa ./ALL_wo_BINS
+
+cd ALL_wo_BINS/
+rm *.unbinned.fa
+
+
+rm *_ALL_READS_1.fastq 
+rm *_ALL_READS_2.fastq 
+
+
+################################################################################
+################# backing up co-assembly results ###############################
+############################# with checkM ########################################
+
+#here we are backing up the co-assembly results, as a safety measure
+
+
+#!/bin/sh
+#SBATCH --error err_2021_10.metawrap
+#SBATCH --output out_2021_10.metawrap
+#SBATCH --job-name 10.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+
+cp -R /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_w_CheckM/*_BIN_REFINEMENT /data/Food/primary/R6564_NGS/Samuel/WK_study/backup_files/01_metawrap_co_assembly_w_CheckM
+
+
+
+################################################################################
+#################   renaming co-assembly files   ###############################
+######################### wo checkM ############################################
+#to be employed from co-assembly folder
+
+#!/bin/sh
+#SBATCH --error err_2021_11.metawrap
+#SBATCH --output out_2021_11.metawrap
+#SBATCH --job-name 11.metawrap
+#SBATCH -p Priority,Background
+#SBATCH -N 1
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=samuel.mortensen@teagasc.ie
+
+for name in $(cat /data/Food/primary/R6564_NGS/Samuel/WK_study/00_file_names/names_unique_lead.txt)
+	do 
+		cd ./"$name"_BIN_REFINEMENT/metawrap_90_5_bins
+			for filename in *.fa; do cp "$filename" "$name"_"$filename"; done;
+		cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_w_CheckM/
+done
+
+
+cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_w_CheckM/
+mkdir ALL_w_BINS
+cp ./*_BIN_REFINEMENT/metawrap_90_5_bins/WK0*.fa ./ALL_w_BINS
+
+
+cd /data/Food/primary/R6564_NGS/Samuel/WK_study/01_metawrap/co_assembly_w_CheckM/
+rm *_ALL_READS_1.fastq 
+rm *_ALL_READS_2.fastq 
+
+
+
+
+
+

@@ -1,0 +1,1159 @@
+perc	tot_all	tot_lvl	1_all	1_lvl	2_all	2_lvl	3_all	3_lvl	4_all	4_lvl	5_all	5_lvl	6_all	6_lvl	7_all	7_lvl	8_all	8_lvl	9_all	9_lvl	10_all	10_lvl	11_all	11_lvl	12_all	12_lvl	lvl_type	taxid	name
+2.9882	1327944	1151720	21492	18803	239481	208786	717508	623274	230	191	73	60	260	216	2	2	334	280	51425	44064	290213	249977	6122	5299	804	768	S	33959	                  Lactobacillus johnsonii
+0.3402	151200	151200	2332	2332	26339	26339	80912	80912	33	33	12	12	37	37	0	0	48	48	6529	6529	34215	34215	712	712	31	31	S1	633699	                    Lactobacillus johnsonii FI9785
+0.0411	18270	18270	249	249	3129	3129	9692	9692	2	2	0	0	3	3	0	0	2	2	400	400	4713	4713	78	78	2	2	S1	909954	                    Lactobacillus johnsonii DPC 6026
+0.0152	6754	6754	108	108	1227	1227	3630	3630	4	4	1	1	4	4	0	0	4	4	432	432	1308	1308	33	33	3	3	S1	1408186	                    Lactobacillus johnsonii N6.2
+2.1842	970661	767918	12744	10063	170739	135572	500665	395821	90	72	10	7	33	28	0	0	57	44	11273	8790	271807	214965	3220	2536	23	20	S	1604	                  Lactobacillus amylovorus
+0.3046	135368	135368	1813	1813	23729	23729	69603	69603	11	11	1	1	3	3	0	0	9	9	1384	1384	38356	38356	457	457	2	2	S1	1423723	                    Lactobacillus amylovorus DSM 20531
+0.1516	67375	67375	868	868	11438	11438	35241	35241	7	7	2	2	2	2	0	0	4	4	1099	1099	18486	18486	227	227	1	1	S1	695562	                    Lactobacillus amylovorus GRL1118
+1.7623	783187	447188	10600	6092	157726	90221	342483	197054	127	70	64	36	148	90	10	9	30	17	11755	6563	253636	143279	6410	3600	198	157	S	1598	                  Lactobacillus reuteri
+0.7058	313670	313670	4271	4271	64209	64209	136405	136405	55	55	27	27	53	53	0	0	11	11	4680	4680	101295	101295	2626	2626	38	38	S1	491077	                    Lactobacillus reuteri SD2112
+0.0280	12450	12450	118	118	1354	1354	4568	4568	0	0	1	1	2	2	0	0	2	2	237	237	6057	6057	110	110	1	1	S1	1340495	                    Lactobacillus reuteri I5007
+0.0132	5882	5882	65	65	1229	1229	2469	2469	1	1	0	0	2	2	1	1	0	0	234	234	1834	1834	46	46	1	1	S1	1358027	                    Lactobacillus reuteri TD1
+0.0090	3997	0	54	0	713	0	1987	0	1	0	0	0	1	0	0	0	0	0	41	0	1171	0	28	0	1	0	S1	1273150	                    Lactobacillus reuteri 1063
+0.8519	378575	339760	4878	4377	69957	62814	197088	176616	35	29	2	2	6	5	0	0	15	13	2158	1877	103073	92813	1355	1206	8	8	S	1587	                  Lactobacillus helveticus
+0.0675	29977	29977	385	385	5501	5501	15779	15779	4	4	0	0	1	1	0	0	1	1	199	199	7999	7999	108	108	0	0	S1	880633	                    Lactobacillus helveticus R0052
+0.0071	3150	3150	47	47	553	553	1640	1640	1	1	0	0	0	0	0	0	1	1	22	22	871	871	15	15	0	0	S1	767462	                    Lactobacillus helveticus H10
+0.0061	2732	2732	27	27	491	491	1475	1475	0	0	0	0	0	0	0	0	0	0	33	33	692	692	14	14	0	0	S1	326425	                    Lactobacillus helveticus CNRZ32
+0.0060	2656	2656	38	38	549	549	1411	1411	1	1	0	0	0	0	0	0	0	0	24	24	622	622	11	11	0	0	S1	405566	                    Lactobacillus helveticus DPC 4571
+0.0007	300	300	4	4	49	49	167	167	0	0	0	0	0	0	0	0	0	0	3	3	76	76	1	1	0	0	S1	767456	                    Lactobacillus helveticus H9
+0.1693	75256	73123	239	232	4300	4141	12027	11553	417	402	58	54	246	238	8	8	383	369	48965	47780	8022	7768	167	163	424	415	S	1624	                  Lactobacillus salivarius
+0.0029	1293	1293	6	6	133	133	355	355	6	6	1	1	5	5	0	0	4	4	598	598	176	176	3	3	6	6	S1	1194971	                    Lactobacillus salivarius str. Ren
+0.0019	840	840	1	1	26	26	119	119	9	9	3	3	3	3	0	0	10	10	587	587	78	78	1	1	3	3	S1	362948	                    Lactobacillus salivarius UCC118
+0.1104	49060	0	617	0	8173	0	25431	0	2	0	4	0	6	0	0	0	7	0	1562	0	13057	0	199	0	2	0	S	267818	                  Lactobacillus kefiranofaciens
+0.1104	49060	49060	617	617	8173	8173	25431	25431	2	2	4	4	6	6	0	0	7	7	1562	1562	13057	13057	199	199	2	2	S1	1033837	                    Lactobacillus kefiranofaciens ZW3
+0.0872	38741	38741	463	463	6943	6943	19733	19733	0	0	0	0	2	2	0	0	0	0	279	279	11179	11179	141	141	1	1	S	52242	                  Lactobacillus gallinarum
+0.0718	31911	31909	443	443	5604	5604	16054	16052	5	5	0	0	0	0	0	0	2	2	770	770	8916	8916	116	116	1	1	S	1579	                  Lactobacillus acidophilus
+0.0000	2	2	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	272621	                    Lactobacillus acidophilus NCFM
+0.0353	15684	0	170	0	2105	0	6203	0	2	0	1	0	0	0	0	0	0	0	30	0	7111	0	62	0	0	0	S	97478	                  Lactobacillus mucosae
+0.0353	15684	15684	170	170	2105	2105	6203	6203	2	2	1	1	0	0	0	0	0	0	30	30	7111	7111	62	62	0	0	S1	1130798	                    Lactobacillus mucosae LM1
+0.0309	13748	13748	179	179	1923	1923	6700	6700	3	3	0	0	0	0	0	0	0	0	137	137	4748	4748	58	58	0	0	S	83683	                  Lactobacillus amylolyticus
+0.0296	13143	13143	42	42	422	422	1055	1055	61	61	7	7	29	29	1	1	76	76	10453	10453	838	838	23	23	136	136	S	1601	                  Lactobacillus agilis
+0.0294	13063	12971	187	187	2040	2027	6974	6919	1	1	1	1	1	1	0	0	2	2	200	196	3591	3573	66	64	0	0	S	1613	                  Lactobacillus fermentum
+0.0001	33	33	0	0	7	7	22	22	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S1	712938	                    Lactobacillus fermentum CECT 5716
+0.0001	27	27	0	0	2	2	17	17	0	0	0	0	0	0	0	0	0	0	0	0	7	7	1	1	0	0	S1	767453	                    Lactobacillus fermentum F-6
+0.0001	26	26	0	0	4	4	15	15	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S1	334390	                    Lactobacillus fermentum IFO 3956
+0.0000	6	6	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	4	4	0	0	1	1	0	0	S1	1381124	                    Lactobacillus fermentum 3872
+0.0175	7799	4592	98	59	1165	766	4127	2418	1	0	0	0	3	2	0	0	4	2	600	268	1759	1051	41	26	1	0	S	1596	                  Lactobacillus gasseri
+0.0040	1796	1796	25	25	226	226	998	998	1	1	0	0	0	0	0	0	1	1	147	147	391	391	6	6	1	1	S1	1380360	                    Lactobacillus gasseri DSM 14869
+0.0032	1411	1411	14	14	173	173	711	711	0	0	0	0	1	1	0	0	1	1	185	185	317	317	9	9	0	0	S1	324831	                    Lactobacillus gasseri ATCC 33323 = JCM 1131
+0.0108	4806	4154	59	51	790	680	2418	2120	1	1	0	0	1	1	0	0	1	1	184	145	1339	1146	12	9	1	0	S	1584	                  Lactobacillus delbrueckii
+0.0008	342	328	3	3	66	62	175	170	0	0	0	0	0	0	0	0	0	0	11	10	87	83	0	0	0	0	S1	29397	                    Lactobacillus delbrueckii subsp. lactis
+0.0005	244	244	5	5	33	33	106	106	0	0	0	0	0	0	0	0	0	0	8	8	88	88	3	3	1	1	S1	83684	                    Lactobacillus delbrueckii subsp. delbrueckii
+0.0001	57	10	0	0	10	2	11	4	0	0	0	0	0	0	0	0	0	0	20	3	16	1	0	0	0	0	S1	1585	                    Lactobacillus delbrueckii subsp. bulgaricus
+0.0000	7	7	0	0	1	1	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1050107	                    Lactobacillus delbrueckii subsp. sunkii
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	249265	                    Lactobacillus delbrueckii subsp. indicus
+0.0072	3220	3220	36	36	490	490	1684	1684	0	0	0	0	3	3	0	0	0	0	176	176	821	821	10	10	0	0	S	1600	                  Lactobacillus acetotolerans
+0.0061	2710	959	39	19	431	102	1295	380	0	0	0	0	1	1	0	0	0	0	29	21	897	429	18	7	0	0	S	1590	                  Lactobacillus plantarum
+0.0039	1750	1750	20	20	329	329	914	914	0	0	0	0	0	0	0	0	0	0	8	8	468	468	11	11	0	0	S1	1327988	                    Lactobacillus plantarum 16
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	337330	                    Lactobacillus plantarum subsp. plantarum
+0.0039	1722	1722	35	35	399	399	645	645	0	0	1	1	13	13	1	1	0	0	1	1	323	323	1	1	303	303	S	1599	                  Lactobacillus sakei
+0.0016	728	728	12	12	141	141	260	260	0	0	1	1	8	8	0	0	0	0	10	10	142	142	4	4	150	150	S	28038	                  Lactobacillus curvatus
+0.0016	693	693	5	5	119	119	340	340	0	0	0	0	0	0	0	0	0	0	5	5	222	222	2	2	0	0	S	109790	                  Lactobacillus jensenii
+0.0013	599	575	16	16	66	63	252	244	0	0	0	0	0	0	0	0	0	0	0	0	258	245	7	7	0	0	S	1610	                  Lactobacillus coryniformis
+0.0000	18	0	0	0	1	0	7	0	0	0	0	0	0	0	0	0	0	0	0	0	10	0	0	0	0	0	S1	115541	                    Lactobacillus coryniformis subsp. coryniformis
+0.0000	6	0	0	0	2	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	S1	115542	                    Lactobacillus coryniformis subsp. torquens
+0.0002	72	25	1	1	13	7	41	13	0	0	0	0	0	0	0	0	0	0	0	0	17	4	0	0	0	0	S	1597	                    Lactobacillus paracasei
+0.0001	47	47	0	0	6	6	28	28	0	0	0	0	0	0	0	0	0	0	0	0	13	13	0	0	0	0	S1	1446494	                      Lactobacillus paracasei N1115
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1582	                    Lactobacillus casei
+0.0008	337	337	5	5	56	56	197	197	1	1	0	0	0	0	0	0	0	0	5	5	72	72	1	1	0	0	S	303541	                  Lactobacillus apis
+0.0004	190	0	4	0	22	0	85	0	0	0	0	0	0	0	0	0	0	0	0	0	78	0	0	0	1	0	S	1193095	                  Lactobacillus hokkaidonensis
+0.0004	190	190	4	4	22	22	85	85	0	0	0	0	0	0	0	0	0	0	0	0	78	78	0	0	1	1	S1	1291742	                    Lactobacillus hokkaidonensis JCM 18461
+0.0003	131	0	0	0	19	0	67	0	0	0	0	0	0	0	0	0	0	0	5	0	38	0	1	0	1	0	S	1603	                  Lactobacillus amylophilus
+0.0003	131	131	0	0	19	19	67	67	0	0	0	0	0	0	0	0	0	0	5	5	38	38	1	1	1	1	S1	1423721	                    Lactobacillus amylophilus DSM 20533 = JCM 1125
+0.0002	101	101	1	1	15	15	54	54	0	0	0	0	1	1	0	0	0	0	0	0	28	28	1	1	1	1	S	375175	                  Lactobacillus backii
+0.0002	77	77	0	0	13	13	35	35	0	0	0	0	1	1	0	0	0	0	2	2	18	18	1	1	7	7	S	89059	                  Lactobacillus acidipiscis
+0.0002	72	72	0	0	17	17	32	32	0	0	0	0	0	0	0	0	0	0	0	0	22	22	1	1	0	0	S	1218493	                  Lactobacillus kullabergensis
+0.0001	58	58	1	1	5	5	25	25	0	0	0	0	0	0	0	0	0	0	15	15	8	8	0	0	4	4	S	1622	                  Lactobacillus murinus
+0.0001	53	0	0	0	5	0	23	0	0	0	0	0	0	0	0	0	0	0	7	0	17	0	0	0	1	0	S	1625	                  Lactobacillus sanfranciscensis
+0.0001	53	53	0	0	5	5	23	23	0	0	0	0	0	0	0	0	0	0	7	7	17	17	0	0	1	1	S1	714313	                    Lactobacillus sanfranciscensis TMW 1.1304
+0.0001	36	36	0	0	6	6	13	13	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	11	11	S	240427	                  Lactobacillus paracollinoides
+0.0001	36	36	0	0	8	8	18	18	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	S	2099789	                  Lactobacillus sp. CBA3606
+0.0001	35	34	0	0	5	5	19	18	0	0	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	S	1580	                  Lactobacillus brevis
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1001583	                    Lactobacillus brevis KB290
+0.0001	31	0	0	0	4	0	5	0	0	0	0	0	0	0	0	0	0	0	12	0	7	0	0	0	3	0	S	1623	                  Lactobacillus ruminis
+0.0001	31	31	0	0	4	4	5	5	0	0	0	0	0	0	0	0	0	0	12	12	7	7	0	0	3	3	S1	1069534	                    Lactobacillus ruminis ATCC 27782
+0.0000	16	16	0	0	5	5	9	9	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	392416	                  Lactobacillus crustorum
+0.0000	11	11	1	1	3	3	4	4	0	0	0	0	0	0	0	0	0	0	0	0	2	2	1	1	0	0	S	1847728	                  Lactobacillus allii
+0.0000	10	10	0	0	0	0	8	8	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	148814	                  Lactobacillus kunkeei
+0.0000	9	9	0	0	1	1	5	5	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	1	1	S	267363	                  Lactobacillus zymae
+0.0000	9	9	0	0	2	2	5	5	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	60520	                  Lactobacillus paraplantarum
+0.0000	7	7	0	0	2	2	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1138822	                  Lactobacillus curieae
+0.0000	6	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	3	0	2	0	0	0	0	0	S	1581	                  Lactobacillus buchneri
+0.0000	6	6	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	3	3	2	2	0	0	0	0	S1	511437	                    Lactobacillus buchneri NRRL B-30929
+0.0000	5	5	0	0	0	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1218494	                  Lactobacillus helsingborgensis
+0.0000	4	4	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	47715	                  Lactobacillus rhamnosus
+0.0000	3	3	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	2099788	                  Lactobacillus sp. CBA3605
+0.0000	3	3	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	152331	                  Lactobacillus parabuchneri
+0.0000	2	2	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1007676	                  Lactobacillus ginsenosidimutans
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1612	                  Lactobacillus farciminis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	936140	                    Lactobacillus farciminis KCTC 3681 = DSM 20184
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	637971	                  Lactobacillus koreensis
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	53444	                  Lactobacillus lindneri
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1074467	                  Lactobacillus heilongjiangensis
+0.0020	900	900	10	10	118	118	424	424	2	2	0	0	2	2	0	0	4	4	55	55	274	274	4	4	7	7	S	1254	                    Pediococcus acidilactici
+0.0002	106	0	0	0	4	0	29	0	0	0	0	0	0	0	0	0	0	0	3	0	69	0	1	0	0	0	S	187452	                  Pediococcus claussenii
+0.0002	106	106	0	0	4	4	29	29	0	0	0	0	0	0	0	0	0	0	3	3	69	69	1	1	0	0	S1	701521	                    Pediococcus claussenii ATCC BAA-344
+0.0000	7	5	0	0	0	0	5	4	0	0	0	0	0	0	0	0	0	0	0	0	2	1	0	0	0	0	S	1255	                  Pediococcus pentosaceus
+0.0000	2	2	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	278197	                    Pediococcus pentosaceus ATCC 25745
+0.0000	3	3	0	0	2	2	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	51663	                  Pediococcus damnosus
+0.0158	7027	7027	53	53	8	8	252	252	5	5	0	0	1	1	0	0	0	0	2	2	6692	6692	14	14	0	0	S	82348	                  Streptococcus pluranimalium
+0.0044	1969	615	0	0	16	8	13	7	5	0	2	1	4	2	0	0	3	1	1914	591	11	5	0	0	1	0	S	315405	                  Streptococcus gallolyticus
+0.0030	1354	253	0	0	8	2	6	1	5	1	1	0	2	1	0	0	2	2	1323	244	6	2	0	0	1	0	S1	53354	                    Streptococcus gallolyticus subsp. gallolyticus
+0.0034	1516	180	0	0	11	1	10	3	1	0	0	0	8	1	0	0	2	0	1477	174	5	1	1	0	1	0	S	102684	                  Streptococcus infantarius
+0.0030	1336	0	0	0	10	0	7	0	1	0	0	0	7	0	0	0	2	0	1303	0	4	0	1	0	1	0	S1	150054	                    Streptococcus infantarius subsp. infantarius
+0.0020	890	350	2	1	8	4	8	8	4	1	0	0	1	0	0	0	1	1	748	264	104	71	14	0	0	0	S	1307	                  Streptococcus suis
+0.0012	525	525	1	1	3	3	0	0	3	3	0	0	1	1	0	0	0	0	477	477	26	26	14	14	0	0	S1	423211	                    Streptococcus suis GZ1
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	2	2	0	0	0	0	S1	1214179	                    Streptococcus suis 6407
+0.0000	3	3	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	568814	                    Streptococcus suis BM407
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	1004951	                    Streptococcus suis ST1
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	1276647	                    Streptococcus suis TL13
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1340847	                    Streptococcus suis T15
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1004952	                    Streptococcus suis D12
+0.0018	810	532	0	0	7	7	3	3	9	9	3	3	4	3	0	0	4	3	773	500	5	3	0	0	2	1	S	1308	                  Streptococcus thermophilus
+0.0006	252	252	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	248	248	2	2	0	0	0	0	S1	322159	                    Streptococcus thermophilus LMD-9
+0.0000	21	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	21	21	0	0	0	0	0	0	S1	264199	                    Streptococcus thermophilus LMG 18311
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	1	1	S1	1051074	                    Streptococcus thermophilus JIM 8232
+0.0015	658	441	0	0	9	4	3	0	0	0	0	0	1	1	0	0	0	0	639	433	5	3	0	0	1	0	S	150055	                  Streptococcus lutetiensis
+0.0005	217	217	0	0	5	5	3	3	0	0	0	0	0	0	0	0	0	0	206	206	2	2	0	0	1	1	S1	1076934	                    Streptococcus lutetiensis 033
+0.0015	656	645	0	0	1	1	1	1	2	2	0	0	1	1	0	0	0	0	609	609	41	30	1	1	0	0	S	1311	                  Streptococcus agalactiae
+0.0000	11	11	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	S1	1309807	                    Streptococcus agalactiae ILRI005
+0.0014	623	527	0	0	4	3	3	3	0	0	0	0	1	0	0	0	1	1	612	518	2	2	0	0	0	0	S	197614	                  Streptococcus pasteurianus
+0.0002	96	96	0	0	1	1	0	0	0	0	0	0	1	1	0	0	0	0	94	94	0	0	0	0	0	0	S1	981540	                    Streptococcus pasteurianus ATCC 43144
+0.0008	355	0	0	0	4	0	3	0	1	0	0	0	1	0	0	0	2	0	341	0	3	0	0	0	0	0	S	59310	                  Streptococcus macedonicus
+0.0008	355	355	0	0	4	4	3	3	1	1	0	0	1	1	0	0	2	2	341	341	3	3	0	0	0	0	S1	1116231	                    Streptococcus macedonicus ACA-DC 198
+0.0008	340	340	0	0	0	0	0	0	2	2	0	0	2	2	0	0	0	0	230	230	105	105	0	0	1	1	S	1326	                  Streptococcus acidominimus
+0.0003	154	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	153	0	1	0	0	0	0	0	S	76860	                    Streptococcus constellatus
+0.0003	154	154	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	153	153	1	1	0	0	0	0	S1	184250	                      Streptococcus constellatus subsp. pharyngis
+0.0000	8	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	0	0	S	1338	                    Streptococcus intermedius
+0.0000	8	8	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	7	7	0	0	0	0	0	0	S1	862967	                      Streptococcus intermedius B196
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	1	1	0	0	0	0	S	1328	                    Streptococcus anginosus
+0.0001	65	0	0	0	1	0	3	0	0	0	0	0	0	0	0	0	0	0	49	0	12	0	0	0	0	0	S	1334	                    Streptococcus dysgalactiae
+0.0001	65	20	0	0	1	0	3	0	0	0	0	0	0	0	0	0	0	0	49	10	12	10	0	0	0	0	S1	119602	                      Streptococcus dysgalactiae subsp. equisimilis
+0.0001	29	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	28	0	0	0	0	0	0	0	S	1336	                    Streptococcus equi
+0.0001	29	29	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	28	28	0	0	0	0	0	0	S1	40041	                      Streptococcus equi subsp. zooepidemicus
+0.0001	43	4	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	39	2	3	2	0	0	0	0	S	1314	                  Streptococcus pyogenes
+0.0001	39	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	37	0	1	0	0	0	0	0	S1	301450	                    Streptococcus pyogenes serotype M6
+0.0001	24	24	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	22	22	0	0	1	1	S	1313	                  Streptococcus pneumoniae
+0.0000	19	14	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	19	14	0	0	0	0	0	0	S	1304	                  Streptococcus salivarius
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	0	0	S1	347253	                    Streptococcus salivarius JIM8777
+0.0000	14	13	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	5	8	8	0	0	0	0	S	1349	                  Streptococcus uberis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	218495	                    Streptococcus uberis 0140J
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	6	6	0	0	0	0	S	712633	                  Streptococcus sp. oral taxon 431
+0.0000	8	8	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	6	6	1	1	0	0	0	0	S	1346	                  Streptococcus iniae
+0.0000	6	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	0	4	0	0	0	0	0	0	0	S	1318	                  Streptococcus parasanguinis
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	1114965	                    Streptococcus parasanguinis FW213
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	0	0	S1	760570	                    Streptococcus parasanguinis ATCC 15912
+0.0000	6	6	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	0	0	S	1348	                  Streptococcus parauberis
+0.0000	5	5	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1310	                  Streptococcus sobrinus
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	3	3	0	0	0	0	0	0	S	1335	                  Streptococcus equinus
+0.0000	4	4	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1888195	                  Streptococcus himalayensis
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1309	                  Streptococcus mutans
+0.0000	3	3	0	0	0	0	0	0	2	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	28037	                  Streptococcus mitis
+0.0000	3	3	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	400065	                  Streptococcus merionis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1814128	                  Streptococcus halotolerans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	113107	                  Streptococcus australis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1759399	                  Streptococcus sp. A12
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	45634	                  Streptococcus cristatus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	889201	                    Streptococcus cristatus ATCC 51100
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1811193	                  Streptococcus pantholopis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1345	                  Streptococcus ferus
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1303	                  Streptococcus oralis
+0.0010	465	109	0	0	3	0	6	2	259	73	0	0	4	0	0	0	0	0	190	34	2	0	0	0	1	0	S	1358	                  Lactococcus lactis
+0.0007	292	195	0	0	2	0	4	3	185	180	0	0	3	3	0	0	0	0	97	9	1	0	0	0	0	0	S1	1360	                    Lactococcus lactis subsp. lactis
+0.0001	64	29	0	0	1	1	0	0	1	1	0	0	1	1	0	0	0	0	59	24	1	1	0	0	1	1	S1	1359	                    Lactococcus lactis subsp. cremoris
+0.0001	33	33	0	0	0	0	1	1	12	12	0	0	0	0	0	0	0	0	17	17	2	2	1	1	0	0	S	1363	                  Lactococcus garvieae
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	0	0	S	1366	                  Lactococcus raffinolactis
+0.0363	16112	16112	24	24	21	21	123	123	406	406	45	45	21	21	2	2	38	38	11826	11826	3504	3504	14	14	88	88	S	44008	                  Enterococcus cecorum
+0.0117	5213	1313	10	8	67	56	200	198	9	2	1	1	17	2	1	1	40	36	4201	397	648	606	14	5	5	1	S	1352	                  Enterococcus faecium
+0.0087	3887	3887	2	2	9	9	1	1	7	7	0	0	15	15	0	0	4	4	3801	3801	35	35	9	9	4	4	S1	1155766	                    Enterococcus faecium Aus0004
+0.0000	8	8	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	3	3	4	4	0	0	0	0	S1	333849	                    Enterococcus faecium DO
+0.0000	4	4	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	1344042	                    Enterococcus faecium T110
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1104325	                    Enterococcus faecium NRRL B-2354
+0.0054	2379	2379	0	0	420	420	205	205	0	0	1	1	6	6	3	3	937	937	733	733	72	72	2	2	0	0	S	53345	                  Enterococcus durans
+0.0010	460	415	0	0	3	2	1	1	321	313	0	0	1	1	0	0	0	0	118	83	15	14	0	0	1	1	S	1351	                  Enterococcus faecalis
+0.0001	29	29	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	28	28	0	0	0	0	0	0	S1	1206105	                    Enterococcus faecalis D32
+0.0000	8	8	0	0	0	0	0	0	6	6	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S1	565651	                    Enterococcus faecalis ARO1/DG
+0.0000	7	7	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	6	6	0	0	0	0	0	0	S1	226185	                    Enterococcus faecalis V583
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	474186	                    Enterococcus faecalis OG1RF
+0.0003	112	112	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	109	109	0	0	0	0	1	1	S	160453	                  Enterococcus gilvus
+0.0001	60	53	0	0	0	0	10	9	0	0	0	0	0	0	0	0	1	1	4	4	45	39	0	0	0	0	S	1354	                  Enterococcus hirae
+0.0000	7	7	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	0	0	S1	768486	                    Enterococcus hirae ATCC 9790
+0.0001	35	35	0	0	0	0	2	2	0	0	0	0	0	0	0	0	1	1	5	5	27	27	0	0	0	0	S	2060307	                  Enterococcus sp. FDAARGOS_375
+0.0000	22	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	20	0	0	0	0	0	S	37734	                  Enterococcus casseliflavus
+0.0000	22	22	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	20	20	0	0	0	0	S1	565655	                    Enterococcus casseliflavus EC20
+0.0000	12	12	0	0	1	1	0	0	0	0	0	0	0	0	0	0	2	2	4	4	5	5	0	0	0	0	S	417368	                  Enterococcus thailandicus
+0.0000	6	4	0	0	2	1	0	0	0	0	0	0	0	0	0	0	2	2	2	1	0	0	0	0	0	0	S	53346	                  Enterococcus mundtii
+0.0000	2	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1300150	                    Enterococcus mundtii QU 25
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	3	3	0	0	0	0	S	1353	                  Enterococcus gallinarum
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	2057791	                  Enterococcus sp. CR-Ec1
+0.0001	23	23	0	0	7	7	13	13	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	519472	                  Vagococcus teuberi
+0.0000	14	14	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	14	14	0	0	0	0	0	0	S	51669	                  Tetragenococcus halophilus
+0.0019	861	861	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	6	6	849	849	5	5	0	0	S	51665	                  Aerococcus urinaeequi
+0.0004	175	175	0	0	6	6	10	10	0	0	0	0	0	0	0	0	0	0	0	0	157	157	2	2	0	0	S	1377	                  Aerococcus viridans
+0.0000	13	13	0	0	1	1	9	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	S	1376	                  Aerococcus urinae
+0.0000	1	1	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	87541	                  Aerococcus christensenii
+0.0004	185	185	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	124	124	57	57	3	3	0	0	S	1631871	                  Weissella jogaejeotgali
+0.0002	68	68	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	2	2	63	63	0	0	0	0	S	1249	                  Weissella paramesenteroides
+0.0001	26	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	25	25	1	1	0	0	0	0	S	137591	                  Weissella cibaria
+0.0000	4	4	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	759620	                  Weissella ceti
+0.0003	133	10	0	0	3	0	3	2	0	0	0	0	0	0	0	0	1	1	120	5	6	2	0	0	0	0	S	1245	                  Leuconostoc mesenteroides
+0.0003	123	123	0	0	3	3	1	1	0	0	0	0	0	0	0	0	0	0	115	115	4	4	0	0	0	0	S1	33967	                    Leuconostoc mesenteroides subsp. mesenteroides
+0.0002	93	93	0	0	27	27	43	43	0	0	0	0	0	0	0	0	0	0	0	0	23	23	0	0	0	0	S	1246	                  Leuconostoc lactis
+0.0000	5	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	2	0	2	0	0	0	0	0	S	1252	                  Leuconostoc carnosum
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	2	2	2	2	0	0	0	0	S1	1229758	                    Leuconostoc carnosum JB16
+0.0000	7	7	0	0	0	0	4	4	0	0	0	0	0	0	0	0	0	0	1	1	2	2	0	0	0	0	S	1247	                  Oenococcus oeni
+0.0010	443	443	1	1	0	0	4	4	0	0	0	0	0	0	0	0	0	0	0	0	435	435	3	3	0	0	S	1903686	                  Jeotgalibaca sp. PTS2502
+0.0000	5	0	0	0	0	0	3	0	0	0	0	0	0	0	0	0	0	0	1	0	1	0	0	0	0	0	S	2751	                  Carnobacterium maltaromaticum
+0.0000	5	5	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S1	1234679	                    Carnobacterium maltaromaticum LMA28
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1911586	                  Marinilactibacillus sp. 15R
+0.0089	3945	3945	0	0	0	0	44	44	0	0	0	0	0	0	0	0	1	1	34	34	3822	3822	44	44	0	0	S	29385	                  Staphylococcus saprophyticus
+0.0042	1871	1871	0	0	0	0	21	21	0	0	0	0	2	2	0	0	0	0	1	1	1820	1820	27	27	0	0	S	1288	                  Staphylococcus xylosus
+0.0030	1327	1327	0	0	0	0	5	5	0	0	0	0	0	0	0	0	1	1	39	39	1268	1268	14	14	0	0	S	29382	                  Staphylococcus cohnii
+0.0005	221	186	0	0	0	0	3	3	5	5	1	1	2	2	1	1	4	4	2	2	194	159	3	3	6	6	S	1280	                  Staphylococcus aureus
+0.0001	35	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	35	9	0	0	0	0	S1	46170	                    Staphylococcus aureus subsp. aureus
+0.0005	212	212	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	3	3	203	203	5	5	0	0	S	246432	                  Staphylococcus equorum
+0.0003	123	123	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	120	120	3	3	0	0	S	61015	                  Staphylococcus succinus
+0.0002	78	0	0	0	0	0	0	0	64	0	4	0	8	0	0	0	0	0	0	0	1	0	0	0	1	0	S	1290	                  Staphylococcus hominis
+0.0002	78	78	0	0	0	0	0	0	64	64	4	4	8	8	0	0	0	0	0	0	1	1	0	0	1	1	S1	145391	                    Staphylococcus hominis subsp. hominis
+0.0002	77	77	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	74	74	2	2	0	0	S	214473	                  Staphylococcus nepalensis
+0.0001	40	40	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	39	39	0	0	0	0	0	0	S	283734	                  Staphylococcus pseudintermedius
+0.0001	31	31	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	31	31	0	0	0	0	S	1715860	                  Staphylococcus sp. AntiMn-1
+0.0001	28	25	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	1	26	24	0	0	0	0	S	1296	                  Staphylococcus sciuri
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	2	2	0	0	0	0	S1	147467	                    Staphylococcus sciuri subsp. sciuri
+0.0001	26	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	22	22	0	0	0	0	S	1286	                  Staphylococcus simulans
+0.0000	21	17	0	0	0	0	0	0	3	3	0	0	10	10	1	1	2	2	0	0	5	1	0	0	0	0	S	1282	                  Staphylococcus epidermidis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	1449752	                    Staphylococcus epidermidis PM221
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	176280	                    Staphylococcus epidermidis ATCC 12228
+0.0000	21	21	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	19	19	0	0	0	0	S	70255	                  Staphylococcus condimenti
+0.0000	16	16	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	16	16	0	0	0	0	S	29384	                  Staphylococcus kloosii
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	643214	                  Staphylococcus stepanovicii
+0.0000	7	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	5	0	0	0	0	S	1281	                  Staphylococcus carnosus
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S1	147448	                    Staphylococcus carnosus subsp. carnosus
+0.0000	6	5	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	1	1	3	2	1	1	0	0	S	1283	                  Staphylococcus haemolyticus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	279808	                    Staphylococcus haemolyticus JCSC1435
+0.0000	6	5	0	0	0	0	1	0	1	1	0	0	2	2	0	0	1	1	0	0	1	1	0	0	0	0	S	29388	                  Staphylococcus capitis
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	72758	                    Staphylococcus capitis subsp. capitis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	S	985762	                  Staphylococcus agnetis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	29379	                  Staphylococcus auricularis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	46127	                  Staphylococcus felis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1284	                  Staphylococcus hyicus
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1292	                  Staphylococcus warneri
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1194526	                    Staphylococcus warneri SG1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	45972	                  Staphylococcus pasteuri
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	0	0	0	0	S	407035	                  Salinicoccus halodurans
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	1849491	                  Auricoccus indicus
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	S	1898474	                  Macrococcus sp. IME1552
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	69966	                  Macrococcus caseolyticus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	458233	                    Macrococcus caseolyticus JCSC5402
+0.0001	38	2	0	0	1	0	0	0	0	0	0	0	2	0	0	0	5	2	29	0	0	0	0	0	1	0	S	1405	                    Bacillus mycoides
+0.0001	36	36	0	0	1	1	0	0	0	0	0	0	2	2	0	0	3	3	29	29	0	0	0	0	1	1	S1	315730	                      Bacillus mycoides KBAB4
+0.0000	20	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	17	0	1	0	1	1	0	0	S	1396	                    Bacillus cereus
+0.0000	17	17	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	16	16	1	1	0	0	0	0	S1	222523	                      Bacillus cereus ATCC 10987
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1454382	                      Bacillus cereus D17
+0.0000	12	11	1	1	3	3	0	0	0	0	0	0	0	0	0	0	0	0	3	3	2	1	1	1	2	2	S	1428	                    Bacillus thuringiensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1442	                      Bacillus thuringiensis serovar tolworthi
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1392	                    Bacillus anthracis
+0.0001	61	61	1	1	7	7	33	33	0	0	0	0	0	0	0	0	0	0	2	2	18	18	0	0	0	0	S	79880	                  Bacillus clausii
+0.0001	40	40	0	0	1	1	1	1	0	0	0	0	0	0	0	0	1	1	8	8	28	28	0	0	1	1	S	35841	                  Bacillus thermoamylovorans
+0.0001	28	9	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	19	8	8	0	0	0	0	0	S	1398	                  Bacillus coagulans
+0.0000	16	16	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	8	8	0	0	0	0	S1	1121088	                    Bacillus coagulans DSM 1 = ATCC 7050
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	345219	                    Bacillus coagulans 36D1
+0.0000	9	0	0	0	2	0	0	0	0	0	0	0	0	0	1	0	3	0	0	0	0	0	2	0	1	0	S	324767	                  Bacillus infantis
+0.0000	9	9	0	0	2	2	0	0	0	0	0	0	0	0	1	1	3	3	0	0	0	0	2	2	1	1	S1	1367477	                    Bacillus infantis NRRL B-14911
+0.0000	6	6	0	0	2	2	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	859143	                  Bacillus kochii
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	2	2	0	0	0	0	0	0	S	1565991	                  Bacillus sp. X1(2014)
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1423	                    Bacillus subtilis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	135461	                      Bacillus subtilis subsp. subtilis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	1408	                  Bacillus pumilus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1479	                  Bacillus smithii
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1664069	                  Bacillus glycinifermentans
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	98228	                  Bacillus sp. OxB-1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	33941	                    Geobacillus thermoleovorans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1911587	                  Virgibacillus sp. 6R
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1482	                  Virgibacillus halodenitrificans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1473	                  Virgibacillus pantothenticus
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	S	1449	                  Amphibacillus xylanus
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S1	698758	                    Amphibacillus xylanus NBRC 15112
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1221500	                  Fictibacillus phosphorivorans
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	33936	                  Aeribacillus pallidus
+0.0000	16	16	0	0	6	6	3	3	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	6	6	S	1464	                  Paenibacillus larvae
+0.0000	4	4	0	0	0	0	0	0	0	0	1	1	0	0	0	0	1	1	0	0	1	1	1	1	0	0	S	189425	                  Paenibacillus graminis
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	2	2	0	0	0	0	S	528191	                  Paenibacillus xylanexedens
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1763538	                  Paenibacillus crassostreae
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	61624	                  Paenibacillus mucilaginosus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	414771	                  Paenibacillus donghaensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1406	                  Paenibacillus polymyxa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	172713	                  Paenibacillus kribbensis
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1536769	                  Paenibacillus sp. FSL P4-0081
+0.0000	8	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	6	0	0	0	0	0	S	377615	                  Thermobacillus composti
+0.0000	8	8	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	0	0	S1	717605	                    Thermobacillus composti KWC4
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1465	                  Brevibacillus laterosporus
+0.0000	6	6	3	3	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	2058136	                  Planococcus sp. MB-3u-03
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	9	9	0	0	0	0	S	1750719	                  Kurthia sp. 11kri321
+0.0000	3	3	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	76853	                  Solibacillus silvestris
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	241244	                  Rummeliibacillus stabekisii
+0.0000	5	3	1	1	1	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1639	                  Listeria monocytogenes
+0.0000	2	2	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	563174	                    Listeria monocytogenes L99
+0.0000	6	6	0	0	1	1	2	2	0	0	0	0	1	1	0	0	0	0	0	0	1	1	0	0	1	1	S	2756	                  Brochothrix thermosphacta
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	1	1	0	0	0	0	S	1471761	                  Novibacillus thermophilus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1214604	                  Tumebacillus algifaecis
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1224749	                    Exiguobacterium sp. ZWU0009
+0.1896	84254	84254	16	16	88	88	17	17	145	145	24	24	259	259	1	1	56	56	82857	82857	507	507	239	239	45	45	S	1871021	                  Lachnoclostridium phocaeense
+0.0159	7045	7045	3	3	17	17	2	2	10	10	1	1	19	19	0	0	5	5	6931	6931	34	34	18	18	5	5	S	208479	                  [Clostridium] bolteae
+0.0085	3789	3789	0	0	4	4	1	1	5	5	0	0	9	9	0	0	3	3	3740	3740	13	13	11	11	3	3	S	1834196	                  Lachnoclostridium sp. YL32
+0.0002	88	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	88	0	0	0	0	0	0	0	S	66219	                  Lachnoclostridium phytofermentans
+0.0002	88	88	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	88	88	0	0	0	0	0	0	S1	357809	                    Lachnoclostridium phytofermentans ISDg
+0.0001	60	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	60	0	0	0	0	0	0	0	S	84030	                  [Clostridium] saccharolyticum
+0.0001	60	60	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	60	60	0	0	0	0	0	0	S1	610130	                    [Clostridium] saccharolyticum WM1
+0.0262	11647	0	0	0	5	0	0	0	14	0	3	0	33	0	1	0	22	0	11496	0	46	0	26	0	1	0	S	301301	                  Roseburia hominis
+0.0262	11647	11647	0	0	5	5	0	0	14	14	3	3	33	33	1	1	22	22	11496	11496	46	46	26	26	1	1	S1	585394	                    Roseburia hominis A2-183
+0.0036	1611	0	0	0	2	0	0	0	3	0	0	0	5	0	0	0	0	0	1576	0	11	0	12	0	2	0	S	1322	                  Blautia hansenii
+0.0036	1611	1611	0	0	2	2	0	0	3	3	0	0	5	5	0	0	0	0	1576	1576	11	11	12	12	2	2	S1	537007	                    Blautia hansenii DSM 20583
+0.0031	1367	1367	0	0	0	0	0	0	2	2	0	0	1	1	0	0	1	1	1343	1343	7	7	8	8	5	5	S	1912897	                  Blautia sp. N6H1-15
+0.0020	890	890	0	0	3	3	0	0	1	1	0	0	4	4	0	0	1	1	871	871	8	8	1	1	1	1	S	1796616	                  Blautia sp. YL58
+0.0085	3765	3765	0	0	1	1	0	0	1	1	1	1	12	12	0	0	1	1	3736	3736	12	12	1	1	0	0	S	649756	                  Anaerostipes hadrus
+0.0047	2097	0	2	0	4	0	0	0	1	0	1	0	7	0	0	0	6	0	2049	0	20	0	3	0	4	0	S	39491	                  [Eubacterium] rectale
+0.0047	2097	2097	2	2	4	4	0	0	1	1	1	1	7	7	0	0	6	6	2049	2049	20	20	3	3	4	4	S1	515619	                    [Eubacterium] rectale ATCC 33656
+0.0010	445	445	0	0	1	1	0	0	0	0	0	0	0	0	0	0	1	1	431	431	8	8	3	3	1	1	S	712991	                  Lachnospiraceae bacterium oral taxon 500
+0.0002	81	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	0	73	0	2	0	0	0	0	0	S	28446	                  Anaerotignum propionicum
+0.0002	81	81	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	6	73	73	2	2	0	0	0	0	S1	991789	                    Anaerotignum propionicum DSM 1682
+0.0000	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	10	0	0	0	0	0	0	0	S	43305	                  Butyrivibrio proteoclasticus
+0.0000	10	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	0	0	S1	515622	                    Butyrivibrio proteoclasticus B316
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1679721	                  Herbinix luporum
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S	29360	                  Cellulosilyticum lentocellum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	642492	                    Cellulosilyticum lentocellum DSM 5427
+0.2534	112602	112602	12	12	77	77	16	16	118	118	6	6	218	218	8	8	47	47	111698	111698	260	260	117	117	25	25	S	853	                  Faecalibacterium prausnitzii
+0.0082	3630	3630	0	0	6	6	0	0	7	7	2	2	13	13	0	0	3	3	3581	3581	12	12	4	4	2	2	S	1834198	                  Ruminiclostridium sp. KB18
+0.0001	27	27	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	27	27	0	0	0	0	0	0	S	29343	                  [Clostridium] cellulosi
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	2	0	0	0	0	0	S	1521	                  [Clostridium] cellulolyticum
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	2	2	0	0	0	0	S1	394503	                    [Clostridium] cellulolyticum H10
+0.0001	23	23	0	0	0	0	1	1	0	0	0	0	1	1	0	0	1	1	20	20	0	0	0	0	0	0	S	1160721	                  Ruminococcus bicirculans
+0.0000	22	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	22	0	0	0	0	0	0	0	S	1264	                  Ruminococcus albus
+0.0000	22	22	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	22	22	0	0	0	0	0	0	S1	697329	                    Ruminococcus albus 7 = DSM 20455
+0.0002	89	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	89	0	0	0	0	0	0	0	S	884684	                  Mageeibacillus indolicus
+0.0002	89	89	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	89	89	0	0	0	0	0	0	S1	699246	                    Mageeibacillus indolicus UPII9-5
+0.0001	29	29	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	29	29	0	0	0	0	0	0	S	1572656	                  Ruminococcaceae bacterium CPB6
+0.0001	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	26	0	0	0	0	0	0	0	S	253239	                  Ethanoligenens harbinense
+0.0001	26	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	26	26	0	0	0	0	0	0	S1	663278	                    Ethanoligenens harbinense YUAN-3
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	236753	                  Fastidiosipila sanguinis
+0.1636	72709	72709	16	16	80	80	11	11	91	91	14	14	180	180	5	5	41	41	71462	71462	540	540	223	223	46	46	S	2086584	                  Mordavella sp. Marseille-P3756
+0.0340	15129	15067	6	6	3036	3019	5688	5643	23	23	2	2	21	21	0	0	2	2	6131	6131	158	158	56	56	6	6	S	1502	                  Clostridium perfringens
+0.0001	37	37	0	0	13	13	24	24	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	195103	                    Clostridium perfringens ATCC 13124
+0.0001	25	25	0	0	4	4	21	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	195102	                    Clostridium perfringens str. 13
+0.0008	350	350	3	3	1	1	7	7	2	2	2	2	30	30	0	0	2	2	1	1	121	121	2	2	179	179	S	1491	                  Clostridium botulinum
+0.0003	133	133	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	131	131	1	1	0	0	0	0	S	1042156	                  Clostridium sp. SY8519
+0.0002	101	101	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	101	101	0	0	0	0	0	0	S	1494	                  Clostridium cochlearium
+0.0000	13	7	0	0	1	0	3	0	0	0	0	0	1	1	0	0	0	0	8	6	0	0	0	0	0	0	S	1561	                  Clostridium baratii
+0.0000	6	6	0	0	1	1	3	3	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	1415775	                    Clostridium baratii str. Sullivan
+0.0000	12	12	2	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	4	4	5	5	0	0	0	0	S	1492	                  Clostridium butyricum
+0.0000	11	11	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	0	0	S	1534	                  Clostridium kluyveri
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S	46867	                  Clostridium chauvoei
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	1542	                  Clostridium novyi
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	386415	                    Clostridium novyi NT
+0.0000	2	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	1	0	0	0	0	0	0	S	1501	                  Clostridium pasteurianum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	86416	                    Clostridium pasteurianum BC1
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	755731	                  Clostridium sp. BNL1100
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	169679	                  Clostridium saccharobutylicum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1519	                  Clostridium tyrobutyricum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1520	                  Clostridium beijerinckii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	36745	                  Clostridium saccharoperbutylacetonicum
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	217159	                  Clostridium carboxidivorans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	536227	                    Clostridium carboxidivorans P7
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1548	                  Clostridium scatologenes
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	1	1	0	0	0	0	1	1	S	2082193	                  Clostridiaceae bacterium 14S0207
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	1	0	0	0	0	0	0	0	S	49118	                  Candidatus Arthromitus sp. SFB-mouse
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	0	0	S1	1029718	                    Candidatus Arthromitus sp. SFB-mouse-Japan
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1508644	                  Candidatus Arthromitus sp. SFB-mouse-NL
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1424294	                  Geosporobacter ferrireducens
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	208226	                  Alkaliphilus metalliredigens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	293826	                    Alkaliphilus metalliredigens QYMF
+0.0615	27348	27348	8	8	22	22	7	7	17	17	2	2	42	42	2	2	18	18	27061	27061	117	117	31	31	21	21	S	292800	                  Flavonifractor plautii
+0.0143	6364	6364	1	1	10	10	2	2	10	10	3	3	19	19	0	0	4	4	6255	6255	40	40	18	18	2	2	S	1297617	                  Intestinimonas butyriciproducens
+0.0581	25809	25809	3	3	31	31	5	5	22	22	1	1	71	71	0	0	20	20	25417	25417	147	147	70	70	22	22	S	1805714	                  Christensenella massiliensis
+0.0431	19159	18682	3	3	32	32	2	2	24	24	3	3	44	44	3	0	16	16	18830	18367	120	112	66	63	16	16	S	1496	                  Clostridioides difficile
+0.0011	477	477	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	463	463	8	8	3	3	0	0	S1	699035	                    Clostridioides difficile M120
+0.0009	393	393	0	0	1	1	1	1	0	0	1	1	1	1	0	0	5	5	373	373	10	10	1	1	0	0	S	1505	                  Paeniclostridium sordellii
+0.0001	44	44	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	43	43	0	0	0	0	0	0	S	2081703	                  Peptostreptococcaceae bacterium oral taxon 929
+0.0000	17	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	16	0	1	0	0	0	0	0	S	143361	                  Filifactor alocis
+0.0000	17	17	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	16	16	1	1	0	0	0	0	S1	546269	                    Filifactor alocis ATCC 35896
+0.0000	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	0	1	0	0	0	0	0	S	1731	                  Peptoclostridium acidaminophilum
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	1	1	0	0	0	0	S1	1286171	                    Peptoclostridium acidaminophilum DSM 3953
+0.0149	6625	6625	4	4	3	3	4	4	2	2	1	1	12	12	0	0	7	7	6507	6507	55	55	26	26	4	4	S	39488	                  [Eubacterium] hallii
+0.0109	4853	366	3	0	5	0	1	0	6	1	1	0	11	1	0	0	3	0	4798	362	14	0	9	2	2	0	S	1736	                  Eubacterium limosum
+0.0101	4487	4487	3	3	5	5	1	1	5	5	1	1	10	10	0	0	3	3	4436	4436	14	14	7	7	2	2	S1	903814	                    Eubacterium limosum KIST612
+0.0001	47	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	46	0	0	0	0	0	0	0	S	39485	                  [Eubacterium] eligens
+0.0001	47	47	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	46	46	0	0	0	0	0	0	S1	515620	                    [Eubacterium] eligens ATCC 27750
+0.0019	835	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	1	0	825	0	5	0	0	0	0	0	S	351091	                  Oscillibacter valericigenes
+0.0019	835	835	0	0	0	0	0	0	0	0	0	0	4	4	0	0	1	1	825	825	5	5	0	0	0	0	S1	693746	                    Oscillibacter valericigenes Sjm18-20
+0.0001	46	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	45	0	1	0	0	0	0	0	S	1564	                  Desulfotomaculum ruminis
+0.0001	46	46	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	45	45	1	1	0	0	0	0	S1	696281	                    Desulfotomaculum ruminis DSM 2154
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	59610	                  Desulfotomaculum reducens
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	349161	                    Desulfotomaculum reducens MI-1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1833852	                  Desulfotomaculum ferrireducens
+0.0000	17	0	5	0	6	0	3	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	2	0	0	0	S	79209	                  Desulfosporosinus meridiei
+0.0000	17	17	5	5	6	6	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	2	2	0	0	S1	768704	                    Desulfosporosinus meridiei DSM 13257
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	885581	                  Desulfosporosinus acidiphilus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	646529	                    Desulfosporosinus acidiphilus SJ4
+0.0000	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	0	0	0	0	0	0	0	S	49338	                  Desulfitobacterium hafniense
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	0	0	S1	138119	                    Desulfitobacterium hafniense Y51
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	1	1	0	0	0	0	S	51515	                  Dehalobacterium formicoaceticum
+0.0000	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	0	0	S	143393	                  [Eubacterium] sulci
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	0	0	S1	888727	                    Eubacterium sulci ATCC 35585
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	863	                  Syntrophomonas wolfei
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S1	370885	                    Syntrophomonas wolfei subsp. wolfei
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	35701	                  Heliobacterium modesticaldum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	498761	                    Heliobacterium modesticaldum Ice1
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	2734	                  Symbiobacterium thermophilum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	292459	                    Symbiobacterium thermophilum IAM 14863
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	1517	                  Thermoanaerobacterium thermosaccharolyticum
+0.0036	1609	1609	0	0	0	0	0	0	2	2	0	0	3	3	0	0	2	2	1597	1597	5	5	0	0	0	0	S	1834207	                    Erysipelotrichaceae bacterium I46
+0.0023	1034	1034	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	1031	1031	2	2	0	0	0	0	S	1702221	                  Faecalibaculum rodentium
+0.0004	156	156	1	1	1	1	3	3	0	0	0	0	0	0	0	0	0	0	128	128	20	20	3	3	0	0	S	1712675	                  Turicibacter sp. H121
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S	1514105	                  Erysipelothrix larvae
+0.0026	1140	1140	0	0	2	2	0	0	2	2	0	0	2	2	0	0	4	4	1120	1120	4	4	6	6	0	0	S	1852373	                  Murdochiella vaginalis
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	0	0	S	33033	                  Parvimonas micra
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	33034	                  Anaerococcus prevotii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	525919	                    Anaerococcus prevotii DSM 20548
+0.0000	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1260	                  Finegoldia magna
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	334413	                    Finegoldia magna ATCC 29328
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	1556	                  Gottschalkia acidurici
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	1128398	                    Gottschalkia acidurici 9a
+0.0003	121	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	120	2	0	0	0	0	0	0	S	907	                  Megasphaera elsdenii
+0.0003	118	118	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	118	118	0	0	0	0	0	0	S1	1458465	                    Megasphaera elsdenii 14-14
+0.0000	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	10	0	0	0	0	0	0	0	S	187327	                  Acidaminococcus intestini
+0.0000	10	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	0	0	S1	568816	                    Acidaminococcus intestini RyC-MR95
+0.0000	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	0	0	S	905	                  Acidaminococcus fermentans
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	0	0	S1	591001	                    Acidaminococcus fermentans DSM 20731
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	971	                  Selenomonas ruminantium
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S1	114197	                    Selenomonas ruminantium subsp. lactilytica
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	158847	                  Megamonas hypermegale
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	0	0	S	243899	              endosymbiont 'TC1' of Trimyema compressum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1871025	              Ndongobacter massiliensis
+0.0429	19052	12880	2	2	2	2	3	1	34	24	12	9	75	53	2	1	30	24	18879	12757	3	1	2	2	8	4	S	1694	                  Bifidobacterium pseudolongum
+0.0113	5038	5038	0	0	0	0	2	2	9	9	3	3	19	19	0	0	5	5	4994	4994	2	2	0	0	4	4	S1	1447715	                    Bifidobacterium pseudolongum PV8-2
+0.0026	1134	0	0	0	0	0	0	0	1	0	0	0	3	0	1	0	1	0	1128	0	0	0	0	0	0	0	S1	1690	                    Bifidobacterium pseudolongum subsp. globosum
+0.0251	11148	5927	2	1	12	9	1	1	24	16	7	2	36	21	5	3	23	9	10991	5833	23	15	12	8	12	9	S	216816	                  Bifidobacterium longum
+0.0110	4872	3748	1	0	3	0	0	0	5	4	5	4	14	12	2	2	14	9	4815	3709	7	4	4	2	2	2	S1	1679	                    Bifidobacterium longum subsp. longum
+0.0006	247	195	0	0	0	0	0	0	3	3	0	0	0	0	0	0	0	0	242	191	1	0	0	0	1	1	S1	1682	                    Bifidobacterium longum subsp. infantis
+0.0002	102	102	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	101	101	0	0	0	0	0	0	S1	205913	                    Bifidobacterium longum DJO10A
+0.0132	5855	8	1	0	7	0	0	0	7	0	2	0	20	0	1	0	8	0	5779	6	16	2	6	0	8	0	S	630129	                  Bifidobacterium kashiwanohense
+0.0125	5546	5546	1	1	7	7	0	0	6	6	1	1	18	18	1	1	8	8	5476	5476	14	14	6	6	8	8	S1	1150460	                    Bifidobacterium kashiwanohense JCM 15439 = DSM 21854
+0.0007	301	301	0	0	0	0	0	0	1	1	1	1	2	2	0	0	0	0	297	297	0	0	0	0	0	0	S1	1447716	                    Bifidobacterium kashiwanohense PV20-2
+0.0057	2543	2472	1	1	3	3	1	1	5	5	0	0	8	8	0	0	7	7	2506	2436	7	7	4	4	1	0	S	1685	                  Bifidobacterium breve
+0.0002	71	71	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	70	70	0	0	0	0	1	1	S1	1385942	                    Bifidobacterium breve 689b
+0.0051	2277	0	1	0	2	0	0	0	9	0	4	0	11	0	0	0	5	0	2233	0	9	0	1	0	2	0	S	158787	                  Bifidobacterium scardovii
+0.0051	2277	2277	1	1	2	2	0	0	9	9	4	4	11	11	0	0	5	5	2233	2233	9	9	1	1	2	2	S1	1150461	                    Bifidobacterium scardovii JCM 12489 = DSM 13734
+0.0021	952	0	0	0	3	0	1	0	0	0	0	0	6	0	0	0	2	0	932	0	3	0	3	0	2	0	S	28026	                  Bifidobacterium pseudocatenulatum
+0.0021	952	952	0	0	3	3	1	1	0	0	0	0	6	6	0	0	2	2	932	932	3	3	3	3	2	2	S1	547043	                    Bifidobacterium pseudocatenulatum DSM 20438 = JCM 1200 = LMG 10505
+0.0021	921	812	1	1	0	0	0	0	3	3	0	0	9	8	0	0	2	2	902	794	2	2	1	1	1	1	S	28025	                  Bifidobacterium animalis
+0.0002	76	13	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	75	13	0	0	0	0	0	0	S1	302912	                    Bifidobacterium animalis subsp. animalis
+0.0001	33	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	33	0	0	0	0	0	0	0	S1	302911	                    Bifidobacterium animalis subsp. lactis
+0.0019	850	767	1	1	3	3	1	1	1	1	0	0	2	2	0	0	2	2	832	750	7	7	0	0	1	0	S	1681	                  Bifidobacterium bifidum
+0.0001	60	60	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	60	60	0	0	0	0	0	0	S1	484020	                    Bifidobacterium bifidum BGN4
+0.0000	21	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	20	20	0	0	0	0	1	1	S1	702459	                    Bifidobacterium bifidum PRL2010
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	883062	                    Bifidobacterium bifidum S17
+0.0014	622	620	2	2	6	6	0	0	1	1	0	0	3	3	0	0	3	3	601	599	2	2	0	0	4	4	S	1680	                  Bifidobacterium adolescentis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	367928	                    Bifidobacterium adolescentis ATCC 15703
+0.0014	613	0	1	0	0	0	0	0	1	0	0	0	2	0	0	0	0	0	605	0	4	0	0	0	0	0	S	33905	                  Bifidobacterium thermophilum
+0.0014	613	613	1	1	0	0	0	0	1	1	0	0	2	2	0	0	0	0	605	605	4	4	0	0	0	0	S1	1254439	                    Bifidobacterium thermophilum RBL67
+0.0009	397	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	395	0	1	0	0	0	1	0	S	1686	                  Bifidobacterium catenulatum
+0.0009	397	397	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	395	395	1	1	0	0	1	1	S1	566552	                    Bifidobacterium catenulatum DSM 16992 = JCM 1194 = LMG 11043
+0.0006	277	220	0	0	1	1	0	0	4	4	0	0	0	0	0	0	0	0	270	213	1	1	1	1	0	0	S	1683	                  Bifidobacterium angulatum
+0.0001	57	57	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	57	57	0	0	0	0	0	0	S1	518635	                    Bifidobacterium angulatum DSM 20098 = JCM 7096
+0.0003	141	141	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	141	141	0	0	0	0	0	0	S	1689	                  Bifidobacterium dentium
+0.0002	102	102	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	102	102	0	0	0	0	0	0	S	35760	                  Bifidobacterium choerinum
+0.0001	58	58	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	56	56	0	0	1	1	0	0	S	1684	                  Bifidobacterium asteroides
+0.0001	24	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	23	0	0	0	0	0	0	0	S	638619	                  Bifidobacterium actinocoloniiforme
+0.0001	24	24	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	23	23	0	0	0	0	0	0	S1	1437605	                    Bifidobacterium actinocoloniiforme DSM 22766
+0.0008	372	0	4	0	43	0	171	0	0	0	0	0	0	0	0	0	0	0	14	0	136	0	4	0	0	0	S	78258	                  Parascardovia denticolens
+0.0008	372	372	4	4	43	43	171	171	0	0	0	0	0	0	0	0	0	0	14	14	136	136	4	4	0	0	S1	864564	                    Parascardovia denticolens DSM 10105 = JCM 12538
+0.0001	44	0	1	0	9	0	16	0	0	0	0	0	0	0	0	0	0	0	0	0	18	0	0	0	0	0	S	78259	                  Scardovia inopinata
+0.0001	44	44	1	1	9	9	16	16	0	0	0	0	0	0	0	0	0	0	0	0	18	18	0	0	0	0	S1	1150468	                    Scardovia inopinata JCM 12537
+0.0001	33	27	0	0	0	0	1	1	5	4	2	2	14	13	1	0	1	0	0	0	0	0	0	0	9	7	S	2702	                  Gardnerella vaginalis
+0.0000	6	6	0	0	0	0	0	0	1	1	0	0	1	1	1	1	1	1	0	0	0	0	0	0	2	2	S1	1009464	                    Gardnerella vaginalis HMP9231
+0.0894	39746	39746	331	331	211	211	8460	8460	0	0	0	0	0	0	0	0	5	5	46	46	30542	30542	150	150	1	1	S	1705	                  Corynebacterium stationis
+0.0020	906	0	6	0	5	0	207	0	0	0	0	0	0	0	0	0	1	0	0	0	683	0	4	0	0	0	S	160386	                  Corynebacterium casei
+0.0020	906	906	6	6	5	5	207	207	0	0	0	0	0	0	0	0	1	1	0	0	683	683	4	4	0	0	S1	1285583	                    Corynebacterium casei LMG S-19264
+0.0018	815	799	3	3	5	5	201	195	0	0	0	0	0	0	0	0	0	0	0	0	605	595	1	1	0	0	S	1718	                  Corynebacterium glutamicum
+0.0000	16	16	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	S1	340322	                    Corynebacterium glutamicum R
+0.0005	242	242	4	4	1	1	51	51	0	0	0	0	0	0	0	0	0	0	8	8	177	177	1	1	0	0	S	1697	                  Corynebacterium ammoniagenes
+0.0003	141	0	2	0	0	0	46	0	0	0	0	0	1	0	0	0	0	0	0	0	92	0	0	0	0	0	S	1727	                  Corynebacterium variabile
+0.0003	141	141	2	2	0	0	46	46	0	0	0	0	1	1	0	0	0	0	0	0	92	92	0	0	0	0	S1	858619	                    Corynebacterium variabile DSM 44702
+0.0001	31	0	0	0	1	0	9	0	0	0	0	0	0	0	0	0	0	0	0	0	21	0	0	0	0	0	S	1408191	                  Corynebacterium deserti
+0.0001	31	31	0	0	1	1	9	9	0	0	0	0	0	0	0	0	0	0	0	0	21	21	0	0	0	0	S1	931089	                    Corynebacterium deserti GIMN1.010
+0.0001	28	27	0	0	0	0	5	5	1	1	0	0	0	0	0	0	2	2	0	0	20	19	0	0	0	0	S	38289	                  Corynebacterium jeikeium
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	306537	                    Corynebacterium jeikeium K411
+0.0000	18	18	0	0	0	0	5	5	0	0	0	0	0	0	0	0	0	0	0	0	13	13	0	0	0	0	S	43770	                  Corynebacterium striatum
+0.0000	15	6	0	0	0	0	8	3	0	0	0	0	0	0	0	0	0	0	0	0	7	3	0	0	0	0	S	1717	                  Corynebacterium diphtheriae
+0.0000	7	7	0	0	0	0	5	5	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	698970	                    Corynebacterium diphtheriae HC04
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	698973	                    Corynebacterium diphtheriae BH8
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	698965	                    Corynebacterium diphtheriae CDCE 8392
+0.0000	13	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	11	0	0	0	0	0	S	152794	                  Corynebacterium efficiens
+0.0000	13	13	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	S1	196164	                    Corynebacterium efficiens YS-314
+0.0000	13	0	0	0	0	0	6	0	0	0	0	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	S	1721	                  Corynebacterium callunae
+0.0000	13	13	0	0	0	0	6	6	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S1	1121353	                    Corynebacterium callunae DSM 20147
+0.0000	12	12	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	9	9	0	0	0	0	S	28028	                  Corynebacterium flavescens
+0.0000	11	11	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	S	1652495	                  Corynebacterium crudilactis
+0.0000	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	S	1223514	                  Corynebacterium humireducens
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S1	1223515	                    Corynebacterium humireducens NBRC 106098 = DSM 45392
+0.0000	7	0	1	0	0	0	1	0	0	0	0	0	1	0	0	0	0	0	0	0	4	0	0	0	0	0	S	575200	                  Corynebacterium maris
+0.0000	7	7	1	1	0	0	1	1	0	0	0	0	1	1	0	0	0	0	0	0	4	4	0	0	0	0	S1	1224163	                    Corynebacterium maris DSM 45190
+0.0000	6	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	4	0	S	108486	                  Corynebacterium falsenii
+0.0000	6	6	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	4	4	S1	1451189	                    Corynebacterium falsenii DSM 44353
+0.0000	6	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	1	0	3	0	0	0	0	0	S	349751	                  Corynebacterium marinum
+0.0000	6	6	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	1	1	3	3	0	0	0	0	S1	1224162	                    Corynebacterium marinum DSM 44953
+0.0000	6	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	0	0	S	258224	                  Corynebacterium resistens
+0.0000	6	6	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S1	662755	                    Corynebacterium resistens DSM 45100
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S	43771	                  Corynebacterium urealyticum
+0.0000	4	0	0	0	0	0	3	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	225326	                  Corynebacterium halotolerans
+0.0000	4	4	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1121362	                    Corynebacterium halotolerans YIM 70093 = DSM 44683
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	2	0	0	0	0	0	S	169292	                  Corynebacterium aurimucosum
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	2	2	0	0	0	0	S1	548476	                    Corynebacterium aurimucosum ATCC 700975
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	0	0	0	0	0	0	S	38305	                  Corynebacterium vitaeruminis
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	S1	1224164	                    Corynebacterium vitaeruminis DSM 20294
+0.0000	3	3	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	161899	                  Corynebacterium singulare
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	146827	                  Corynebacterium simulans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1050174	                  Corynebacterium epidermidicanis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1724	                  Corynebacterium renale
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	1	1	S	401472	                  Corynebacterium ureicelerivorans
+0.0000	2	2	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	136857	                  Corynebacterium testudinoris
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	42817	                  Corynebacterium argentoratense
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1348662	                    Corynebacterium argentoratense DSM 44202
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	702967	                  Corynebacterium sp. NML98-0116
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	191493	                  Corynebacterium sphenisci
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1437874	                    Corynebacterium sphenisci DSM 44792
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1719	                  Corynebacterium pseudotuberculosis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	38301	                  Corynebacterium minutissimum
+0.0000	1	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1121358	                  Corynebacterium doosanense
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	558173	                    Corynebacterium doosanense CAU 212 = DSM 45436
+0.0000	1	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1404244	                  Corynebacterium glyciniphilum
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1404245	                    Corynebacterium glyciniphilum AJ 3170
+0.0001	38	38	1	1	1	1	9	9	0	0	0	0	0	0	0	0	0	0	0	0	27	27	0	0	0	0	S	712270	                  Dietzia sp. oral taxon 368
+0.0000	14	14	0	0	0	0	4	4	0	0	0	0	0	0	0	0	4	4	0	0	6	6	0	0	0	0	S	499555	                  Dietzia timorensis
+0.0000	13	13	0	0	0	0	5	5	0	0	0	0	1	1	0	0	0	0	0	0	7	7	0	0	0	0	S	139021	                  Dietzia psychralcaliphila
+0.0000	7	7	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	S	546160	                  Dietzia lutea
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	2052657	                  Dietzia sp. JS16-p6b
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	2	2	S	1682113	                  Mycobacterium sp. YC-RL4
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	212767	                  Mycobacterium sp. JS623
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	1774	                  Mycobacteroides chelonae
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1460372	                    Mycobacteroides chelonae CCUG 47445
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	875328	                  Mycolicibacter sinensis
+0.0000	10	10	0	0	0	0	3	3	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	935199	                  Rhodococcus sp. p52
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	103816	                  Rhodococcus pyridinivorans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1136941	                  Gordonia phthalatica
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	2054	                  Gordonia bronchialis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	526226	                    Gordonia bronchialis DSM 43247
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	2059875	                  Gordonia sp. YC-JH1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1528099	                  Lawsonella clevelandensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	57704	                  Tsukamurella tyrosinosolvens
+0.0027	1206	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	0	1193	0	2	0	3	0	S	43669	                  Brachybacterium faecium
+0.0027	1206	1206	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	1193	1193	2	2	3	3	S1	446465	                    Brachybacterium faecium DSM 4810
+0.0003	137	137	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	135	135	1	1	0	0	S	1331682	                  Brachybacterium ginsengisoli
+0.0002	74	74	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	71	71	3	3	0	0	S	1903186	                  Brachybacterium sp. P6-10-X1
+0.0001	53	53	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	51	51	1	1	0	0	S	2017484	                  Brachybacterium sp. VM2412
+0.0001	48	48	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	46	46	2	2	0	0	S	2017485	                  Brachybacterium sp. VR2415
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1630135	                  Dermabacter vaginalis
+0.0022	964	964	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	17	17	943	943	4	4	0	0	S	1703	                  Brevibacterium linens
+0.0000	15	15	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	15	15	0	0	0	0	S	273384	                  Brevibacterium aurantiacum
+0.0001	23	22	0	0	1	1	0	0	1	1	0	0	1	0	0	0	0	0	0	0	20	20	0	0	0	0	S	43675	                  Rothia mucilaginosa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	680646	                    Rothia mucilaginosa DY-18
+0.0000	4	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	1	0	S	2047	                  Rothia dentocariosa
+0.0000	4	4	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	2	2	0	0	1	1	S1	762948	                    Rothia dentocariosa ATCC 17931
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	6	6	0	0	1	1	S	71999	                  Kocuria palustris
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	446860	                  Kocuria flava
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	S	1702043	                  Kocuria sp. BT304
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	72000	                  Kocuria rhizophila
+0.0000	16	0	0	0	0	0	0	0	2	0	0	0	10	0	0	0	0	0	0	0	4	0	0	0	0	0	S	1270	                  Micrococcus luteus
+0.0000	16	16	0	0	0	0	0	0	2	2	0	0	10	10	0	0	0	0	0	0	4	4	0	0	0	0	S1	465515	                    Micrococcus luteus NCTC 2665
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1652545	                  Arthrobacter sp. YC-RL1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1690248	                  Arthrobacter sp. LS16
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	37928	                  Arthrobacter crystallopoietes
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	656366	                  Arthrobacter alpinus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	2079227	                  Arthrobacter sp. PGP41
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S	256701	                  Glutamicibacter arilaitensis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	861360	                    Glutamicibacter arilaitensis Re117
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	361575	                  Pseudarthrobacter phenanthrenivorans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	930171	                    Pseudarthrobacter phenanthrenivorans Sphe3
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	121292	                  Pseudarthrobacter sulfonivorans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	556325	                  Neomicrococcus aestuarii
+0.0000	4	4	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	1	1	S	36805	                  Microbacterium aurum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1938334	                  Microbacterium sp. TPU 3598
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	2033	                  Microbacterium testaceum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	979556	                    Microbacterium testaceum StLB037
+0.0000	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1906742	                  Microbacterium sp. BH-3-3-3
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	2079791	                  Salinibacterium sp. CGMCC 1.16371
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	33888	                  Rathayibacter tritici
+0.0001	40	40	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	40	40	0	0	0	0	S	43674	                  Jonesia denitrificans
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	6	6	2	2	0	0	S	857417	                  Janibacter indicus
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	1758689	                  Serinicoccus sp. JLT9
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	53358	                  Intrasporangium calvum
+0.0000	4	4	0	0	0	0	0	0	1	1	0	0	2	2	0	0	0	0	0	0	0	0	0	0	1	1	S	1274	                  Dermacoccus nishinomiyaensis
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	S	1276	                  Kytococcus sedentarius
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S1	478801	                    Kytococcus sedentarius DSM 20547
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1710	                  Cellulosimicrobium cellulans
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	372663	                  Isoptericola dokdonensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1300344	                    Isoptericola dokdonensis DS-3
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	139208	                  Isoptericola variabilis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	743718	                    Isoptericola variabilis 225
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	1	0	0	0	0	0	S	1711	                  Cellulomonas flavigena
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S1	446466	                    Cellulomonas flavigena DSM 20109
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	11	                  Cellulomonas gilvus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	593907	                    Cellulomonas gilvus ATCC 13127
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	2171623	                  Miniimonas sp. S16
+0.0084	3722	3693	40	40	31	30	18	18	899	888	109	109	1764	1752	22	22	43	43	26	26	150	149	27	27	593	589	S	1747	                  Cutibacterium acnes
+0.0000	22	16	0	0	1	1	0	0	7	6	0	0	10	6	0	0	0	0	0	0	1	0	0	0	3	3	S1	1734925	                    Cutibacterium acnes subsp. acnes
+0.0000	4	0	0	0	0	0	0	0	2	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	1	0	S1	1905725	                    Cutibacterium acnes subsp. defendens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	1134454	                    Cutibacterium acnes HL096PA1
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1276648	                    Cutibacterium acnes hdn-1
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1234380	                    Cutibacterium acnes C1
+0.0000	9	9	0	0	0	0	0	0	1	1	0	0	4	4	0	0	1	1	0	0	0	0	0	0	3	3	S	33011	                  Cutibacterium granulosum
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	33010	                  Cutibacterium avidum
+0.0000	13	13	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	13	13	0	0	0	0	S	1744	                  Propionibacterium freudenreichii
+0.0000	11	11	0	0	0	0	0	0	1	1	0	0	4	4	0	0	0	0	0	0	2	2	0	0	4	4	S	671223	                  Propionibacterium sp. oral taxon 193
+0.0000	11	11	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	10	10	0	0	0	0	S	2161816	                  Tessaracoccus sp. Marseille-P5995
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	399497	                  Tessaracoccus flavescens
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	0	0	S	1748	                  Acidipropionibacterium acidipropionici
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	75385	                  Micropruina glycogenica
+0.0001	28	28	3	3	6	6	2	2	3	3	1	1	0	0	0	0	3	3	7	7	1	1	1	1	1	1	S	2071627	                  Plantactinospora sp. BB1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	2108470	                  Plantactinospora sp. BC1
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	1866	                  Actinoplanes missouriensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	512565	                    Actinoplanes missouriensis 431
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	S	1003110	                  Verrucosispora maris
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S1	263358	                    Verrucosispora maris AB-18-032
+0.0005	233	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	232	0	0	0	0	0	0	0	S	2051	                  Mobiluncus curtisii
+0.0005	233	233	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	232	232	0	0	0	0	0	0	S1	548479	                    Mobiluncus curtisii ATCC 43063
+0.0001	48	48	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	44	44	1	1	1	1	0	0	S	1661	                  Trueperella pyogenes
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	6	2	2	0	0	0	0	S	111015	                  Actinomyces radicidentis
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	0	0	S	2079536	                  Actinomyces sp. Z16
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	2081702	                  Actinomyces sp. oral taxon 897
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	1	1	0	0	0	0	S	544580	                  Actinomyces oris
+0.0000	2	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	2171980	                  Actinotignum sp. 313
+0.0001	45	0	0	0	0	0	10	0	0	0	0	0	0	0	0	0	1	0	0	0	34	0	0	0	0	0	S	53437	                  Nocardiopsis alba
+0.0001	45	45	0	0	0	0	10	10	0	0	0	0	0	0	0	0	1	1	0	0	34	34	0	0	0	0	S1	1205910	                    Nocardiopsis alba ATCC BAA-2165
+0.0000	11	11	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	9	9	0	0	0	0	S	2014	                  Nocardiopsis dassonvillei
+0.0000	5	0	0	0	0	0	0	0	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	2021	                  Thermobifida fusca
+0.0000	5	5	0	0	0	0	0	0	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	269800	                    Thermobifida fusca YX
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	2020	                  Thermomonospora curvata
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	471852	                    Thermomonospora curvata DSM 43183
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	9	9	0	0	0	0	0	0	S	2202000	                  Streptomyces sp. NEAU-S7GS2
+0.0000	6	6	0	0	1	1	0	0	1	1	0	0	1	1	0	0	2	2	0	0	0	0	1	1	0	0	S	362257	                  Streptomyces vietnamensis
+0.0000	2	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	S	1950	                  Streptomyces peucetius
+0.0000	2	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	S1	55158	                    Streptomyces peucetius subsp. caesius
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	29303	                  Streptomyces cattleya
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1003195	                    Streptomyces cattleya NRRL 8057 = DSM 46488
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	862751	                  Streptomyces sp. SirexAA-E
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1616117	                  Streptomyces formicae
+0.0000	2	2	1	1	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	68173	                  Kitasatospora albolonga
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1894	                  Kitasatospora aureofaciens
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	4	4	S	477641	                  Modestobacter marinus
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	138336	                  Blastococcus saxobsidens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	1146883	                    Blastococcus saxobsidens DD2
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	0	0	0	0	S	240495	                  Pseudonocardia dioxanivorans
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	0	0	S1	675635	                    Pseudonocardia dioxanivorans CB1190
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	103731	                  Saccharothrix espanaensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1179773	                    Saccharothrix espanaensis DSM 44229
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	414996	                  Actinopolyspora erythraea
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	1	0	0	0	0	0	0	0	S	131568	                  Kineococcus radiotolerans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	1	1	0	0	0	0	0	0	S1	266940	                    Kineococcus radiotolerans SRS30216 = ATCC BAA-149
+0.0336	14935	14935	0	0	0	0	0	0	13	13	1	1	37	37	1	1	2	2	14706	14706	1	1	0	0	174	174	S	1805478	                  Olsenella sp. Marseille-P2300
+0.0002	76	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	74	0	0	0	0	0	1	0	S	133926	                  Olsenella uli
+0.0002	76	76	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	74	74	0	0	0	0	1	1	S1	633147	                    Olsenella uli DSM 7084
+0.0000	14	14	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	14	14	0	0	0	0	0	0	S	712411	                  Olsenella sp. oral taxon 807
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	S	1382	                  Atopobium parvulum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	S1	521095	                    Atopobium parvulum DSM 20469
+0.0001	40	40	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	40	40	0	0	0	0	0	0	S	1531429	                  Coriobacteriaceae bacterium 68-1-3
+0.0001	26	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	24	24	1	1	0	0	0	0	S	74426	                  Collinsella aerofaciens
+0.0000	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	0	0	0	0	0	1	0	S	33871	                  Coriobacterium glomerans
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	0	0	1	1	S1	700015	                    Coriobacterium glomerans PW2
+0.0082	3622	3622	0	0	4	4	2	2	8	8	0	0	6	6	0	0	0	0	3584	3584	11	11	0	0	7	7	S	1335613	                  Gordonibacter urolithinfaciens
+0.0004	187	187	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	184	184	1	1	0	0	2	2	S	1841863	                  Gordonibacter massiliensis
+0.0051	2275	2275	1	1	2	2	0	0	5	5	2	2	5	5	0	0	0	0	2249	2249	8	8	2	2	1	1	S	502558	                  Eggerthella sp. YY7918
+0.0014	631	594	0	0	2	2	1	1	2	1	0	0	1	1	0	0	0	0	621	585	2	2	2	2	0	0	S	84112	                  Eggerthella lenta
+0.0001	37	37	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	36	36	0	0	0	0	0	0	S1	479437	                    Eggerthella lenta DSM 2243
+0.0002	82	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	81	0	0	0	0	0	0	0	S	446660	                  Adlercreutzia equolifaciens
+0.0002	82	82	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	81	81	0	0	0	0	0	0	S1	1384484	                    Adlercreutzia equolifaciens DSM 19450
+0.0000	19	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	19	0	0	0	0	0	0	0	S	84110	                  Slackia heliotrinireducens
+0.0000	19	19	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	19	19	0	0	0	0	0	0	S1	471855	                    Slackia heliotrinireducens DSM 20476
+0.0000	14	14	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	13	13	0	0	0	0	0	0	S	79604	                  Denitrobacterium detoxificans
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	84163	                  Cryptobacterium curtum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	469378	                    Cryptobacterium curtum DSM 15641
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1944646	                  Phoenicibacter massiliensis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	2095	                    Mycoplasma capricolum
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S1	40480	                      Mycoplasma capricolum subsp. capripneumoniae
+0.0000	11	11	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	11	11	S	81459	                  Entomoplasma melaleucae
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1911683	            Tenericutes bacterium MZ-XQ
+0.0000	5	5	0	0	0	0	0	0	0	0	2	2	0	0	0	0	1	1	0	0	1	1	0	0	1	1	S	46234	                  Anabaena sp. 90
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	264691	                  Trichormus variabilis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	240292	                    Trichormus variabilis ATCC 29413
+0.0000	2	2	0	0	0	0	0	0	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	1618022	                  Nostoc sp. 'Lobaria pulmonaria (5183) cyanobiont'
+0.0000	5	0	0	0	0	0	0	0	1	0	1	0	2	0	0	0	0	0	0	0	0	0	1	0	0	0	S	32054	                  Calothrix parietina
+0.0000	5	5	0	0	0	0	0	0	1	1	1	1	2	2	0	0	0	0	0	0	0	0	1	1	0	0	S1	1170562	                    Calothrix sp. PCC 6303
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1337936	                  Calothrix sp. 336/3
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1752063	                  Fischerella sp. NIES-3754
+0.0000	6	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	0	0	1	0	2	0	S	59930	                  Cyanobium gracile
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	0	0	1	1	2	2	S1	292564	                    Cyanobium gracile PCC 6307
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1851505	                  Cyanobium sp. NIES-981
+0.0000	2	2	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	585425	                  Synechococcus sp. KORDI-52
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1219	                  Prochlorococcus marinus
+0.0000	1	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1209493	                  Halomicronema hongdechloris
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1641165	                    Halomicronema hongdechloris C2206
+0.0000	1	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1155739	                    Moorea producens
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1458985	                      Moorea producens PAL-8-15-08-1
+0.0001	24	24	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	22	22	0	0	1	1	0	0	S	1986204	                  Brevefilum fermentans
+0.0000	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	0	0	0	0	0	0	0	S	61435	                  Dehalococcoides mccartyi
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	0	0	0	0	0	0	S1	243164	                    Dehalococcoides mccartyi 195
+0.0000	2	2	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1806508	                  Candidatus Promineofilum breve
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	133453	                  Caldilinea aerophila
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	926550	                    Caldilinea aerophila DSM 14535 = NBRC 104270
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1108	                    Chloroflexus aurantiacus
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	0	0	S	55148	                  Deinococcus proteolyticus
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S1	693977	                    Deinococcus proteolyticus MRP
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	502394	                  Deinococcus gobiensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	745776	                    Deinococcus gobiensis I-0
+0.2311	102719	94192	6	5	119	114	5	5	54	48	13	11	225	208	2	2	11	9	101763	93317	266	244	170	155	85	74	S	817	                    Bacteroides fragilis
+0.0125	5567	5567	1	1	1	1	0	0	3	3	2	2	13	13	0	0	2	2	5523	5523	5	5	8	8	9	9	S1	862962	                      Bacteroides fragilis 638R
+0.0034	1533	1533	0	0	1	1	0	0	3	3	0	0	3	3	0	0	0	0	1512	1512	9	9	5	5	0	0	S1	295405	                      Bacteroides fragilis YCH46
+0.0032	1427	1427	0	0	3	3	0	0	0	0	0	0	1	1	0	0	0	0	1411	1411	8	8	2	2	2	2	S1	272559	                      Bacteroides fragilis NCTC 9343
+0.0184	8161	8161	2	2	7	7	0	0	5	5	5	5	13	13	1	1	1	1	8063	8063	27	27	15	15	22	22	S	28116	                    Bacteroides ovatus
+0.0156	6939	6939	0	0	1	1	0	0	3	3	0	0	24	24	0	0	0	0	6888	6888	7	7	5	5	11	11	S	1796613	                    Bacteroides caecimuris
+0.0125	5570	4387	0	0	1	0	0	0	5	4	1	0	10	5	0	0	1	1	5541	4368	2	2	7	6	2	1	S	818	                    Bacteroides thetaiotaomicron
+0.0027	1183	1183	0	0	1	1	0	0	1	1	1	1	5	5	0	0	0	0	1173	1173	0	0	1	1	1	1	S1	226186	                      Bacteroides thetaiotaomicron VPI-5482
+0.0076	3396	0	47	0	374	0	32	0	70	0	1	0	4	0	0	0	1	0	920	0	1175	0	768	0	4	0	S	357276	                    Bacteroides dorei
+0.0076	3396	3396	47	47	374	374	32	32	70	70	1	1	4	4	0	0	1	1	920	920	1175	1175	768	768	4	4	S1	997877	                      Bacteroides dorei CL03T12C01
+0.0059	2640	2640	2	2	18	18	1	1	6	6	0	0	3	3	1	1	0	0	2514	2514	57	57	38	38	0	0	S	246787	                    Bacteroides cellulosilyticus
+0.0037	1654	0	0	0	0	0	0	0	2	0	0	0	7	0	0	0	0	0	1643	0	1	0	1	0	0	0	S	290053	                    Bacteroides helcogenes
+0.0037	1654	1654	0	0	0	0	0	0	2	2	0	0	7	7	0	0	0	0	1643	1643	1	1	1	1	0	0	S1	693979	                      Bacteroides helcogenes P 36-108
+0.0033	1447	1447	0	0	0	0	0	0	1	1	0	0	12	12	0	0	1	1	1432	1432	0	0	0	0	1	1	S	28113	                    Bacteroides heparinolyticus
+0.0016	716	0	5	0	45	0	5	0	2	0	0	0	3	0	0	0	0	0	466	0	101	0	84	0	5	0	S	821	                    Bacteroides vulgatus
+0.0016	716	716	5	5	45	45	5	5	2	2	0	0	3	3	0	0	0	0	466	466	101	101	84	84	5	5	S1	435590	                      Bacteroides vulgatus ATCC 8482
+0.0011	496	496	0	0	0	0	0	0	3	3	0	0	2	2	0	0	0	0	481	481	6	6	3	3	1	1	S	47678	                    Bacteroides caccae
+0.0006	251	0	0	0	2	0	0	0	0	0	0	0	2	0	0	0	1	0	231	0	6	0	8	0	1	0	S	376805	                    Bacteroides salanitronis
+0.0006	251	251	0	0	2	2	0	0	0	0	0	0	2	2	0	0	1	1	231	231	6	6	8	8	1	1	S1	667015	                      Bacteroides salanitronis DSM 18170
+0.0004	165	165	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	164	164	0	0	0	0	0	0	S	28119	                    Bacteroides zoogleoformans
+0.0904	40155	0	3	0	4	0	1	0	73	0	13	0	98	0	0	0	6	0	39830	0	24	0	9	0	94	0	S	214856	                    Alistipes finegoldii
+0.0904	40155	40155	3	3	4	4	1	1	73	73	13	13	98	98	0	0	6	6	39830	39830	24	24	9	9	94	94	S1	679935	                      Alistipes finegoldii DSM 17242
+0.0001	29	29	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	28	28	0	0	1	1	0	0	S	1433126	                    Mucinivorans hirudinis
+0.0121	5375	0	73	0	349	0	44	0	86	0	5	0	9	0	1	0	1	0	2670	0	1285	0	824	0	28	0	S	397865	                    Barnesiella viscericola
+0.0121	5375	5375	73	73	349	349	44	44	86	86	5	5	9	9	1	1	1	1	2670	2670	1285	1285	824	824	28	28	S1	880074	                      Barnesiella viscericola DSM 18177
+0.0009	420	420	1	1	10	10	2	2	2	2	2	2	0	0	0	0	0	0	355	355	22	22	26	26	0	0	S	28118	                    Odoribacter splanchnicus
+0.0002	104	104	0	0	2	2	0	0	1	1	2	2	0	0	0	0	0	0	75	75	18	18	6	6	0	0	S	2025876	                    Parabacteroides sp. CT06
+0.0001	51	0	1	0	9	0	1	0	0	0	1	0	0	0	0	0	0	0	22	0	11	0	6	0	0	0	S	823	                    Parabacteroides distasonis
+0.0001	51	51	1	1	9	9	1	1	0	0	1	1	0	0	0	0	0	0	22	22	11	11	6	6	0	0	S1	435591	                      Parabacteroides distasonis ATCC 8503
+0.0002	107	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	106	0	0	0	0	0	0	0	S	28112	                    Tannerella forsythia
+0.0002	107	107	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	106	106	0	0	0	0	0	0	S1	1307832	                      Tannerella forsythia 3313
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	1	1	S	712710	                    Tannerella sp. oral taxon HOT-286
+0.0006	276	276	0	0	0	0	0	0	1	1	0	0	4	4	0	0	0	0	271	271	0	0	0	0	0	0	S	1562970	                    Fermentimonas caenicola
+0.0001	25	25	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	25	25	0	0	0	0	0	0	S	1642646	                    Petrimonas mucosa
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	28123	                    Porphyromonas asaccharolytica
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	879243	                      Porphyromonas asaccharolytica DSM 20707
+0.0000	3	3	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	S	837	                    Porphyromonas gingivalis
+0.0005	231	231	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	225	225	1	1	2	2	1	1	S	28131	                    Prevotella intermedia
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	28129	                    Prevotella denticola
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	767031	                      Prevotella denticola F0289
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	52227	                    Prevotella dentalis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	908937	                      Prevotella dentalis DSM 3688
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	839	                    Prevotella ruminicola
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	264731	                      Prevotella ruminicola 23
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	1177574	                    Prevotella jejuni
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	S	652716	                    Prevotella sp. oral taxon 299
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	575614	                      Prevotella sp. oral taxon 299 str. F0039
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	76123	                    Prevotella enoeca
+0.0001	50	27	0	0	0	0	1	0	2	1	0	0	0	0	0	0	0	0	16	0	3	0	2	0	26	26	S	28251	                    Ornithobacterium rhinotracheale
+0.0001	23	23	0	0	0	0	1	1	1	1	0	0	0	0	0	0	0	0	16	16	3	3	2	2	0	0	S1	1401325	                      Ornithobacterium rhinotracheale ORT-UMN 88
+0.0001	40	40	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	39	39	0	0	0	0	0	0	S	1324352	                    Chryseobacterium gallinarum
+0.0000	17	0	0	0	0	0	0	0	2	0	0	0	4	0	3	0	3	0	0	0	0	0	0	0	5	0	S	411153	                    Gramella forsetii
+0.0000	17	17	0	0	0	0	0	0	2	2	0	0	4	4	3	3	3	3	0	0	0	0	0	0	5	5	S1	411154	                      Gramella forsetii KT0803
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	0	0	0	0	S	76832	                    Myroides odoratimimus
+0.0000	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	0	0	0	0	0	0	0	S	1018	                    Capnocytophaga ochracea
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	0	0	S1	521097	                      Capnocytophaga ochracea DSM 7271
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	2183896	                    Flavobacterium sp. HYN0056
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	2201181	                    Flavobacterium sp. MEBiC07310
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	996	                    Flavobacterium columnare
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	531844	                    Flavobacteriaceae bacterium 3519-10
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	398743	                    Zunongwangia profunda
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	655815	                      Zunongwangia profunda SM-A87
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1014	                    Weeksella virosa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	865938	                      Weeksella virosa DSM 16922
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1383885	                    Spongiibacterium sp. HME9304
+0.0001	62	62	3	3	6	6	3	3	8	8	4	4	16	16	3	3	10	10	0	0	1	1	2	2	6	6	S	336810	                    Candidatus Sulcia muelleri
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	242600	                    Ichthyobacterium seriolicida
+0.0000	14	14	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	13	13	1	1	0	0	S	1010	                    Sphingobacterium mizutaii
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S	743722	                    Sphingobacterium sp. 21
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	188932	                    Pedobacter cryoconitis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	2057025	                    Spirosoma sp. HA7
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1211326	                    Spirosoma aerolatum
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S	316068	                    Leadbetterella byssophila
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	649349	                      Leadbetterella byssophila DSM 17132
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	94254	                    Dyadobacter fermentans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	471854	                      Dyadobacter fermentans DSM 18053
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S	232259	                    Belliella baltica
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	866536	                      Belliella baltica DSM 15883
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	2029983	                    Chitinophaga caeni
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1850526	                    Arachidicoccus sp. BS20
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	274537	                    Chlorobaculum limnaeum
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	861299	                  Gemmatirosa kalamazoonesis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	173480	                  Gemmatimonas aurantiaca
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	379066	                    Gemmatimonas aurantiaca T-27
+0.2109	93708	93401	1	1	4	4	10	10	55	55	4	4	135	135	0	0	9	9	93462	93159	11	8	2	1	15	15	S	195	                  Campylobacter coli
+0.0003	138	138	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	138	138	0	0	0	0	0	0	S1	1358410	                    Campylobacter coli 15-537360
+0.0003	115	115	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	111	111	3	3	1	1	0	0	S1	1183380	                    Campylobacter coli RM5611
+0.0001	45	45	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	45	45	0	0	0	0	0	0	S1	1183378	                    Campylobacter coli RM1875
+0.0000	9	9	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	9	9	0	0	0	0	0	0	S1	1273173	                    Campylobacter coli CVM N29710
+0.1000	44456	43263	24	24	1248	1208	2013	1963	51	49	57	55	163	160	4	3	3513	3402	36714	35739	564	557	94	92	11	11	S	197	                  Campylobacter jejuni
+0.0024	1075	1042	0	0	34	33	45	45	2	2	2	2	3	3	1	1	104	104	876	844	7	7	1	1	0	0	S1	32022	                    Campylobacter jejuni subsp. jejuni
+0.0002	85	85	0	0	6	6	5	5	0	0	0	0	0	0	0	0	7	7	66	66	0	0	1	1	0	0	S1	1338035	                    Campylobacter jejuni 32488
+0.0001	33	33	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	33	33	0	0	0	0	0	0	S1	1347340	                    Campylobacter jejuni 4031
+0.0053	2366	0	0	0	0	0	0	0	2	0	1	0	5	0	0	0	1	0	2354	0	1	0	2	0	0	0	S	522485	                  Campylobacter avium
+0.0053	2366	2366	0	0	0	0	0	0	2	2	1	1	5	5	0	0	1	1	2354	2354	1	1	2	2	0	0	S1	522484	                    Campylobacter avium LMG 24591
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	201	                  Campylobacter lari
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	1453988	                    Campylobacter lari RM16712
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	306263	                    Campylobacter lari RM2100
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1660073	                  Campylobacter sp. RM6137
+0.0000	2	1	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	196	                  Campylobacter fetus
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1507806	                    Campylobacter fetus subsp. testudinum
+0.0000	2	0	0	0	0	0	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	75658	                  Campylobacter lanienae
+0.0000	2	2	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1031753	                    Campylobacter lanienae NCTC 13004
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	1660074	                  Campylobacter sp. RM8964
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	374106	                  Campylobacter cuniculorum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1121267	                    Campylobacter cuniculorum DSM 23162 = LMG 24588
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1965231	                  Campylobacter pinnipediorum
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	S	827	                  Campylobacter ureolyticus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	1032069	                    Campylobacter ureolyticus RIGS 9880
+0.0000	7	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	2	0	0	0	0	S	28197	                  Arcobacter butzleri
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S1	1036172	                    Arcobacter butzleri 7h1h
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	944546	                    Arcobacter butzleri ED-1
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	28199	                  Arcobacter nitrofigilis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	572480	                    Arcobacter nitrofigilis DSM 7299
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	44674	                  Sulfurospirillum barnesii
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	760154	                    Sulfurospirillum barnesii SES-3
+0.0012	529	529	0	0	2	2	0	0	0	0	0	0	1	1	0	0	1	1	523	523	0	0	2	2	0	0	S	135569	                  Helicobacter apodemus
+0.0001	43	43	28	28	1	1	3	3	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	0	0	S	222136	                  Helicobacter sp. MIT 01-6242
+0.0001	39	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	39	0	0	0	0	0	0	0	S	214	                  Helicobacter felis
+0.0001	39	39	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	39	39	0	0	0	0	0	0	S1	936155	                    Helicobacter felis ATCC 49179
+0.0000	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	21	0	0	0	0	0	0	0	S	32025	                  Helicobacter hepaticus
+0.0000	21	21	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	21	21	0	0	0	0	0	0	S1	235279	                    Helicobacter hepaticus ATCC 51449
+0.0000	6	5	1	1	0	0	0	0	0	0	1	1	0	0	0	0	1	0	3	3	0	0	0	0	0	0	S	210	                  Helicobacter pylori
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S1	866344	                    Helicobacter pylori F16
+0.0000	6	6	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	217	                  Helicobacter mustelae
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	0	0	S	1591088	                  Helicobacter himalayensis
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	138563	                  Helicobacter cetorum
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	76936	                  Helicobacter typhlonius
+0.0000	1	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	213	                  Helicobacter cinaedi
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	537971	                    Helicobacter cinaedi CCUG 18818 = ATCC BAA-847
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	844	                  Wolinella succinogenes
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	273121	                    Wolinella succinogenes DSM 1740
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	269261	                  Nitratifractor salsuginis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	749222	                    Nitratifractor salsuginis DSM 16511
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	387092	                Nitratiruptor sp. SB155-2
+0.0004	178	178	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	178	178	0	0	0	0	0	0	S	901	                  Desulfovibrio piger
+0.0001	31	27	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	31	27	0	0	0	0	0	0	S	881	                  Desulfovibrio vulgaris
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	0	0	S1	883	                    Desulfovibrio vulgaris str. 'Miyazaki F'
+0.0001	31	31	1	1	0	0	1	1	1	1	0	0	0	0	0	0	0	0	19	19	3	3	6	6	0	0	S	44742	                  Desulfovibrio fairfieldensis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	876	                  Desulfovibrio desulfuricans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	641491	                    Desulfovibrio desulfuricans ND132
+0.0001	48	48	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	48	48	0	0	0	0	0	0	S	29546	                  Lawsonia intracellularis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1716143	                  Pseudodesulfovibrio indicus
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	182210	                  Pseudodesulfovibrio aespoeensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	643562	                    Pseudodesulfovibrio aespoeensis Aspo-2
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	0	0	0	0	0	0	S	899	                  Desulfomicrobium baculatum
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S1	525897	                    Desulfomicrobium baculatum DSM 4028
+0.0002	110	0	0	0	0	0	0	0	1	0	0	0	1	0	0	0	0	0	108	0	0	0	0	0	0	0	S	427923	                  Desulfurivibrio alkaliphilus
+0.0002	110	110	0	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	108	108	0	0	0	0	0	0	S1	589865	                    Desulfurivibrio alkaliphilus AHT 2
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	897	                  Desulfococcus multivorans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	345632	                  Geobacter pickeringii
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	28232	                  Geobacter metallireducens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	269799	                    Geobacter metallireducens GS-15
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	483547	                  Geoalkalibacter subterraneus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1842532	                  Pelobacter sp. SFB93
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	S	83453	                    Melittangium boletus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	1294270	                      Melittangium boletus DSM 14713
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	161493	                    Anaeromyxobacter dehalogenans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	290397	                      Anaeromyxobacter dehalogenans 2CP-C
+0.0000	2	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	1	0	0	0	0	0	0	S	56	                    Sorangium cellulosum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1254432	                      Sorangium cellulosum So0157-2
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	80816	                    Haliangium ochraceum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	502025	                      Haliangium ochraceum DSM 14365
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	453230	                  Desulfarculus baarsii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	644282	                    Desulfarculus baarsii DSM 2075
+0.0060	2688	2664	2	2	24	23	4	4	17	17	1	1	7	7	2	2	267	267	1483	1474	84	81	6	6	791	780	S	562	                Escherichia coli
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	6	6	S1	1329907	                  Escherichia coli APEC IMT5155
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	0	0	S1	409438	                  Escherichia coli SE11
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	S1	1954351	                  Escherichia coli APEC O2-211
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	168807	                  Escherichia coli O127:H6
+0.0000	2	2	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S1	439855	                  Escherichia coli SMS-3-5
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	930406	                  Escherichia coli O157:H16
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S1	1072458	                  Escherichia coli O7:K1
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S1	498388	                  Escherichia coli C
+0.0000	6	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	2	2	2	0	0	0	0	0	0	S	208962	                Escherichia albertii
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	0	0	S1	1440052	                  Escherichia albertii KF1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1499973	                Escherichia marmotae
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	564	                Escherichia fergusonii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	585054	                  Escherichia fergusonii ATCC 35469
+0.0001	25	7	2	0	1	0	0	0	2	0	2	0	2	0	0	0	3	0	9	7	0	0	1	0	3	0	S	28901	                Salmonella enterica
+0.0000	18	1	2	0	1	0	0	0	2	0	2	0	2	0	0	0	3	0	2	1	0	0	1	0	3	0	S1	59201	                  Salmonella enterica subsp. enterica
+0.0000	12	11	0	0	0	0	0	0	1	1	0	0	6	6	2	2	0	0	3	2	0	0	0	0	0	0	S	573	                Klebsiella pneumoniae
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	72407	                  Klebsiella pneumoniae subsp. pneumoniae
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	571	                Klebsiella oxytoca
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	881260	                Enterobacter bugandensis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	550	                  Enterobacter cloacae
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S1	336306	                    Enterobacter cloacae subsp. cloacae
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	67827	                  Citrobacter werkmanii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	546	                  Citrobacter freundii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	35703	                Citrobacter amalonaticus
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	413503	                Cronobacter malonaticus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1159491	                  Cronobacter malonaticus LMG 23826
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	623	                Shigella flexneri
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S1	42897	                  Shigella flexneri 2a
+0.0001	64	64	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	64	64	0	0	0	0	S	549	                  Pantoea agglomerans
+0.0001	28	26	0	0	0	0	0	0	0	0	0	0	26	25	0	0	0	0	0	0	2	1	0	0	0	0	S	470934	                Pantoea vagans
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	1	1	0	0	0	0	S1	712898	                  Pantoea vagans C9-1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	29486	                Yersinia ruckeri
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	632	                  Yersinia pestis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	1639108	                Chania multitudinisentens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1441930	                  Chania multitudinisentens RB-25
+0.0000	4	0	1	0	1	0	0	0	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	S	63612	                Sodalis glossinidius
+0.0000	4	4	1	1	1	1	0	0	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S1	343509	                  Sodalis glossinidius str. 'morsitans'
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	82983	                Obesumbacterium proteus
+0.0000	2	2	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	703	                Plesiomonas shigelloides
+0.0000	2	2	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	584	                Proteus mirabilis
+0.0087	3879	0	0	0	0	0	0	0	1240	0	1448	0	703	0	0	0	2	0	26	0	7	0	2	0	451	0	S	750	                Gallibacterium anatis
+0.0087	3879	3879	0	0	0	0	0	0	1240	1240	1448	1448	703	703	0	0	2	2	26	26	7	7	2	2	451	451	S1	1005058	                  Gallibacterium anatis UMN179
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	1432056	                Mannheimia sp. USDA-ARS-USMARC-1261
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	47735	                Bibersteinia trehalosi
+0.0000	1	1	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	716	                Actinobacillus suis
+0.0009	388	388	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	381	381	7	7	0	0	S	756892	                Acinetobacter indicus
+0.0000	15	15	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	15	15	0	0	0	0	S	108981	                Acinetobacter schindleri
+0.0000	10	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	9	9	0	0	0	0	S	2079596	                Acinetobacter sp. SWBY1
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	0	0	S	470	                  Acinetobacter baumannii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	106654	                  Acinetobacter nosocomialis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	471	                  Acinetobacter calcoaceticus
+0.0000	8	7	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	6	0	0	0	0	S	40214	                Acinetobacter johnsonii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1242245	                  Acinetobacter johnsonii XBB1
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	1608473	                Acinetobacter sp. NCu2D-2
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	1636603	                Acinetobacter sp. ACNIH1
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S	1871111	                Acinetobacter defluvii
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	1808001	                Acinetobacter sp. LoGeW2-3
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	2004644	                Acinetobacter sp. WCHA45
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	29430	                Acinetobacter haemolyticus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	40215	                Acinetobacter junii
+0.0000	14	14	0	0	0	0	1	1	4	4	0	0	4	4	0	0	0	0	0	0	4	4	0	0	1	1	S	34062	                Moraxella osloensis
+0.0002	100	11	0	0	0	0	1	0	0	0	0	0	2	2	0	0	0	0	0	0	93	9	4	0	0	0	S	316	                    Pseudomonas stutzeri
+0.0002	89	89	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	84	84	4	4	0	0	S1	1123519	                      Pseudomonas stutzeri DSM 10701
+0.0001	41	41	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	41	41	0	0	0	0	0	0	S	237610	                Pseudomonas psychrotolerans
+0.0000	18	18	0	0	0	0	0	0	0	0	4	4	12	12	0	0	0	0	0	0	2	2	0	0	0	0	S	287	                  Pseudomonas aeruginosa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	330	                    Pseudomonas pseudoalcaligenes
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	3	3	0	0	0	0	S	294	                  Pseudomonas fluorescens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	76758	                  Pseudomonas orientalis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	380021	                  Pseudomonas protegens
+0.0000	3	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	1	0	0	0	0	S	317	                    Pseudomonas syringae
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	199201	                      Pseudomonas syringae pv. lapsa
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	S	198620	                Pseudomonas koreensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	47885	                  Pseudomonas oryzihabitans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	303	                  Pseudomonas putida
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1931241	                Pseudomonas sp. S-6-2
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	2049589	                Pseudomonas sp. HLS-6
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	1827300	                Pseudomonas sp. MYb193
+0.0000	1	1	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1294143	                Pseudomonas sp. ATCC 13867
+0.0000	16	15	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	1	1	12	11	0	0	1	1	S	40324	                  Stenotrophomonas maltophilia
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	391008	                    Stenotrophomonas maltophilia R551-3
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	216778	                Stenotrophomonas rhizophila
+0.0001	26	26	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	26	26	0	0	0	0	S	56458	                Xanthomonas sacchari
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	0	S	346	                  Xanthomonas citri
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	S1	473423	                    Xanthomonas citri pv. phaseoli var. fuscans
+0.0000	2	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	339	                Xanthomonas campestris
+0.0000	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	340	                  Xanthomonas campestris pv. campestris
+0.0001	26	25	1	1	4	4	1	1	4	4	1	1	1	1	0	0	2	2	0	0	2	1	5	5	5	5	S	314722	                Pseudoxanthomonas suwonensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	743721	                  Pseudoxanthomonas suwonensis 11-1
+0.0000	3	3	1	1	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	2371	                Xylella fastidiosa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	2172099	                Catenovulum sp. CCB-QB4
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	1	0	0	0	S	60217	                Shewanella violacea
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	1	1	0	0	S1	637905	                  Shewanella violacea DSS12
+0.0000	2	2	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1816219	                Colwellia sp. PAMC 21821
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1178482	                Halomonas huangheensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1971364	                Halomonas sp. GT
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	1306787	                Alcanivorax pacificus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	391936	                  Alcanivorax pacificus W11-5
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1978339	                Chromatiaceae bacterium 2141T.STBD.0c.01a
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	680	                  Vibrio campbellii
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	465721	                Steroidobacter denitrificans
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1238	                Piscirickettsia salmonis
+0.0004	187	187	4	4	14	14	6	6	8	8	0	0	95	95	0	0	11	11	6	6	5	5	17	17	21	21	S	2057741	                Bradyrhizobium sp. SK17
+0.0001	33	33	1	1	3	3	1	1	4	4	2	2	6	6	0	0	6	6	0	0	4	4	2	2	4	4	S	1404367	                Bradyrhizobium sp. 3 85S1MB
+0.0000	5	5	0	0	0	0	1	1	0	0	0	0	2	2	0	0	1	1	0	0	0	0	0	0	1	1	S	288000	                Bradyrhizobium sp. BTAi1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	1355477	                Bradyrhizobium diazoefficiens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S	1274631	                Bradyrhizobium icense
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	1076	                Rhodopseudomonas palustris
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	7	7	0	0	0	0	S	418223	                Methylobacterium phyllosphaerae
+0.0000	4	4	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	270351	                Methylobacterium aquaticum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	2202826	                Methylobacterium sp. 17Sr1-1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1826873	                Methylobacterium sp. XJLM
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	426117	                Methylobacterium sp. 4-46
+0.0000	2	2	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1882682	                Microvirga ossetica
+0.0000	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1842534	                  Sinorhizobium sp. RAC02
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	529	                Ochrobactrum anthropi
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	7	                Azorhizobium caulinodans
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	438753	                  Azorhizobium caulinodans ORS 571
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	S	293089	                Martelella mediterranea
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	1122214	                  Martelella mediterranea DSM 17316
+0.0000	3	3	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	147645	                Paracoccus yeei
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1077935	                Paracoccus zhejiangensis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1063	                Rhodobacter sphaeroides
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	349102	                  Rhodobacter sphaeroides ATCC 17025
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	221822	                Phaeobacter inhibens
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	2099786	                Ruegeria sp. NKC1-1
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	S	1390395	                Sphingomonas sp. LK11
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1357916	                Sphingopyxis sp. QXT-31
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	266951	                Erythrobacter seohaensis
+0.0000	2	2	0	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	28448	                Komagataeibacter xylinus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	257708	                Roseomonas gilardii
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	84159	                Magnetospirillum magneticum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	342108	                  Magnetospirillum magneticum AMB-1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	246273	                  Wolbachia endosymbiont of Cimex lectularius
+0.0000	3	3	2	2	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1637837	                  Burkholderia sp. MSMB0266
+0.0000	2	2	0	0	0	0	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	28450	                  Burkholderia pseudomallei
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	60550	                  Burkholderia pyrrocinia
+0.0000	7	7	0	0	0	0	0	0	0	0	0	0	3	3	1	1	3	3	0	0	0	0	0	0	0	0	S	1389192	                Cupriavidus sp. USMAHM13
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	119219	                Cupriavidus metallidurans
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	68895	                Cupriavidus basilensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	134537	                Paraburkholderia fungorum
+0.0000	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	261302	                Paraburkholderia phytofirmans
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	398527	                  Paraburkholderia phytofirmans PsJN
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	75105	                Paraburkholderia caribensis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	29443	                Paucimonas lemoignei
+0.0001	49	49	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	45	45	3	3	0	0	0	0	S	1834205	                Burkholderiales bacterium YL45
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	0	0	0	0	S	28068	                  Rubrivivax gelatinosus
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	0	0	S1	983917	                    Rubrivivax gelatinosus IL144
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	1296669	                  Aquabacterium olei
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	413882	              [Polyangium] brachysporum
+0.0000	10	10	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	10	10	0	0	0	0	S	2109913	                Melaminivora sp. SC2-9
+0.0000	9	9	2	2	0	0	0	0	0	0	0	0	0	0	2	2	1	1	0	0	0	0	2	2	2	2	S	742013	                Delftia sp. Cs1-4
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	180282	                Delftia tsuruhatensis
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	1	1	S	225992	                Comamonas kerstersii
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	285	                Comamonas testosteroni
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	358220	                Acidovorax sp. KKS102
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	S	34073	                Variovorax paradoxus
+0.0000	22	22	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	22	22	0	0	0	0	S	511	                Alcaligenes faecalis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	32002	                Achromobacter denitrificans
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	85698	                Achromobacter xylosoxidans
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	643674	                Paenalcaligenes hominis
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	84590	                Taylorella asinigenitalis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	1008459	                  Taylorella asinigenitalis MCE3
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	521	                Bordetella avium
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	360910	                  Bordetella avium 197N
+0.0000	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	55508	                Janthinobacterium agaricidamnosum
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	1349767	                  Janthinobacterium agaricidamnosum NBRC 102515 = DSM 9628
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	S	341045	                Herbaspirillum hiltneri
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	1262470	                  Herbaspirillum hiltneri N3
+0.0000	11	11	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	11	11	0	0	0	0	0	0	S	1938604	                Aquaspirillum sp. LM1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1108595	                  Chromobacterium vaccinii
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	2	2	1	1	0	0	0	0	0	0	0	0	0	0	S	485	                Neisseria gonorrhoeae
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1853278	                Neisseria sp. 10023
+0.0000	3	0	0	0	0	0	0	0	0	0	0	0	1	0	1	0	1	0	0	0	0	0	0	0	0	0	S	59405	                Thauera aromatica
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	1	1	1	1	1	1	0	0	0	0	0	0	0	0	S1	44139	                  Thauera aromatica K172
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	146939	                Azospira oryzae
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	640081	                  Azospira oryzae PS
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	S	1842540	                Methyloversatilis sp. RAC08
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	S	33059	                Acidithiobacillus caldus
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	S1	637389	                  Acidithiobacillus caldus ATCC 51756
+0.0039	1726	1726	0	0	1	1	0	0	1	1	1	1	2	2	0	0	0	0	1707	1707	4	4	8	8	2	2	S	2094242	                Victivallales bacterium CCUG 44730
+0.0001	36	31	0	0	0	0	7	6	1	0	0	0	0	0	0	0	0	0	19	18	9	7	0	0	0	0	S	239935	                  Akkermansia muciniphila
+0.0000	5	5	0	0	0	0	1	1	1	1	0	0	0	0	0	0	0	0	1	1	2	2	0	0	0	0	S1	349741	                    Akkermansia muciniphila ATCC BAA-835
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	1838286	                  Lacunisphaera limnophila
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	794903	                  Opitutaceae bacterium TAV5
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1630693	                  Gemmata sp. SH-PL17
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	466153	                  Singulisphaera acidiphila
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	886293	                    Singulisphaera acidiphila DSM 18658
+0.0000	2	2	0	0	0	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	S	83559	                    Chlamydia suis
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	1457153	                    Chlamydia gallinacea
+0.0010	449	449	0	0	0	0	0	0	1	1	0	0	3	3	0	0	0	0	440	440	2	2	3	3	0	0	S	1197717	                Cloacibacillus porcorum
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	3	0	0	0	0	0	0	0	S	81462	                Thermanaerovibrio acidaminovorans
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	3	3	0	0	0	0	0	0	S1	525903	                  Thermanaerovibrio acidaminovorans DSM 6589
+0.0007	289	0	2	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	282	0	1	0	2	0	1	0	S	167	                Treponema succinifaciens
+0.0007	289	289	2	2	1	1	0	0	0	0	0	0	0	0	0	0	0	0	282	282	1	1	2	2	1	1	S1	869209	                  Treponema succinifaciens DSM 2489
+0.0001	43	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	43	0	0	0	0	0	0	0	S	88058	                Treponema primitia
+0.0001	43	43	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	43	43	0	0	0	0	0	0	S1	545694	                  Treponema primitia ZAS-2
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	221027	                Treponema putidum
+0.0000	17	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	17	0	0	0	0	0	0	0	S	55206	                Sediminispirochaeta smaragdinae
+0.0000	17	17	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	17	17	0	0	0	0	0	0	S1	573413	                  Sediminispirochaeta smaragdinae DSM 11293
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	1131703	                Sphaerochaeta globosa
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	158189	                  Sphaerochaeta globosa str. Buddy
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	0	0	S	64897	                Borreliella bissettii
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S1	521010	                  Borreliella bissettii DN127
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	52584	                Brachyspira pilosicoli
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	1	0	0	0	0	0	S	851	                Fusobacterium nucleatum
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S1	76856	                  Fusobacterium nucleatum subsp. nucleatum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	155615	                  Fusobacterium nucleatum subsp. vincentii
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	860	                Fusobacterium periodonticum
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	712357	                Leptotrichia sp. oral taxon 212
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	712368	                Leptotrichia sp. oral taxon 498
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	936456	                Desulfurispirillum indicum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	653733	                  Desulfurispirillum indicum S5
+0.0000	7	7	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	2	2	S	10116	                                                            Rattus norvegicus
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	0	0	S	4577	                                              Zea mays
+0.0651	28947	5974	0	0	0	0	0	0	6	3	0	0	5	2	1	0	77	8	28853	5958	3	2	1	1	1	0	S	1511894	            Avian dependoparvovirus 1
+0.0325	14436	14436	0	0	0	0	0	0	1	1	0	0	2	2	1	1	53	53	14378	14378	0	0	0	0	1	1	S1	281492	              Avian adeno-associated virus strain DA-1
+0.0192	8537	8537	0	0	0	0	0	0	2	2	0	0	1	1	0	0	16	16	8517	8517	1	1	0	0	0	0	S1	219704	              Avian adeno-associated virus ATCC VR-865
+0.0002	67	67	5	5	10	10	1	1	9	9	1	1	11	11	4	4	10	10	5	5	1	1	4	4	6	6	S	10847	            Escherichia virus phiX174
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	2017712	            Porcine feces-associated gemycircularvirus
+0.0000	1	1	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	12618	          Chicken anemia virus
+0.0175	7787	7787	27	27	23	23	24	24	18	18	13	13	287	287	339	339	2830	2830	4216	4216	5	5	0	0	5	5	S	190064	          Fowl aviadenovirus D
+0.0023	1044	1044	10	10	945	945	11	11	5	5	0	0	1	1	0	0	12	12	13	13	25	25	22	22	0	0	S	190065	          Fowl aviadenovirus E
+0.0075	3317	3317	50	50	605	605	1893	1893	1	1	0	0	2	2	0	0	1	1	84	84	665	665	16	16	0	0	S	139872	            Lactobacillus prophage Lj928
+0.0002	95	95	5	5	23	23	48	48	0	0	0	0	0	0	0	0	0	0	0	0	19	19	0	0	0	0	S	139871	            Lactobacillus prophage Lj771
+0.0001	63	63	0	0	5	5	10	10	0	0	0	0	0	0	0	0	1	1	38	38	9	9	0	0	0	0	S	12417	            Lactobacillus phage phiadh
+0.0000	18	18	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	18	18	0	0	0	0	S	1403390	            Staphylococcus phage phiRS7
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	S	1814958	            Streptococcus virus 9872
+0.0000	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	0	0	0	0	S	447909	            Geobacillus virus E2
+0.0000	3	3	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1105171	            Bacteroides phage B124-14
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1445858	            Enterococcus phage IME-EFm1
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1718158	            Enterococcus phage IME-EFm5
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S	1239381	            Streptococcus phage phiNJ2
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	432198	            Enterobacteria phage HK106
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	0	0	0	0	0	0	S	1051631	              Streptococcus phage YMC-2011
+0.0000	6	6	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	6	6	0	0	0	0	0	0	S	633135	            Streptococcus virus phiAbc2
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	112023	            Streptococcus virus 7201
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	64186	            Streptococcus virus Sfi21
+0.0000	18	18	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	18	18	0	0	0	0	0	0	S	85154	            Streptococcus virus O1205
+0.0000	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	0	0	0	0	0	S	1922247	            Staphylococcus virus SEP9
+0.0000	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	4	4	0	0	0	0	S1	1434319	              Staphylococcus phage vB_SepS_SEP9
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1698709	              Mycobacterium phage Enkosi
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	83129	            Lactococcus virus P008
+0.0006	264	264	3	3	26	26	152	152	0	0	0	0	0	0	0	0	1	1	7	7	75	75	0	0	0	0	S	1206110	            Lactobacillus phage phiAQ113
+0.0003	130	130	3	3	14	14	78	78	1	1	0	0	0	0	0	0	0	0	5	5	29	29	0	0	0	0	S	363555	            Lactobacillus phage KC5a
+0.0000	8	8	0	0	1	1	4	4	0	0	0	0	0	0	0	0	0	0	0	0	3	3	0	0	0	0	S	1416334	            Lactobacillus phage phi jlb1
+0.0000	4	4	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S	1567484	            Lactobacillus phage LfeInf
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	103807	            Enterobacteria phage phiP27
+0.0000	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	0	0	0	0	0	S	1980962	              Staphylococcus virus Rodi
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	S1	1572703	                Staphylococcus phage phiIPLA-RODI
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	S	1924731	              Staphylococcus virus P108
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	S1	1526408	                Staphylococcus phage P108
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	S	551895	              Iodobacteriophage phiPLPE
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S	665033	              Escherichia phage D108
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1980931	            Staphylococcus virus IPLAC1C
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S1	1572704	              Staphylococcus phage phiIPLA-C1C
+0.0000	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	0	0	0	0	0	S	1987941	            Escherichia virus Septima11
+0.0000	8	8	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	8	8	0	0	0	0	S1	1436889	              Escherichia phage KBNP1711
+0.0000	5	5	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	0	0	0	0	S	1701850	              Streptococcus phage A25
+0.0001	47	47	2	2	3	3	2	2	8	8	1	1	4	4	1	1	3	3	0	0	2	2	3	3	18	18	S	10372	              Human betaherpesvirus 7
+0.0000	12	12	1	1	4	4	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	5	5	2	2	S	35250	              Gallid alphaherpesvirus 3
+0.0000	11	11	3	3	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	2	2	6	6	S	37108	              Meleagrid alphaherpesvirus 1
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	2	2	0	0	0	0	0	0	0	0	0	0	0	0	S	10390	              Gallid alphaherpesvirus 2
+0.0000	21	21	3	3	2	2	2	2	3	3	2	2	1	1	2	2	0	0	0	0	1	1	2	2	3	3	S	317858	            Cyprinid herpesvirus 1
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	10401	            Ictalurid herpesvirus 1
+0.0000	18	18	2	2	1	1	1	1	2	2	0	0	1	1	0	0	5	5	0	0	0	0	3	3	3	3	S	419435	          Glypta fumiferanae ichnovirus
+0.0000	6	6	0	0	0	0	0	0	3	3	0	0	0	0	0	0	1	1	0	0	1	1	0	0	1	1	S	265522	          Hyposoter fugitivus ichnovirus
+0.0000	19	19	4	4	3	3	3	3	0	0	0	0	0	0	0	0	0	0	0	0	1	1	3	3	5	5	S	1349410	          Pandoravirus salinus
+0.0000	2	2	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	1	1	0	0	0	0	S	2107707	          Pandoravirus macleodensis
+0.0000	6	6	1	1	0	0	0	0	0	0	0	0	1	1	0	0	3	3	0	0	0	0	0	0	1	1	S	1094892	          Megavirus chiliensis
+0.0000	3	3	1	1	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	1	1	S	251749	            Phaeocystis globosa virus
+0.0000	1	1	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	10506	          Paramecium bursaria Chlorella virus 1
+0.0000	1	1	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	1474867	          Aureococcus anophagefferens virus
+0.0000	1	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S	334209	            Betapapillomavirus 5
+0.0000	1	1	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	S1	247269	              Human papillomavirus type 96
+0.0000	13	13	0	0	0	0	0	0	4	4	2	2	2	2	0	0	3	3	0	0	0	0	0	0	2	2	S	93465	            Avian endogenous retrovirus EAV-HP
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	0	0	0	0	0	0	S	11864	            Avian leukosis virus
+0.0000	17	17	0	0	1	1	0	0	2	2	1	1	0	0	2	2	2	2	0	0	2	2	2	2	5	5	S	1678078	      Mollivirus sibericum
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	S	1211417	        uncultured crAssphage
+0.0000	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	0	0	0	0	0	0	0	S	387086	      Streptococcus pyogenes MGAS10750 phage
+0.0000	1	1	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	0	0	0	0	0	0	S1	370569	        Streptococcus phage 10750.4

@@ -42,6 +42,8 @@ Not yet started. The initial steps (setup, get data, QC) are very similar in mos
 Not yet started. This is the real magic, and we get to make _pictures_.
 
 
+<a href="documents/mb6302__preamble.html">`see also.`</a>
+
 ---
   <a href="documents/climber_todo.html">`</a>
 
