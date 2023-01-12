@@ -355,4 +355,10 @@ done
 If we wanted to achieve the same things with `KneadData`, we could provide similar arguments to those above (often, its the _exact_ same argument, we're just asking `KneadData` to tell `Trimmomatic`/`BowTie2`). Note that we would still have had to download our reference genomes and build a database from them using `bowtie-build`. 
 
 
-## add link to next section
+## Microbiome Analysis
+
+  * <a href="documents/mb6302__setup.html">`workspace setup`</a>
+  * <a href="documents/mb6302__qc.html">`sequence QC`</a>
+  * <a href="documents/mb6302__decontam.html">`sequence decontamination`</a>
+  * <a href="documents/mb6302__taxonomy.html">`sequence taxonomic estimation`</a>
+

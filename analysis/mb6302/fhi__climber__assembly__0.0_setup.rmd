@@ -126,5 +126,11 @@ mkdir $FQC/fhi_redch_raw $FQC/fhi_redch_filt $FQC/fhi_redch_raw_multi $FQC/fhi_r
 ```
 
 
-## add link to next section
+## Microbiome Analysis
+
+  * <a href="documents/mb6302__preamble.html">`opening comments`</a>
+  * <a href="documents/mb6302__setup.html">`workspace setup`</a>
+  * <a href="documents/mb6302__qc.html">`sequence QC`</a>
+  * <a href="documents/mb6302__decontam.html">`sequence decontamination`</a>
+  * <a href="documents/mb6302__taxonomy.html">`sequence taxonomic estimation`</a>
 

@@ -355,4 +355,10 @@ Sometimes, it might be necessary to use `Trimmomatic` more than once before the 
 
 
 
-## add link to next section
+## Microbiome Analysis
+
+  * <a href="documents/mb6302__setup.html">`workspace setup`</a>
+  * <a href="documents/mb6302__qc.html">`sequence QC`</a>
+  * <a href="documents/mb6302__decontam.html">`sequence decontamination`</a>
+  * <a href="documents/mb6302__taxonomy.html">`sequence taxonomic estimation`</a>
+
