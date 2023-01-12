@@ -601,7 +601,7 @@ There are many things that we can do to change the above, but once happy:
   * try [bringing your data into `R` to start exploring!](./data_to_R.html)
 
 
-## Microbiome Analysis
+# Microbiome Analysis
 
   * <a href="mb6302__setup.html">`workspace setup`</a>
   * <a href="mb6302__qc.html">`sequence QC`</a>
