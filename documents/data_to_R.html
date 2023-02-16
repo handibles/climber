@@ -12,7 +12,7 @@
 <meta name="author" content="IC / NPV / JFG" />
 
 
-<title>Porting Metagenomics into R</title>
+<title>First Look at the Microbiome in R</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1490,643 +1490,83 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">Porting Metagenomics into
+<h1 class="title toc-ignore">First Look at the Microbiome in
 <code>R</code></h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">20 Dec 2022, 10:49</h4>
+<h4 class="date">19 Jan 2023, 14:06</h4>
 
 </div>
 
 
 <blockquote>
-<p>workflow is complete, but page remains under construction 🚧</p>
+<p>workflow incomplete 🚧</p>
 </blockquote>
 <hr />
-<p>The <code>R</code> work starts here 😬, continued from work
-assembling the <a href="./shotgun_assembly.html">metagenomic
-data</a>.</p>
+<p>Following from work assembling the <a href="./shotgun_assembly.html">metagenomic data</a>, and importing the
+microbial community into <code>R</code>-friendly foamt</p>
 <hr />
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>Getting metagenomic data from <code>bash &amp; co.</code> to
-<code>R</code> can be awkward - this is just a quick run-through of one
-way it can be done, creating basic <code>.tsv</code> files (as enjoyed
-by microsoft excel), bringing them into basic <code>R</code> first, and
-then to the great <code>R</code> library <code>phyloseq</code>. Feel
-free to suggest alternate routes.</p>
-<p>Here, we do the following: for <code>Kraken2+Bracken</code>, and
-separately for `<code>Kaiju</code>:</p>
-<ol style="list-style-type: decimal">
-<li>import the data from <code>Bracken</code> <strong>or</strong>
-<code>Kaiju</code> into <code>R</code>:</li>
-<li>re-arrange the outputs in <code>R</code> in one of two ways: a.
-reorganise it for <code>Bracken</code> b. reorganise it for
-<code>Kaiju</code></li>
-<li>save this “basic” output as <code>.tsv</code> text files, that can
-be used in e.g. excel (if you like excel)</li>
-<li>export this output to <a href="http://joey711.github.io/phyloseq/install.html"><code>phyloseq</code></a>,
-a <code>R</code> library <em>specifically</em> for doing microbial
-community ecology, designed to keep all the community data in one place,
-and make using <code>R</code> easier for microbiologists, virologists,
-mycologists &amp; co.</li>
-</ol>
-<p><strong>Note:</strong> - it’s the same idea for
-<code>Kraken2-Bracken</code> and for <code>Kaiju</code>, except that
-step 2 is different (because <code>Bracken</code> output is different
-from <code>Kaiju</code> output). Note also that we’re using the outputs
-from the <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling">first
-page</a>.</p>
-<div id="set-up-r" class="section level2">
-<h2>0. Set up <code>R</code></h2>
-<p>This might not be necessary for you, but here we set up
-<code>R</code> using <code>conda</code> - this creates a local version
-that we have control over. We start off in <code>*bash*</code>, using <a href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html"><code>conda</code></a>
-to get going.</p>
-<pre class="bash"><code># R! - requires conda to be installed
-conda create -n fyR
-conda activate fyR
+<p>Get</p>
+<pre class="r"><code>library(&quot;phyloseq&quot;); packageVersion(&quot;phyloseq&quot;)
 
-# get a personal copy of R; -y flag for silent install
-# we&#39;ll still have to install libraries of interest 
-conda install -c r -y r
+theme_set(theme_bw())
 
-# dir for microbial community
-R=$WRK/5__rmicro
-mkdir $R
-mkdir $R/analysis $R/input $R/output $R/vis $R/documents
+# basic visuals
 
-# arrange your outputs from Krak  &amp; kaiju
-cp $KROUT/*tsv $R/input
-cp $KaOUT/*tsv $R/input
+plot_bar(physeq, fill = &quot;Family&quot;)
 
-# check picking up the correct env
-which R
+plot_heatmap(physeq1)
 
-# here we go!
-R
-</code></pre>
-</div>
-<div id="import-data-to-r" class="section level2">
-<h2>1. Import data to <code>R</code></h2>
-<p>Point to your output files, and import them: here there are 2 files
-for <code>Kraken2</code>, 1 file for <code>Kaiju</code>.</p>
-<p><!-- # # dummy --> <!-- # # INES -->
-<!-- # krak2_brack_file="../input/fhi_redch_krakenStnd_abundances.tsv" -->
-<!-- # krak2_mpa_file="../input/fhi_redch_krakenStnd_taxonomy.tsv" -->
-<!-- # kaij_file="../input/fhi__redch__kaiju_speciesab.tsv" -->
-<!-- # # NURIA -->
-<!-- krak2_brack_file="../input/fhi__chickmi_krakenStnd_abundances.tsv" -->
-<!-- krak2_mpa_file="../input/fhi__chickmi_krakenStnd_taxonomy.tsv" -->
-<!-- kaij_file="../input/fhi__chickmi_total__kaiju_summary_species.tsv" --></p>
-<pre class="r"><code>## Kraken2
+plot_heatmap(physeq1, taxa.label=&quot;Phylum&quot;)
 
-# output from kraken2-bracken, combined to one file
-  krak2_brack_file=&quot;../input/rmicro__krakenStnd_abundances.tsv&quot;
+plot_richness(myData, x=&quot;BODY_SITE&quot;, color=&quot;Description&quot;)
 
-# output from single kraken2 report, converted to MPA
-  krak2_mpa_file=&quot;../input/rmicro__krakenStnd_taxonomy.tsv&quot;
+OTUnames10 = names(sort(taxa_sums(GP), TRUE)[1:10])
+GP10  = prune_taxa(OTUnames10,  GP)
+mGP10 = prune_taxa(OTUnames10, mergedGP)
+ocean_samples = sample_names(subset(sample_data(GP), SampleType==&quot;Ocean&quot;))
+print(ocean_samples)
+
+rowSums(otu_table(GP10)[, ocean_samples])
+
+plot_richness(GP, &quot;human&quot;, &quot;SampleType&quot;, title=&quot;unmerged&quot;)
 
 
-## Kaiju
-  
-# output from kaiju&#39;s kaiju2table output
-  kaij_file=&quot;../input/rmicro__total__kaiju_summary_species.tsv&quot;</code></pre>
-</div>
-<div id="re-arrange-data" class="section level2">
-<h2>2. Re-arrange data</h2>
-<p>There are many, many ways to do things (generally and) in
-<code>R</code> - note that this page avoids using <code>R::tidy</code>
-solutions, but feel free to suggest some.</p>
-<div id="a.-for-kraken2bracken-data" class="section level3">
-<h3>2a. for <code>Kraken2+Bracken</code> data:</h3>
-<p>Point to output file, and import</p>
-<pre class="r"><code>  k2dat &lt;- read.table(file = krak2_brack_file, header=TRUE, quote = &quot;&quot;, sep = &#39;\t&#39;)
-  k2dat[1:10, 1:10]
-  
-  prenames_k2dat &lt;- paste0(&quot;k2_&quot;, stringr::str_pad(k2dat[,2], width=7, pad=0))
-  ## non-unique names -  assume only one dupe of each
-  prenames_k2dat[ duplicated(k2dat[,2])] &lt;- gsub(&#39;k2_&#39;, &#39;k2-A_&#39;, prenames_k2dat[ duplicated(k2dat[,2])])
-  rownames(k2dat) &lt;- prenames_k2dat
-  
-  # counts
-  k2_counts &lt;- k2dat[ , grep(&#39;_num&#39;, colnames(k2dat))]
-  colnames(k2_counts) &lt;- gsub( &quot;.bracken_num&quot;, &quot;&quot;, colnames(k2_counts) )
-  
-  # relab%
-  k2_relab &lt;- k2dat[ , grep(&#39;_frac&#39;, colnames(k2dat))]
-  colnames(k2_relab) &lt;- gsub( &quot;.bracken_frac&quot;, &quot;&quot;, colnames(k2_relab) )</code></pre>
-<p>We need to make taxonomic data from the material we have (we made
-files for this using <code>--report-zero-counts</code> and
-<code>kreport2mpa.py</code>). Note that this takes a little
-organisation, as the taxonomic hierarchy is not the same across all
-domains of life (because it is imaginary).</p>
-<pre class="r"><code>## start with data from the abundance table names  --------------------------------
+# basic subsets 
 
-  tax_a &lt;- data.frame(taxon=k2dat[ ,1], k2_id=k2dat[ ,2], row.names = rownames(k2dat) , stringsAsFactors = FALSE)
-  tax_a[,1] &lt;- gsub(&#39;\\/&#39;,&#39;&#39;, tax_a[,1])
-  tax_a[,1] &lt;- gsub(&#39;ALOs_&#39;,&#39;ALOs-&#39;, tax_a[,1])
-  # tax_a[,1] &lt;- gsub(&quot;&#39;&quot;,&quot;&quot;, tax_a[,1])      # none?
+rank_names(GlobalPatterns)
 
-  
-  ## NOTE use quote=&quot;&quot; to avoid nightmare of special characters like &#39;&quot;`/,| etc in names
-  tax_b &lt;- read.table( krak2_mpa_file, sep=&#39;\t&#39;, header=FALSE, fill = TRUE, stringsAsFactors = FALSE, quote=&quot;&quot;)
-  head(tax_b)
-  
-## regularise taxonomic ranks (not all have K:P:C:O:F:G:S etc.)   -----------------
-  
-  ranks &lt;- c(&quot;k__&quot;, &quot;p__&quot;, &quot;c__&quot;, &quot;o__&quot; , &quot;f__&quot;, &quot;g__&quot;, &quot;s__&quot;)
-  tax_b &lt;- t(apply(tax_b, 1, function(aa){  # aa &lt;- tax_b[1,]
-    sapply(ranks, function(aaa){ # aaa &lt;- &quot;c__&quot;
-      bbb &lt;- grep(aaa, unlist(aa), value=TRUE)
-      ifelse( length(bbb) == 0, &quot;unkn.&quot;, bbb)
-    })
-  }))
-  dim(tax_b) ; str(tax_b)
-  
-  ## e.g. eukarya have loads of ranks, so many empty sapces to be filled, e.g.
-  # tax_b[4000:4200,]
-  
-## more tax issues due to names: doubled ranks:
-  prior_index &lt;- (unlist( lapply(1:nrow(tax_b), function(aa){ if( sum( grepl(&quot;unkn.&quot;, tax_b[aa,])) == 6){aa} }) ) - 1)
-  # # compare:
-  # tax_b[ prior_index , ]
-  # tax_b[ prior_index+1 , ]
-  # amend, by doubling up (will remove duplicates later)
-  tax_b[ prior_index , &quot;s__&quot;] &lt;- tax_b[ (prior_index+1) , &quot;s__&quot;]
-  # row is only useful if has a species: cannot have a species, and hit 6, And be worth keeping
-  tax_b &lt;- tax_b[ !apply(tax_b, 1, function(aa) sum(grepl(&quot;unkn.&quot;, unlist(aa)) ) == 6) , ]
-  
-  colnames(tax_b) &lt;- c(&quot;D&quot;, &quot;P&quot;, &quot;C&quot;, &quot;O&quot;, &quot;F&quot;, &quot;G&quot;, &quot;S&quot;)
-  
-  
-  tax_a[ , &quot;taxon&quot;] &lt;- gsub(&quot; &quot;, &quot;_&quot;, paste0(&quot;s__&quot;, tax_a[ , &quot;taxon&quot;]))
-  head(tax_a) ; head(tax_a[ , &quot;taxon&quot;]) ;  dim(tax_a)
-  head(tax_b) ;   head(tax_b[ , &quot;S&quot;]) ;  dim(tax_b)
-  
-  
-## stitch  &amp;  name   ----------------------------------
-  
-  tax_c &lt;- merge(tax_b, tax_a, by.x=&quot;S&quot;, by.y=&quot;taxon&quot;)[, c(2:7,1,8)]
-  head(tax_c) ; dim(tax_c)
-  prenames_tax &lt;- paste0(&quot;k2_&quot;, stringr::str_pad(tax_c[,&quot;k2_id&quot;], width=7, pad=0))
-  rownames(tax_c) &lt;- prenames_tax
-  
-  
-## check all on the same page   -----------------------
-  
-  all(rownames(k2dat) == rownames(k2_counts) &amp; rownames(k2dat) == rownames(k2_relab))
-  all(rownames(k2dat) %in% rownames(tax_c))
-  
-  kraken_ids &lt;- sort(rownames(k2dat))
-  k2dat &lt;- k2dat [kraken_ids , ]
-  k2_counts &lt;- k2_counts [kraken_ids , ]
-  k2_relab &lt;- k2_relab [kraken_ids , ]
-  tax_c &lt;- tax_c[kraken_ids , ]
-  
-  ## remove if no values (kraken2 set to give all taxa)
-  pos_abund &lt;- rownames(k2_relab)[rowSums(k2_relab) &gt; 0]
-  k2_relab &lt;- k2_relab[ pos_abund , ]
-  k2_counts &lt;- k2_counts[ pos_abund , ]
-  k2_tax &lt;- tax_c[ pos_abund , ]</code></pre>
-<p>Next, add in the metadata we use to organise this study.
-Environmental variables like pH, SCFA, dates, locations, and other study
-design data go in here. We create a minimal set based on the data
-available:</p>
-<pre class="r"><code>  mgdat &lt;- data.frame(&quot;sample&quot; = colnames(k2_counts),
-                     &quot;type&quot; = gsub(&quot;(.).*&quot;, &quot;\\1&quot;, colnames(k2_counts), perl = TRUE),
-                     &quot;seqdepth&quot; = colSums(k2_counts) )
-  # View(mgdat)</code></pre>
-<p>Next, check that all the data looks sane and normal.</p>
-<pre class="r"><code>## check - do all match?   -----------------------
+sample_variables(GlobalPatterns)
 
-  dim(k2_counts)
-  dim(k2_relab)
-  dim(k2_tax)
-  dim(mgdat)
-  
-  # look
-  k2_counts[1:10, 1:10]
-  
-  # View(k2_counts)
-  # hist( log10(k2_counts ))</code></pre>
-</div>
-<div id="b.-kraken2-on-its-own" class="section level3">
-<h3>2b. <code>Kraken2</code> on it’s own <code>:(</code></h3>
-<blockquote>
-<p>note that this isn’t recommended</p>
-</blockquote>
-<p>You might not want to use <code>Bracken</code> (or more likely, you
-might not be able to make a <code>Bracken</code> database). It is <a href="https://doi.org/10.1038/s41596-022-00738-y">not the best idea</a>,
-but you can</p>
-<ul>
-<li>combine all the <code>Kraken2</code> reports to one file</li>
-<li>get all the species (<code>S</code>) and strains (<code>S1</code>)
-from that report</li>
-<li>extract the taxonomic info, and combine all the abundances at
-<code>S</code>pecies level</li>
-</ul>
-<p>First, we get the species data. Be careful here that you don’t
-accidentally include the <code>$TEST</code> file too! This would
-duplicate that sample.</p>
-<pre class="bash"><code>##   i n   b a s h   ================================================== ##
+otu_table(GlobalPatterns)[1:5, 1:5]
 
-# presume you&#39;ve made a load of kraken2 files:
-ls -lsh $KROUT/*kraken_report
+tax_table(GlobalPatterns)[1:5, 1:4]
 
-# be careful here that you don&#39;t accidentally include the $TEST file too! This would duplicate that sample
-~/bin/KrakenTools/combine_kreports.py -r $KROUT/*kraken_report -o $KROUT/krakenStnd_kreportCombo.tsv
+taxa_names(GlobalPatterns)[1:10]
 
-# table of sorts
-grep -E &#39;perc\stot_all&#39; $KROUT/krakenStnd_kreportCombo.tsv | sed &#39;s/#//&#39; &gt; $KROUT/krakenStnd_kreportCombo_count.tsv
-grep -E &#39;\sS1?\s&#39; $KROUT/krakenStnd_kreportCombo.tsv &gt;&gt; $KROUT/krakenStnd_kreportCombo_count.tsv
-</code></pre>
-<p>Put the file where it needs to be (assuming alongside
-<code>krak2_brack_file</code> &amp; <code>krak2_mpa_file</code>
-described above). Note the structure of this data using
-<code>head()</code>: there are two columns for each sample:
-<code>all</code> (all reads from this point onwards in the tree), and
-<code>lvl</code> (reads assigned to this specific level in the tree). If
-we selected <code>all</code>, we would count the same values multiple
-times at each level. The <code>lvl</code> counts are the abundances
-assigned specifically to that taxonomic point - this is what we will
-use.</p>
-<p>As there will be several e.g. <em>Streptococcus thermophilus</em>
-strains (<code>S1</code> level), we will gather read abundances for all
-those strains to <code>S</code>pecies level by finding all taxa who’s
-names contain <em>Streptococcus thermophilus</em> (and do this for all
-taxa present).</p>
-<p>Note that we also make a <code>taxonomy</code> table based on the
-work above, to try match the feature IDs properly.</p>
-<pre class="r"><code>just_krak &lt;- &quot;../input/krakenStnd_kreportCombo.tsv&quot;
-krak2 &lt;- read.table(just_krak, header=TRUE, sep=&quot;\t&quot;, quote = &quot;&quot;)
-rownames(krak2) &lt;- paste0(&quot;k2_&quot;, stringr::str_pad(krak2$taxid, width=7, pad=0))
-head(krak2)
-# View(krak2)
+# name the ten largest
+myTaxa = names(sort(taxa_sums(GlobalPatterns), decreasing = TRUE)[1:10])
 
-# choose to keep the abundances at &quot;_lvl&quot;, rather than at &quot;_all&quot; 
-kfeat &lt;- krak2[ , grep(&quot;\\d_lvl$&quot;, colnames(krak2), value= TRUE, perl=TRUE) ]
-head(kfeat)
+# choose jsut those ten
+ex1 = prune_taxa(myTaxa, GlobalPatterns)
 
-# fix some names, esp for the next step
-tax_x &lt;- data.frame(taxon=krak2[ ,30], k2_id=krak2[ ,29], row.names = rownames(krak2) , stringsAsFactors = FALSE)
-tax_x[,1] &lt;- gsub(&#39;\\/&#39;,&#39;&#39;, tax_x[,1])
-tax_x[,1] &lt;- gsub(&#39;ALOs_&#39;,&#39;ALOs-&#39;, tax_x[,1])
-tax_x[,1] &lt;- gsub(&#39;[\\[\\]]&#39;,&#39;&#39;, tax_x[,1], perl = TRUE)
+# make %
+GPr  = transform_sample_counts(GlobalPatterns, function(x) x / sum(x) )
 
-# make a clean genus and species column
-tax_x$G &lt;- gsub(&quot;^\\s*(\\w*)\\s.*&quot;, &quot;\\1&quot;, tax_x$taxon, perl=TRUE)
-tax_x$S &lt;- gsub(&quot;^\\s*(\\w+)\\s(\\w+)\\s*.*&quot;, &quot;\\2&quot;, tax_x$taxon, perl=TRUE)
-head(tax_x)
-# View(tax_x)
+# filter out those below 10-5 (0.00001) %
+GPfr = filter_taxa(GPr, function(x) mean(x) &gt; 1e-5, TRUE)
 
-# now gather abundances based on perfect matches to each &quot;Genus species&quot; combo
-kIDs_per_unique_binomials &lt;- apply( unique(tax_x[,c(&quot;G&quot;, &quot;S&quot;)]), 1, function(aa){ rownames(tax_x)[(tax_x$G == unlist(aa[1])) &amp; (tax_x$S == unlist(aa[2]))] })
-k2only_counts &lt;- t(sapply( kIDs_per_unique_binomials, function(aa){ colSums(kfeat[ aa , ]) }))
+# keep only the family Chlamydiae
+GP.chl = subset_taxa(GlobalPatterns, Phylum==&quot;Chlamydiae&quot;)
+# from those samples, only keep samples with at least 20 counts
+GP.chl = prune_samples(sample_sums(GP.chl)&gt;=20, GP.chl)
 
-# make a taxonomy file, based on teh work done above using krak2_mpa_file
-k2only_tax2 &lt;- tax_c[kraken_ids , ]
+# combine aka merge the first 5 Chlamydiae taxa
+GP.chl.merged = merge_taxa(GP.chl, taxa_names(GP.chl)[1:5])
 
-# check dimensions / orientation
-dim(k2only_counts)
-dim(k2only_tax)</code></pre>
-<p>From here, <code>k2only_counts</code> and <code>k2only_tax</code> can
-be used instead of <code>k2_counts</code> &amp; <code>k2_tax</code> made
-above (i.e. use them to make <code>phyloseq</code> etc.), though you
-will have to edit the names as necessary. Do also check that the
-<code>taxa</code>/<code>samples</code> are on the right sides!</p>
-</div>
-<div id="c.-for-kaiju-data" class="section level3">
-<h3>2c. for <code>Kaiju</code> data:</h3>
-<p>In case we have outputs for <code>Kaiju</code>: point to output file,
-and then manipulate that data. We extract count and <code>%</code> data
-directly from the <code>kaidat</code> object, and set
-<code>kaiju IDs</code> as the “names” of the taxa.</p>
-<p>Note, had to delete some “<code>#</code>” characters from file, which
-gives errors.</p>
-<!-- # ## fix sample names - NURIA -->
-<!-- # kaidat$file <- gsub(".*/_(N.*)_Nuria.*", "\\1", kaidat$file) -->
-<pre class="r"><code>## note the quote option, to stop strange names doing strange things
-
-  kaidat &lt;- read.table(file = kaij_file, header = TRUE, sep = &quot;\t&quot;, stringsAsFactors = FALSE, quote = &quot;&quot;)
-  # remove 1+ header(s)
-  kaidat &lt;- kaidat[ !grepl(&quot;file&quot;, kaidat[,1]) , ]
-  dim(kaidat)
-  head(kaidat)
-  # View(kaidat)
-  
-  ## fix sample names
-  kaidat$file &lt;- gsub(&quot;.*/(.*)_kaiju.*&quot;, &quot;\\1&quot;, kaidat$file)
-  kaidat$otu &lt;- gsub( &quot;.*;(.*);&quot;, &quot;\\1&quot;, kaidat$taxon_name )
-  kaidat$ID &lt;- paste0( &quot;kai__&quot;, stringr::str_pad( kaidat[, &quot;taxon_id&quot;], width = 7, pad = 0) )
-  length(unique(kaidat$file))         # 20 files
-  length(unique(kaidat$otu))          # 11.7K OTUs
-  length(unique(kaidat$ID))           # 11.7K IDs
-  kaidat$percent &lt;- as.numeric(as.character(kaidat$percent))
-  
-  # should be very close to nsamples * 100
-  sum(kaidat$percent, na.rm = TRUE)
-
-  head(kaidat) # View(kaidat)
-  str(kaidat)
-
-  
-## assess total output    ----------------------------
-  
-  kaidf &lt;- as.data.frame(kaidat) 
-  kaidf[ , &quot;reads&quot;] &lt;- as.numeric(kaidf[ , &quot;reads&quot;])
-  
-  # again, counts and percent
-  sum( (kaidf[ , &quot;reads&quot;]))
-  sum( (kaidf[ , &quot;percent&quot;]), na.rm = TRUE)  # nsample*100%
-  
-  ## nreads unclassified / sent to bin
-  kaidf$substrate &lt;- gsub(&quot;([A-Z]).*&quot;, &quot;\\1&quot;, kaidf$file)
-  # ggplot(kaidf, aes(log10(reads), fill = substrate)) + geom_boxplot() + labs(title = &quot;total N reads per substrate&quot;)
-
-  
-## congeal  -------------------------------------------
-  
-  # use the Kaiju ID, bot the genus name
-    u_bio &lt;- unique( kaidf$ID)
-    u_sample &lt;- unique( kaidf$file)
-    
-  ## count data
-  # to each unique taxon found (u_bio), assign the number of counts found in each unique sample (u_sample)
-    ka_counts &lt;- do.call(&quot;rbind&quot;, lapply( u_bio, function(aa){   # aa &lt;- u_bio[100]
-      bb_df &lt;- kaidf[ grep(aa, kaidf$ID) , ]
-      cc_vec &lt;- unlist(lapply( u_sample, function(aaa){ # aaa &lt;- u_sample[9]
-        as.numeric(bb_df[ match(aaa, bb_df$file) , &quot;reads&quot; ])
-      }))
-    } )
-    )
-    rownames(ka_counts) &lt;- u_bio # [1:100]
-    colnames(ka_counts) &lt;- u_sample
-    
-    # only keep real numbers
-    ka_counts[ is.na(ka_counts)] &lt;- 0
-    dim( ka_counts &lt;- ka_counts[ , !apply( ka_counts, 2, function(aa){ all(aa == 0)}) ] )
-
-        
-  ## % data    
-  # same, but make relative abudances using the values given by kaiju
-    ka_relab &lt;- do.call(&quot;rbind&quot;, lapply( u_bio, function(aa){   # aa &lt;- u_bio[100]
-      bb_df &lt;- kaidf[ grep(aa, kaidf$ID) , ]
-      cc_vec &lt;- unlist(lapply( u_sample, function(aaa){ # aaa &lt;- u_sample[9]
-        as.numeric(bb_df[ match(aaa, bb_df$file) , &quot;percent&quot; ])
-      }))
-    } )
-    )
-    rownames(ka_relab) &lt;- u_bio # [1:100]
-    colnames(ka_relab) &lt;- u_sample
-    
-    # only keep real numbers
-    ka_relab[ is.na(ka_relab)] &lt;- 0
-    dim( ka_relab &lt;- ka_relab[ , !apply( ka_relab, 2, function(aa){ all(aa == 0)}) ] )
-    
-    
-    # look
-    ka_counts[1:10,1:10]
-    ka_relab[1:10,1:10]</code></pre>
-<p>Again, we have to fabricate out own taxonomic table, while taking
-care to manage any irregularities.</p>
-<pre class="r"><code>  ka_tax &lt;- unique( t(# do.call(&quot;rbind&quot;, 
-    apply( kaidf[ , c(&quot;ID&quot;, &quot;taxon_name&quot;)], 1, function(aa){   # aa &lt;- kaidf[ 1, c(&quot;ID&quot;, &quot;taxon_name&quot; )]
-      bb_vec &lt;- aa[2]
-      if( grepl(&quot;Viruses&quot;, bb_vec)){ 
-        cc_vec &lt;- c( rep( &quot;Viruses&quot;, length(2:7)), aa[1])
-      }else{
-        cc_vec &lt;- c( unlist(strsplit(unlist(bb_vec), &quot;;&quot;))[ 2:7], aa[1] )
-      }
-      cc_vec  }) ))
-
-
-  # set names
-  rownames(ka_tax) &lt;- ka_tax[,7]
-  colnames(ka_tax) &lt;- c(&quot;p&quot;, &quot;c&quot;, &quot;o&quot;, &quot;f&quot;, &quot;g&quot;, &quot;s&quot;, &quot;ID&quot;)   # Jun&#39;22 - remove &quot;d&quot; here, increase index of all names by 1
-  head(ka_tax)
-  dim(ka_tax &lt;- (unique(ka_tax)))</code></pre>
-<p><!-- ##   K A I J U    ----------------- -->
-<!-- ## assess unassigned / nonclassified   ----------------- -->
-<!--       #    -->
-<!--       #   head(kaiu <- kai[ (kai$otu == "cannot be assigned to a (non-viral) species" | kai$otu == "unclassified") , ] ) -->
-<!--       #   kaiu[ , "reads"] <- as.numeric(kaiu[ , "reads"]) -->
-<!--       #    --> <!--       #   hist( log10(kaiu[ , "reads"])) -->
-<!--       #   hist( (kaiu[ , "percent"])) --> <!--       #  -->
-<!--       #   # nreads unclassified / sent to bin -->
-<!--       #   kudf <- as.data.frame(kaiu)     -->
-<!--       #   kudf$substrate <- gsub(".*-([A-Z]*).*_.*", "\\1", kudf$file) -->
-<!--       #   # ggplot(kudf, aes(reads, fill = substrate)) + geom_boxplot() + labs(title = "N reads unclassified / sent to bin") -->
-<!--       #   # ggplot(kudf, aes(percent, fill = substrate)) + geom_boxplot() + labs(title = "% reads unclassified / sent to bin") -->
-<!--       #    --> <!--       #   summary(kudf$reads) -->
-<!--       #   summary(kudf$percent) --> <!--       #    -->
-<!--       #  -->
-<!--       # ## ggplot out the gap  ------------------------------- -->
-<!--       #    -->
-<!--       #   dim(kaif <- dplyr::filter(kai, percent > 1 , otu != "cannot be assigned to a (non-viral) species", otu != "unclassified") ) -->
-<!--       #   length(unique(kaif$otu)) -->
-<!--       #   length(unique(kaif$file)) --> <!--       #  -->
-<!--       #   kaip <- kaif --> <!--       #   head( kaip ) -->
-<!--       #   kaip$otu <- ifelse( kaip$percent < 0.5, "other", kaip$otu) -->
-<!--       #   kaip$otu <- ifelse( grepl("unclassified", kaip$otu), NA, kaip$otu) -->
-<!--       #   kaip$otu <- ifelse( grepl("cannot be assigned to a \\(non-viral\\) species", kaip$otu), "AAA", kaip$otu) -->
-<!--       #   length( unique( kaip$taxon_name)) --> <!--       #    -->
-<!--       #   ## waste of time -->
-<!--       #   # kaip$otu_g <- unlist( lapply( kaip$otu, function(aa){ strsplit(aa, split = " ")[[1]][1]})) -->
-<!--       #   # kaip <- kaip[ order( kaip$otu_g) , ] -->
-<!--       #   # kaip_cols <- shade_ranks2( TAXA = kaip, COLOUR_BY = "otu_g", SHADE_BY = "otu", MONIKER = "AAA") -->
-<!--       #   # kaip_cols_vec <- kaip_cols[ match(kaip$otu, names(kaip_cols))] -->
-<!--       #   kaip$facet_by <- sapply( kaip$taxon_name, function(aa){ -->
-<!--       #     strsplit( aa, ";")[[1]][3] --> <!--       #   }) -->
-<!--       #    -->
-<!--       #   ggplot( kaip, aes( x = file, y = as.numeric(percent), fill = otu )) + -->
-<!--       #     facet_grid( facet_by~ substrate, space = "free_x", scale = "free_x") + -->
-<!--       #     geom_col(colour="black") + -->
-<!--       #     scale_fill_manual(values = c( ab_col, ab_col) ) + -->
-<!--       #     theme( -->
-<!--       #       # legend.position = "none", -->
-<!--       #       axis.text.x = element_text(angle = 90), -->
-<!--       #       strip.text.y = element_text(angle = 0) -->
-<!--       #     ) --></p>
-</div>
-</div>
-<div id="save-the-output-in-a-basic-format" class="section level2">
-<h2>3. save the output in a basic format</h2>
-<p>Note - at this stage we’ve reduced gigabytes of sequence data into ~3
-basic spreadsheets (<code>.tsv</code>), irrespective of whether it came
-from <code>Kraken2</code> or <code>Kaiju</code> (or some other program)
-- from here on, the data used can be processed using standard methods
-from biology and data-science, whether that’s in <code>R</code>,
-<code>python</code>, <code>MSExcel</code> etc.</p>
-<pre class="r"><code>## general metadata
-    write.table(mgdat, &quot;../output/rmicro__metadata__dat.tsv&quot;, sep = &quot;\t&quot;)
-    saveRDS( mgdat, &quot;../output/rmicro__metadata__dat.RDS&quot;)
-
-
-## for Kraken2:
-  
-  ## tsv output
-    write.table(k2_counts, &quot;../output/rmicro__krakenStnd__num.tsv&quot;, sep = &quot;\t&quot;)
-    write.table(k2_relab, &quot;../output/rmicro__krakenStnd__frac.tsv&quot;, sep = &quot;\t&quot;)
-    write.table(k2_tax, &quot;../output/rmicro__krakenStnd__tax.tsv&quot;, sep = &quot;\t&quot;)
-    
-  ## RDS for R output - note samples are ROWS
-    saveRDS( t(k2_counts), &quot;../output/rmicro__krakenStnd__num.RDS&quot;)
-    saveRDS( t(k2_relab), &quot;../output/rmicro__krakenStnd__frac.RDS&quot;)
-    saveRDS( k2_tax, &quot;../output/rmicro__krakenStnd__tax.RDS&quot;)
-
-        
-## for Kaiju:
-
-  ## tsv output
-    write.table(ka_counts, &quot;../output/rmicro__kaijuStnd__num.tsv&quot;, sep = &quot;\t&quot;)
-    write.table(ka_relab, &quot;../output/rmicro__kaijuStnd__frac.tsv&quot;, sep = &quot;\t&quot;)
-    write.table(ka_tax, &quot;../output/rmicro__kaijuStnd__tax.tsv&quot;, sep = &quot;\t&quot;)
-    
-  ## RDS for R output - note samples are ROWS
-    saveRDS( t(ka_counts), &quot;../output/rmicro__kaijuStnd__num.RDS&quot;)
-    saveRDS( t(ka_relab), &quot;../output/rmicro__kaijuStnd__frac.RDS&quot;)
-    saveRDS( ka_tax, &quot;../output/rmicro__kaijuStnd__tax.RDS&quot;)</code></pre>
-</div>
-<div id="export-to-rphyloseq" class="section level2">
-<h2>4. export to <code>R::phyloseq</code></h2>
-<p>More info on the gateway drug that is <code>phyloseq</code>, see the
-<a href="http://joey711.github.io/phyloseq">phyloseq main page</a>, and
-<a href="http://joey711.github.io/phyloseq/import-data.html">here</a>
-for importing data. Note again that here, it doesn’t matter whether it’s
-<code>Kraken2</code> or <code>Kaiju</code> (or some other program) -
-from here on, the data used can be processed using standard methods from
-biology and data-science</p>
-<pre class="r"><code>  ## note: we use the count data (making % is easy in R, but 
-  ##  - we would have no way of knowing the original counts)
-
-  ## note also: we did not extract any phylogenetic tree from 
-  ##  - the shotgun data, so no tree is included below
-
-    library(phyloseq)
-
-## Kraken2/Bracken   ---
-
-  # look at the first ten rows, ten columns:
-    k2_counts[1:10, 1:10]
-    k2_relab[1:10, 1:10]
-    k2_tax[1:10, 1:5]
-    mgdat[1:10,  ]
-
-    # note: we use the count data
-    k2_otu &lt;- otu_table(k2_counts, taxa_are_rows = TRUE)
-    # convert from df to matrix to tax_table to avoid losing rownames...
-    k2_tax2 &lt;- tax_table(as.matrix(k2_tax))
-
-    (k2_phyloseq_dat &lt;- phyloseq(
-      k2_otu,
-      k2_tax2,
-      # note no phylogenetic tree
-      sample_data(mgdat)
-      ))
-    
-    saveRDS( k2_phyloseq_dat, &quot;../output/rmicro__KrakenStnd__phylo.RDS&quot;)
-    # check: save and read back in. RDS is a handy way to save/load data
-    k2_phylo &lt;- readRDS(&quot;../output/rmicro__KrakenStnd__phylo.RDS&quot;)
-    k2_phylo
-
-            
-## Kaiju   ----------
-    
-  # look at the first ten rows, ten columns:
-    ka_counts[1:10, 1:10]
-    ka_relab[1:10, 1:10]
-    ka_tax[1:10, 1:5]
-    mgdat[1:10, ]
-
-  # note: we use the count data..
-    # sample names need to match - here we solve an issue between &quot;-&quot; and &quot;.&quot;
-    colnames(ka_counts) &lt;- gsub(&quot;-&quot;, &quot;.&quot;, colnames(ka_counts))
-    dim(kai_otu &lt;- otu_table(ka_counts, taxa_are_rows = TRUE))
-    # minimum modification of sample names
-    colnames(kai_otu) &lt;- paste0(&quot;X&quot;, colnames(kai_otu))
-    dim(kai_tax2 &lt;- tax_table(ka_tax))
-
-    (kai_phyloseq_dat &lt;- phyloseq(kai_otu, kai_tax2, sample_data(mgdat)))
-
-    saveRDS( kai_phyloseq_dat, &quot;../output/rmicro__KaijuStnd__phylo.RDS&quot;)
-    # demo - save out and read back in again
-    kai_phylo &lt;- readRDS(&quot;../output/rmicro__KaijuStnd__phylo.RDS&quot;)
-    kai_phylo</code></pre>
-<!-- # Sandbox -->
-<!-- Use a phyloseq object - it's up to you which one. -->
-<!-- ```{R, eval=FALSE} -->
-<!-- library("phyloseq"); packageVersion("phyloseq") -->
-<!-- theme_set(theme_bw()) -->
-<!-- # basic visuals -->
-<!-- plot_bar(physeq, fill = "Family") -->
-<!-- plot_heatmap(physeq1) -->
-<!-- plot_heatmap(physeq1, taxa.label="Phylum") -->
-<!-- plot_richness(myData, x="BODY_SITE", color="Description") -->
-<!-- OTUnames10 = names(sort(taxa_sums(GP), TRUE)[1:10]) -->
-<!-- GP10  = prune_taxa(OTUnames10,  GP) -->
-<!-- mGP10 = prune_taxa(OTUnames10, mergedGP) -->
-<!-- ocean_samples = sample_names(subset(sample_data(GP), SampleType=="Ocean")) -->
-<!-- print(ocean_samples) -->
-<!-- rowSums(otu_table(GP10)[, ocean_samples]) -->
-<!-- plot_richness(GP, "human", "SampleType", title="unmerged") -->
-<!-- # basic subsets  -->
-<!-- rank_names(GlobalPatterns) -->
-<!-- sample_variables(GlobalPatterns) -->
-<!-- otu_table(GlobalPatterns)[1:5, 1:5] -->
-<!-- tax_table(GlobalPatterns)[1:5, 1:4] -->
-<!-- taxa_names(GlobalPatterns)[1:10] -->
-<!-- # name the ten largest -->
-<!-- myTaxa = names(sort(taxa_sums(GlobalPatterns), decreasing = TRUE)[1:10]) -->
-<!-- # choose jsut those ten -->
-<!-- ex1 = prune_taxa(myTaxa, GlobalPatterns) -->
-<!-- # make % -->
-<!-- GPr  = transform_sample_counts(GlobalPatterns, function(x) x / sum(x) ) -->
-<!-- # filter out those below 10-5 (0.00001) % -->
-<!-- GPfr = filter_taxa(GPr, function(x) mean(x) > 1e-5, TRUE) -->
-<!-- # keep only the family Chlamydiae -->
-<!-- GP.chl = subset_taxa(GlobalPatterns, Phylum=="Chlamydiae") -->
-<!-- # from those samples, only keep samples with at least 20 counts -->
-<!-- GP.chl = prune_samples(sample_sums(GP.chl)>=20, GP.chl) -->
-<!-- # combine aka merge the first 5 Chlamydiae taxa -->
-<!-- GP.chl.merged = merge_taxa(GP.chl, taxa_names(GP.chl)[1:5]) -->
-<!-- # summarise all taxa to the family level -->
-<!-- gpsfbg = tax_glom(gpsfb, "Family") -->
-<!-- ``` -->
-</div>
-</div>
-<div id="next-steps" class="section level1">
-<h1>Next Steps</h1>
-<p>That was, hopefully, easy! Take this data, and have a look at the <a href="http://joey711.github.io/phyloseq">phyloseq guide</a> to exploring
-data, their inspirational <a href="https://f1000research.com/articles/5-1492">F1000 expanded methods
-paper</a>, or other guides as recommended on the <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference"><code>climber</code>
-page</a>.</p>
-<!-- ##  handy but unused ====================================================== -->
-<!-- ```{R, eval = FALSE} -->
-<!--   rm(list=ls()) -->
-<!--   library(ggplot2)   -->
-<!--   library(parallel)   -->
-<!--   source("~/Dropbox/SeqBiome/sb_4.11_master/analysis/background_code/R__fns_jfg/fn_definitions.R") -->
-<!--   ab_col <- ( c("#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#6a3d9a", "#FF1493", -->
-<!--                 "#b15928", "#737f33", "#8B008B", "#32fbd8", "#fdbf6f", -->
-<!--                 RColorBrewer::brewer.pal(5, "Spectral"), -->
-<!--                 "#b2df8a", "#fb9a99", "#d9e627", "#EE82EE", "#DEB887", -->
-<!--                 "#a6cee3", -->
-<!--                 RColorBrewer::brewer.pal(4,'Accent') -->
-<!--   ) -->
-<!--   ) -->
-<!--   clr <- function(aa){    print(paste("samples must be ROWS ; dim =", dim(aa)[1], "x", dim(aa)[2]))  -->
-<!--     t(apply(aa, 1, function(bb) log(bb) - log(mean(bb)) ))  -->
-<!--   } -->
-<!-- ``` -->
-<!-- ##   D I S T A N T   C L U S T E R S     ======================================= -->
-<!--     kaigeal_ra <- apply( kaigeal, 2, function(aa) aa/sum(aa)) -->
-<!--     kaigeal_bc <- vegan::vegdist(t(kaigeal_ra[ , rownames(metad)]), method = "bray") -->
-<!--     kaigeal_ja <- vegan::vegdist(t(kaigeal_ra[ , rownames(metad)]), method = "jaccard") -->
-<!--     kaigeal_ja_hclust <- hclust( kaigeal_ja, method = "ward.D2") -->
-<!--     metad$hclust <- kaigeal_ja_hclust$order -->
-<!-- ##    C L R   T R A N S F O R M   =============================================== -->
-<!--     dim( kaigeal_czm <- zCompositions::cmultRepl(t(kaigeal), label=0, method="CZM") )                     # samples must be ROWS ; returns samples as rows -->
-<!--     dim( kaigeal_clr <- t( clr(kaigeal_czm)) )                              # samples as ROWS ; returns samples as rows -->
+# summarise all taxa to the family level
+gpsfbg = tax_glom(gpsfb, &quot;Family&quot;)</code></pre>
 </div>
 
 

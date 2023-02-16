@@ -1,0 +1,6 @@
+https://usda-ars-gbru.github.io/Microbiome-workshop/tutorials/metagenomics/
+
+1. Read QC
+2. Read merging (if paired)
+3. Alignment or kmer based matching against curated dataset.
+4. Heuristics for determining the correct level to classify at and the classification (Megan-LCA, Clarke, Surpi, Centrifuge, proprietary methods).

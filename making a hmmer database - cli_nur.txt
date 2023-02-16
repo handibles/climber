@@ -1,0 +1,73 @@
+
+## ==========================================================================================================================================================
+## ==========================================================================================================================================================
+## final output from the command:  $MSDAT/bin/bagel4_2022/tools/hmmsearch/binaries/hmmsearch --tblout $MSDAT/ref/pfam_bagel4/Pfam-A.tblout.txt -E 1e-5 --cpu 20 $MSDAT/ref/pfam_bagel4/Pfam-A.hmm /data/databases/pfam_bagel4/Pfam-A.fasta
+## ==========================================================================================================================================================
+## ==========================================================================================================================================================
+
+
+  Alignments for each domain:
+  == domain 1  score: 35.2 bits;  conditional E-value: 8.8e-10
+                        SEEBETTTSSBBECSCEEEESSSTSSEECHHHHHTGCBTTC CS
+                  ZZ  3 kkytCdgCseapligvRyhclrcsdYDLCqsCfsthkagkh 43
+                        ++++C +C  +  +g  +hc  c+dYD+C  C+++  + +h
+  S8C569_9LAMI/43-86  2 FVAQCAVCHRDIEAGQGWHCGTCPDYDMCNACYQKDEGRNH 42
+                        5799******************************9777766 PP
+
+>> A0A139AK50_GONPR/30-72  A0A139AK50.1 PF00569.16;ZZ;
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 !   35.0   4.5     1e-09   1.1e-05       5      41 ..       3      40 ..       2      43 .] 0.84
+
+  Alignments for each domain:
+  == domain 1  score: 35.0 bits;  conditional E-value: 1e-09
+                            EBETTTSSBBECSCEEEESSSTSSEECHHHHHT..GCBT CS
+                      ZZ  5 ytCdgCseapligvRyhclrcsdYDLCqsCfst..hkag 41
+                            + CdgC        R++c++c d+DLC++C+    + ++
+  A0A139AK50_GONPR/30-72  3 VYCDGCRL-HGLSERFKCMVCADFDLCIQCYGDaaRIHA 40
+                            67******.88999****************976445555 PP
+
+>> E3NT10_CAERE/158-200  E3NT10.1 PF00569.16;ZZ;
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 !   35.2  11.8   8.8e-10   9.8e-06       3      39 ..       3      40 ..       1      43 [] 0.86
+
+  Alignments for each domain:
+  == domain 1  score: 35.2 bits;  conditional E-value: 8.8e-10
+                          SEEBETTTSSBBECSCEEEESSSTSSEECHHHHHT..GC CS
+                    ZZ  3 kkytCdgCseapligvRyhclrcsdYDLCqsCfst..hk 39
+                          +  +C  C   p+ g Ryhcl c dYD+C +C++   h+
+  E3NT10_CAERE/158-200  3 FHIHCCHCRL-PIHGSRYHCLECADYDICGKCEKDliHF 40
+                          5789******.*********************9984444 PP
+
+>> D3B9W6_POLPA/1-44  D3B9W6.1 PF00569.16;ZZ;
+   #    score  bias  c-Evalue  i-Evalue hmmfrom  hmm to    alifrom  ali to    envfrom  env to     acc
+ ---   ------ ----- --------- --------- ------- -------    ------- -------    ------- -------    ----
+   1 !   35.0   2.6     1e-09   1.1e-05       5      43 ..       2      42 ..       1      44 [] 0.82
+
+  Alignments for each domain:
+  == domain 1  score: 35.0 bits;  conditional E-value: 1e-09
+                       EBETTTSSBBECS...CEEEESSSTSSEECHHHHHT.GCBTTC CS
+                 ZZ  5 ytCdgCseaplig...vRyhclrcsdYDLCqsCfst.hkagkh 43
+                       ++CdgC++  +i+   vRy c  c+  DLC +C++  +k+ ++
+  D3B9W6_POLPA/1-44  2 FICDGCGA--TIEggvVRYVCIECKGLDLCKKCYKReQKYFPQ 42
+                       79******..5544568*****************997766555 PP
+
+
+
+Internal pipeline statistics summary:
+-------------------------------------
+Query model(s):                              1  (45 nodes)
+Target sequences:                     21827419  (3488813650 residues searched)
+Passed MSV filter:                    889573  (0.0407548); expected 436548.4 (0.02)
+Passed bias filter:                   434133  (0.0198893); expected 436548.4 (0.02)
+Passed Vit filter:                     52450  (0.00240294); expected 21827.4 (0.001)
+Passed Fwd filter:                      4791  (0.000219495); expected 218.3 (1e-05)
+Initial search space (Z):           21827419  [actual number of targets]
+Domain search space  (domZ):            1969  [number of targets reported over threshold]
+# CPU time: 80.90u 7.17s 00:01:28.07 Elapsed: 00:00:27.89
+# Mc/sec: 5629.14
+//
+[ok]
+(b4)[jamie.fitzgerald@compute05 pfam_bagel4]$
+(b4)[jamie.fitzgerald@compute05 pfam_bagel4]$

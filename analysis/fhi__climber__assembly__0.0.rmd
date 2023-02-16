@@ -26,7 +26,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 <!-- ``` -->
 
-> workflow is complete, but page remains under construction `r emo::ji("construction")`
+<!-- > workflow is complete, but page remains under construction `r emo::ji("construction")` -->
 
     
 
@@ -98,7 +98,7 @@ One of the best ways to learn quickly (and hopefully make different, exciting mi
 ---
 
 
-> Finally, please remember:
+> Finally, please remember (when working on the HPC server):
 
 >  * when you login to the HPC, you must **always** change to a `node` (eg `ssh compute05`) before you do any work 
 
