@@ -2,7 +2,46 @@
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
-This guide to metagenomic analysis continues to be updated (Dec '22). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
+This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
+
+### notions abound
+
+````mermaid
+flowchart TD
+    A[SHOTGUN STUDY] --> |download FASTQ| B(check raw quality - FQC/MQC)
+    B --> C(QC : remove adapters)
+    C --> |as necessary| C
+    C --> |get the right genomes| D(QC : remove host)
+
+    D --> E((taxonomy))
+    E --> M(Kaiju)
+    E --> N(Kraken2)
+    N --> |Bracken - abundances | N
+
+    D --> |there are many types of function!| F((fa:fa-car functions))
+    F --> G(HUMAnN3)
+    F --> H(ARG/VIR - CARD-DB)
+    F --> I(CAZymes)
+    
+    D --> P((MAG assembly))
+
+    D --> |agnostic measure of diversity| O((kmer diversity))
+
+	click A "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click B "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click C "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click D "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click E "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click N "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click M "https://handibles.github.io/climber/documents/shotgun_assembly.html"
+	click F "https://www.teagasc.ie/unknowabletruths"
+	click G "https://www.teagasc.ie/unknowabletruths"
+	click H "https://www.teagasc.ie/unknowabletruths"
+	click I "https://www.teagasc.ie/unknowabletruths"
+	click P "https://www.teagasc.ie/unknowabletruths"
+	click O "https://www.teagasc.ie/unknowabletruths"
+"
+```
 
 
 ### Metagenomic data (i.e. shotgun)
