@@ -4,9 +4,9 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
 This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
 
-### notions abound
+### simpler to show, than to tell:
 
-````mermaid
+```mermaid
 flowchart TD
     A[SHOTGUN STUDY] --> |download FASTQ| B(check raw quality - FQC/MQC);
     B --> C(QC : remove adapters);
