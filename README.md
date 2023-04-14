@@ -5,7 +5,7 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
 
 ```mermaid
-flowchart LR;
+flowchart LR
     fastq1[(sequencing run\ndata)] ==> |download data,\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square 1-3: clean\nsequences)));
     qc1 ==> tax1(((fa:fa-arrow-up-right-from-square 4: taxonomy\nassignment)));
     qc1 ==> func1(((fa:fa-link-slash x: Function)));
