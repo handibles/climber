@@ -3,6 +3,16 @@
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
 
 ```mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+```
+
+
+
+```mermaid
 
 flowchart LR
     fastq1[(sequencing run\ndata)] ==> |download data,\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square 1-3: clean\nsequences)));
