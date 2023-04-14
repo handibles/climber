@@ -5,22 +5,22 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues) .
 
 ```mermaid
-flowchart LR
-	fastq1[(sequencing run\ndata)] ==> |download data,\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square 1-3: clean\nsequences)))
-    qc1 ==> tax1(((fa:fa-arrow-up-right-from-square 4: taxonomy\nassignment)))
-    qc1 ==> func1(((fa:fa-link-slash x: Function)))
-    qc1 -.-> mag1(((fa:fa-link-slash Y: Metagenomic\nassembly)))
-    mag1 -.- |figuring this out!| mag1
-    tax1 ==> comm1 
-    func1 ==> comm1 
-    comm1 -.- |fa:fa-ban avoid endless\nrecursion\nif at all\npossible...| comm1
-    comm1(((fa:fa-arrow-up-right-from-square microbial\necology)))
-    comm1 --> R2(diversity)
-    comm1 --> R3(abundance)
-    comm1 --> R4(association)
-    R2 --> R5(visualise)
-    R3 --> R5
-    R4 --> R5
+flowchart LR;
+    fastq1[(sequencing run\ndata)] ==> |download data,\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square 1-3: clean\nsequences)));
+    qc1 ==> tax1(((fa:fa-arrow-up-right-from-square 4: taxonomy\nassignment)));
+    qc1 ==> func1(((fa:fa-link-slash x: Function)));
+    qc1 -.-> mag1(((fa:fa-link-slash Y: Metagenomic\nassembly)));
+    mag1 -.- |figuring this out!| mag1;
+    tax1 ==> comm1 ;
+    func1 ==> comm1 ;
+    comm1 -.- |fa:fa-ban avoid endless\nrecursion\nif at all\npossible...| comm1;
+    comm1(((fa:fa-arrow-up-right-from-square microbial\necology)));
+    comm1 --> R2(diversity);
+    comm1 --> R3(abundance);
+    comm1 --> R4(association);
+    R2 --> R5(visualise);
+    R3 --> R5;
+    R4 --> R5;
 
     click qc1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#2_-_quality_control_(_check)";
     click tax1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling";
