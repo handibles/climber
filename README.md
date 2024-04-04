@@ -16,7 +16,7 @@ As above, the tutorial covers the following steps:
   4. Metagenomic Community profiling - `Kraken2` & `Bracken`
 
 
-We also move through <a href="documents/data_to_R.html">importing output from `Kaiju` or `Kraken2+Bracken` into `R`: </a>.
+We also move through <a href="documents/data_to_R.html">importing output from `Kaiju` or `Kraken2+Bracken` into `R` (bare-bones): </a>.
 
   * importing data into `R` - generating a count matrix, taxonomic table, and phyloseq object from metagenomic data
 
@@ -33,7 +33,7 @@ Forthcoming. The initial steps (setup, get data, QC) are very similar in most ca
 
 ### Microbial Ecology (and `R`)
 
-Still to be done. Although it's a simply enormous topic, it is also the real magic, and we get to make _pictures_. Until this section is properly fleshed out, consider instead the guide from [Happy-Belly Bioinformatics](https://astrobiomike.github.io/amplicon/dada2_workflow_ex#analysis-in-r), and the steady pace of [phyloseq](http://joey711.github.io/phyloseq/) which is an excellent on-ramp.
+Still to be done. Although it's a simply enormous topic, it is also the real magic, and we get to make _pictures_. Until this section is properly fleshed out, consider instead the guide from [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/amplicon/dada2_workflow_ex#analysis-in-r), and the steady pace of [phyloseq](http://joey711.github.io/phyloseq/) which is an excellent on-ramp.
 
 
 ---

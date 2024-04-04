@@ -1,6 +1,6 @@
 ---
-title: 'Porting Metagenomics into `R`'
-author: 'IC / NPV / JFG'
+title: 'Getting Metagenomics into `R`'
+author: 'jfg'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
   html_document:
@@ -658,9 +658,7 @@ More info on the gateway drug that is `phyloseq`, see the [phyloseq main page](h
 
 # Next Steps
 
-
-
-That was, hopefully, easy! Take this data, and have a look at the [phyloseq guide](http://joey711.github.io/phyloseq) to exploring data, their inspirational [F1000 expanded methods paper](https://f1000research.com/articles/5-1492), or other guides as recommended on the [`climber` page](https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference).
+That was, hopefully, easy! Take this data, and have a look at the [phyloseq guide](http://joey711.github.io/phyloseq) to exploring data, their inspirational [F1000 expanded methods paper](https://f1000research.com/articles/5-1492), a [quick list of related commands](./R_to_phyloseq.html),  or other guides as recommended on the [`climber` page](https://handibles.github.io/climber/documents/shotgun_assembly.html#Reading__Reference).
         
 <!-- ##  handy but unused ====================================================== -->
 <!-- ```{R, eval = FALSE} -->

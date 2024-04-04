@@ -1,6 +1,6 @@
 ---
-title: 'First Look at the Microbiome in `R`'
-author: 'IC / NPV / JFG'
+title: 'Getting Metagenomics into `R` - extra steps in `phyloseq`'
+author: 'jfg'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
   html_document:
@@ -12,32 +12,27 @@ output:
     toc: TRUE
     toc_depth: 3
     number_sections: FALSE
-knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/data_to_R.html') })
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/R_to_phyloseq.html') })
 ---
 
 > workflow incomplete `r emo::ji("construction")`
 
 ---
 
-Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly format.
+# Introduction
+
+Following from work [assembling the metagenomic data](./shotgun_assembly.html), and [importing the microbial community into an `R`-friendly format](./data_to_R.html), we might want to use the handy [phyloseq](https://joey711.github.io/phyloseq/import-data.html) package for `R` to look at things.
+
+It's hard to overstate how powerful `phyloseq` can be - it standardises your work, makes sure things are sensible, has great documentation, and shows you how to start ecological analysis of your data. 
+
+It was linked in the last page, but the teams behind `DADA2` and `phyloseq` put together an incredible showcase paper of what can be done: do check it out.
 
 ---
 
 
-# Introduction
-
-From our first workflow, we should have a *feature count table*:
-
-We should also have a *taxonomy table*:
-
-We should hopefully have (or can build) a *sample data table* also - this will tell us about the samples we're analysinig (i.e. metadata):
-
-
-Note, 
-
 # Phyloseq Steps
 
-These commands are simply ripped straight from the excellent [phyloseq]() tutorial section, as this package covers many of the important first steps.
+These commands are simply ripped straight from the excellent [phyloseq](https://joey711.github.io/phyloseq/import-data.html) tutorial section, as this package covers many of the important first steps.
   
 ```{R, eval=FALSE}
 
