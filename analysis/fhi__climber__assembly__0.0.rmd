@@ -1,6 +1,6 @@
 ---
 title: 'Assembling Metagenomic Sequence Data `r emo::ji("person_climbing")`'
-author: 'IC / NPV / JFG'
+author: 'JFG'
 date: "`r format(Sys.time(), '%d %b %Y, %H:%M')`"
 output:
   html_document:

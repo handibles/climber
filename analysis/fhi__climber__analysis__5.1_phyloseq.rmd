@@ -19,9 +19,7 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly foamt
-
-
+Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly format. There are no outputs to see here yet. 
 
 ---
 

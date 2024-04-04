@@ -1,0 +1,74 @@
+
+flowchart LR
+    fastq1[(sequencing run\ndata)] ==> |download data,\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square clean\nsequences)));
+    qc1 ==> tax1(((fa:fa-arrow-up-right-from-square taxonomy\nassignment)));
+    qc1 ==> func1(((fa:fa-link-slash function)));
+    qc1 -.-> mag1(((fa:fa-link-slash Metagenomic\nassembly)));
+    mag1 -.- |figuring this out!| mag1;
+    tax1 ==> comm1 ;
+    func1 ==> comm1 ;
+    comm1 -.- |fa:fa-ban avoid endless\nrecursion\nif at all\npossible...| comm1;
+    comm1(((fa:fa-arrow-up-right-from-square microbial\necology)));
+    comm1 --> R2(diversity);
+    comm1 --> R3(abundance);
+    comm1 --> R4(association);
+    R2 --> R5(visualise);
+    R3 --> R5;
+    R4 --> R5;
+    
+    click qc1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#2_-_quality_control_(_check)";
+    click tax1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling";
+    click comm1 "https://handibles.github.io/climber/documents/data_to_R.html";
+    click func1 "https://teagasc.ie/unknowable_truths";
+    click mag1 "https://teagasc.ie/unknowable_truths";
+
+	
+	
+
+flowchart TD
+fastq1[(sequencing run)] --> |download data\npresumably from illumina| qc1(((fa:fa-arrow-up-right-from-square clean\nsequences)))
+qc4 --> tax1(((fa:fa-arrow-up-right-from-square taxonomy\nassignment)))
+qc4 --> func1(((fa:fa-link-slash function)))
+qc4 --> mag1(((fa:fa-link-slash Metagenomic\nassembly)))
+mag1 === |who even knows| mag2[start at\nmetaWRAP\n...]
+subgraph do_qc
+qc1 --> qc2[check FastQC/MultiQC]
+qc1 --> qc4[remove host\nsequences]
+qc4 --> qc2[check FastQC/MultiQC]
+end
+subgraph do_tax
+tax1 --> tax2[kaiju]
+tax1 --> tax3[kraken] --> tax4[Bracken]
+tax1 --> tax5[...]
+end
+subgraph do_func
+func1 --> |ref/de novo\nfunction|func2[HUMAnN3]
+func2a[(choc/nr)] --> func2
+func1 --> |carb. \nmetabolism| func3[(CAZy)]
+func1 --> |AMR & virulence| func4[(CARD)] --> func5[AMR]
+func4 --> func6[virulence]
+func1 --> func10[...]
+end
+tax4 -.- comm1
+tax2 -.- comm1
+func2 -.- comm1
+func3 -.- comm1
+func6 -.- comm1
+func5 -.- comm1
+subgraph do_comm
+comm1 -.- |fa:fa-ban avoid endless\nrecursion if possible...| comm1
+comm1(((fa:fa-arrow-up-right-from-square microbial\necology)))
+comm1 --> R2(diversity)
+comm1 --> R3(abundance)
+comm1 --> R4(association)
+comm1 --> R5(visualise)
+end
+
+click qc1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#2_-_quality_control_(_check)";
+click qc4 "https://handibles.github.io/climber/documents/shotgun_assembly.html#3_-_decontaminate_data_(_check)";
+click tax1 "https://handibles.github.io/climber/documents/shotgun_assembly.html#4_-_Microbiome_Community_Profiling";
+click comm1 "https://handibles.github.io/climber/documents/data_to_R.html";
+click func1 "https://teagasc.ie/unknowable_truths";
+click mag1 "https://teagasc.ie/unknowable_truths";
+
+

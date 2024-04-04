@@ -1,3 +1,19 @@
+---
+output:
+  html_document:
+    toc: TRUE
+    toc_depth: 3
+    toc_float: TRUE
+    number_sections: FALSE
+  pdf_document: 
+    toc: TRUE
+    toc_depth: 3
+    number_sections: FALSE
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../README.html') })
+---
+
+
+
 # `CLI`, `M`icro`b`ial `E`cology, and `R`
 
 Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Illumina `fastq` data, into either `amplicon` (e.g. 16S) or `metagenomic` (e.g. shotgun) datasets, followed by ecology-based analysis of the communities and patterns we find in that data.
@@ -7,7 +23,7 @@ Some basic steps in microbial ecology, focusing on the processing of `2ndGen` Il
 
   * <a href="https://handibles.github.io/climber/documents/shotgun_assembly.html"> --> Jump straight to the tutorial on metagenomic shotgun assembly </a> 
 
-As above, the tutorial covers the following steps:
+The tutorial covers the following steps, in one long page:
 
   0. Setting up your analysis - `bash` and friends
   1. Checking your sequence data - `FastQC` & `MultiQC`
@@ -21,7 +37,7 @@ We also move through <a href="documents/data_to_R.html">importing output from `K
   * importing data into `R` - generating a count matrix, taxonomic table, and phyloseq object from metagenomic data
 
 
-This metagenomic workflow is also present in simple, no-nonsense, `raw code` (note there might be differences to the complete workflow above).
+This metagenomic workflow is also available in simple, no-nonsense, `raw code` (note there might be differences to the complete workflow above).
 
   * <a href="documents/shotgun_assembly_raw.html">`raw code only of the metagenomic shotgun assembly`</a> - as above, less explanation
 
@@ -33,12 +49,12 @@ Forthcoming. The initial steps (setup, get data, QC) are very similar in most ca
 
 ### Microbial Ecology (and `R`)
 
-Still to be done. Although it's a simply enormous topic, it is also the real magic, and we get to make _pictures_. Until this section is properly fleshed out, consider instead the guide from [Happy-Belly Bioinformatics](https://astrobiomike.github.io/amplicon/dada2_workflow_ex#analysis-in-r), and the steady pace of [phyloseq](http://joey711.github.io/phyloseq/) which is an excellent on-ramp.
+This is the real magic, and we get to make _pictures_. This part might be updated as annotated code ahead of actual tutorials - it's a massive collection of huge topics..
 
 
 ---
 
-This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues).
+This guide to metagenomic analysis continues to be updated (April, ~~3023~~ 3,024!). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues).
 
 all the best!  
 
