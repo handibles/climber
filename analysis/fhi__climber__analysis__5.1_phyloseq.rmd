@@ -19,15 +19,25 @@ knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=enc
 
 ---
 
-Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly format. There are no outputs to see here yet. 
+Following from work assembling the [metagenomic data](./shotgun_assembly.html), and importing the microbial community into `R`-friendly format.
 
 ---
 
 
 # Introduction
 
-Get
-  
+From our first workflow, we should have a *feature count table*:
+
+We should also have a *taxonomy table*:
+
+We should hopefully have (or can build) a *sample data table* also - this will tell us about the samples we're analysinig (i.e. metadata):
+
+
+Note, 
+
+# Phyloseq Steps
+
+These commands are simply ripped straight from the excellent [phyloseq]() tutorial section, as this package covers many of the important first steps.
   
 ```{R, eval=FALSE}
 

@@ -1481,7 +1481,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">First Look at the Microbiome in
 <code>R</code></h1>
 <h4 class="author">IC / NPV / JFG</h4>
-<h4 class="date">04 Apr 2024, 15:22</h4>
+<h4 class="date">04 Apr 2024, 16:04</h4>
 
 </div>
 
@@ -1491,11 +1491,17 @@ border-radius: 0px;
 </blockquote>
 <hr />
 <p>Following from work assembling the <a href="./shotgun_assembly.html">metagenomic data</a>, and importing the
-microbial community into <code>R</code>-friendly foamt</p>
+microbial community into <code>R</code>-friendly format.</p>
 <hr />
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>Get</p>
+</div>
+<div id="phyloseq-steps" class="section level1">
+<h1>Phyloseq Steps</h1>
+<p>These commands are simply ripped straight from the excellent phyoseq
+tutorial section, as this package covers many of the important first
+steps.</p>
 <pre class="r"><code>library(&quot;phyloseq&quot;); packageVersion(&quot;phyloseq&quot;)
 
 theme_set(theme_bw())
