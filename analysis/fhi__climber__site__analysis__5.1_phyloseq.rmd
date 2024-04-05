@@ -15,7 +15,7 @@ output:
 knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding=encoding, output_file='../documents/R_to_phyloseq.html') })
 ---
 
-> workflow incomplete `r emo::ji("construction")`
+> exceedingly basic workflow `r emo::ji("construction")`
 
 ---
 
@@ -25,14 +25,14 @@ Following from work [assembling the metagenomic data](./shotgun_assembly.html), 
 
 It's hard to overstate how powerful `phyloseq` can be - it standardises your work, makes sure things are sensible, has great documentation, and shows you how to start ecological analysis of your data. 
 
-It was linked in the last page, but the teams behind `DADA2` and `phyloseq` put together an incredible showcase paper of what can be done: do check it out.
+It was linked in the last page, but the teams behind `DADA2` and `phyloseq` put together [an incredible showcase paper of what can be done](https://f1000research.com/articles/5-1492): do check it out.
 
 ---
 
 
 # Phyloseq Steps
 
-These commands are simply ripped straight from the excellent [phyloseq](https://joey711.github.io/phyloseq/import-data.html) tutorial section, as this package covers many of the important first steps.
+This really is only for reference - these commands are simply ripped straight from the excellent [phyloseq](https://joey711.github.io/phyloseq/import-data.html) tutorial section, as this package covers many of the important first steps. For more info, please see the tutorial section linked above.
   
 ```{R, eval=FALSE}
 

@@ -29,7 +29,7 @@ The `R` work starts here `r emo::ji("grimacing_face")`, continued from work asse
 
 Getting metagenomic data from `bash & co.` to `R` can be awkward - this is just a quick run-through of one way it can be done, creating basic `.tsv` files (as enjoyed by microsoft excel), bringing them into basic `R` first, and then to the great `R` library `phyloseq`. Feel free to suggest alternate routes. 
 
-Here, we do the following: for `Kraken2+Bracken`, and separately for ``Kaiju`: 
+Here, we do the following: for `Kraken2+Bracken`, and separately for `Kaiju`: 
   
   1. import the data from `Bracken` **or** `Kaiju` into `R`:
   2. re-arrange the outputs in `R` in one of two ways:

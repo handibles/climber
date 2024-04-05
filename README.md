@@ -13,7 +13,7 @@ As above, the tutorial covers the following steps:
   1. Checking your sequence data - `FastQC` & `MultiQC`
   2. Sequencing QC - filtering and trimming your sequences - `Trimmomatic`
   3. Sequencing QC - purifying your sequences - `BowTie2`
-  4. Metagenomic Community profiling - `Kraken2` & `Bracken`
+  4. Metagenomic Community profiling - `Kraken2` & `Bracken` (or `Kaiju` if you like)
 
 
 We also move through <a href="documents/data_to_R.html">importing output from `Kaiju` or `Kraken2+Bracken` into `R` (bare-bones): </a>.
@@ -33,12 +33,12 @@ Forthcoming. The initial steps (setup, get data, QC) are very similar in most ca
 
 ### Microbial Ecology (and `R`)
 
-Still to be done. Although it's a simply enormous topic, it is also the real magic, and we get to make _pictures_. Until this section is properly fleshed out, consider instead the guide from [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/amplicon/dada2_workflow_ex#analysis-in-r), and the steady pace of [phyloseq](http://joey711.github.io/phyloseq/) which is an excellent on-ramp.
+Still to be done. Although it's a simply enormous topic, it is also the real magic, and we get to make _pictures_. Until this section is properly fleshed out, consider instead this [comprehensive methods (F1000) paper from DADA2's Callahan et al.](https://f1000research.com/articles/5-1492/v2), this guide from [AstroBioMike - Bioinformatics for beginners](https://astrobiomike.github.io/amplicon/dada2_workflow_ex#analysis-in-r), and the steady pace of [phyloseq](http://joey711.github.io/phyloseq/) which is an excellent on-ramp.
 
 
 ---
 
-This guide to metagenomic analysis continues to be updated (April, 3023). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues).
+This guide to metagenomic analysis continues to be updated (~~April, 3023~~ April 5^th^ 3,024!). All (+/-)feedback is welcome: simply throw objects/comments directly at me, or [drop us a line at the related repo](https://github.com/handibles/climber/issues).
 
 all the best!  
 
