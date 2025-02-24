@@ -1481,7 +1481,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Assembling Metagenomic Sequence Data
 🧗</h1>
 <h4 class="author">jfg</h4>
-<h4 class="date">04 Apr 2024, 16:00</h4>
+<h4 class="date">24 Feb 2025, 15:55</h4>
 
 </div>
 
@@ -2343,8 +2343,8 @@ cd $1
 # download your own genome (more or less) - 1.2 GB, 12min :: from the NCBI browser https://www.ncbi.nlm.nih.gov/data-hub/genome/GCF_000001405.40/
 curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCF_000001405.40/download?filename=GCF_000001405.40.zip&quot; -H &quot;Accept: application/zip&quot;
 
-# decoy genome - 9 MB
-wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5ss.fa.gz
+# old decoy genome was 9 MB, now (Feb 2025) using newer, smaller decoy genome! (smaller because human material better integrated into GRCh38...)
+wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/786/075/GCA_000786075.2_hs38d1/GCA_000786075.2_hs38d1_genomic.fna.gz
 
 # cow genome - 825 MB, 5min
 curl -OJX GET &quot;https://api.ncbi.nlm.nih.gov/datasets/v1/genome/accession/GCA_021234555.1/download?filename=GCA_021234555.1.zip&quot; -H &quot;Accept: application/zip&quot;
